@@ -1,11 +1,11 @@
-using Intro;
+using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddDbContext<BloggingContext>(options =>
+builder.Services.AddDbContext<HardwareStoreDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BloggingDatabase")));
 var app = builder.Build();
 

@@ -9,15 +9,15 @@ using System.ComponentModel.DataAnnotations;
 
 using System.Reflection.Emit;
 
-namespace Intro
+namespace HardwareStoreNameSpace
 {
 
 
-    public class HardwareStoreContext: DbContext
+    public class HardwareStoreDbContext: DbContext
     {
 
 
-        public HardwareStoreContext(DbContextOptions <HardwareStoreContext> options):base(options)
+        public HardwareStoreDbContext(DbContextOptions <HardwareStoreDbContext> options):base(options)
         {
             
         }
