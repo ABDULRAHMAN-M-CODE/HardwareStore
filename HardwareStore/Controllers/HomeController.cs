@@ -6,10 +6,14 @@ namespace HardwareStore.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult ShowMessage()
+        public IActionResult Login()
         {
             return View();
-        }        
+        }
+        public IActionResult Index()
+        {
+            return View();
+        }
 
     }
 }
