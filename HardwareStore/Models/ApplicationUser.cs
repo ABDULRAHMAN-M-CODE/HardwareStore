@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace HardwareStore.Models
 {
@@ -6,4 +7,6 @@ namespace HardwareStore.Models
     {
         public DateTime RegistrationDate { get; set; }
     }
+    
+
 }
