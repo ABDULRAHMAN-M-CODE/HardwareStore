@@ -1,30 +1,9 @@
 using HardwareStore.Models;
-using HardwareStore.ViewModel;
 using HardwareStoreNameSpace;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
-using System.Diagnostics;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
-
-// The following  imports are required for Login IDentity User
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
 using HardwareStore.ViewModel.AccountViewModels;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Azure.Core;
-
+using HardwareStore.Services;
 namespace HardwareStore.Controllers
 {
 
@@ -32,245 +11,139 @@ namespace HardwareStore.Controllers
     public class AccountController : Controller
     {
 
-            private readonly ApplicationDbContext _context;
+
+
+            
+            //  The reason I used  readonly is to ensure that the instance is
+            //  not accidentally modified by any of the controller's methods. 
+
+            private readonly IUserStore<ApplicationUser> _userStore;        // to set the user name
+            
+            private readonly UserManager<ApplicationUser> _userManager;   //  actually create the user in the database, given password and 
+
             private readonly SignInManager<ApplicationUser> _signInManager;
-            private readonly ILogger<AccountController> _logger;
-            private readonly IUserStore<ApplicationUser> _userStore;
-            private readonly IUserEmailStore<ApplicationUser> _emailStore;
-            private readonly IEmailSender _emailSender;
-            private readonly UserManager<ApplicationUser> _userManager;
         
-        
-             /// <Note>
-             ///    THe following properties  supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </Note>
 
-            public string ReturnUrl { get; set; }
-            [BindProperty]
-            public InputModel Input { get; set; } //related to Login, not signup.
-            public SignupViewModel SignupInput { get; set; }
-            public IList<AuthenticationScheme> ExternalLogins { get; set; }
-  
-            [TempData]
-            public string ErrorMessage { get; set; }
-
-
-            public AccountController(ApplicationDbContext context, 
-                SignInManager<ApplicationUser> signInManager, 
-                ILogger<AccountController> logger,
-                IUserStore<ApplicationUser> userStore,
-                IEmailSender emailSender,
-                UserManager<ApplicationUser> userManager){
-                _context = context;
-                _userStore = userStore;
-                _signInManager = signInManager;
-                _logger = logger;
+            public AccountController
+                (
+                    
+                    SignInManager<ApplicationUser> signInManager, 
+                    IUserStore<ApplicationUser> userStore,
+                    UserManager<ApplicationUser> userManager
+                )
+            {
                 
-                _emailSender=emailSender;
+                _signInManager = signInManager;
                 _userManager = userManager;
-                _emailStore = GetEmailStore();
-               
+                _userStore = userStore;
             }
             public IActionResult Index()
             {
                 return View();
             }
-            [HttpGet]
-            public async Task<IActionResult> Login(string returnUrl = null)
+
+
+
+        // the following 4 Action methods are related to Signup.
+            public IActionResult Register()
             {
-                if (!string.IsNullOrEmpty(ErrorMessage))
-                {
-                    ModelState.AddModelError(string.Empty, ErrorMessage);
-                }
 
-                returnUrl ??= Url.Content("~/");
-
-                // Clear the existing external cookie to ensure a clean login process
-                await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
-                ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-                ReturnUrl = returnUrl;
-                return View( new LoginViewModel());  
-            }
-
-            [HttpPost]
-            public async Task<IActionResult> ViewAfterProcessingLoginRequest(string returnUrl = null)
-            {
-                //returnUrl ??= Url.Content("~/");
-
-                ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-                if (ModelState.IsValid)
-                {
-                    // This doesn't count login failures towards account lockout
-                    // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                    var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                    if (result.Succeeded)
-                    {
-                        _logger.LogInformation("User logged in.");
-                    return RedirectToAction("LoginSuccesful");
-                        //return LocalRedirect(returnUrl);
-                    }
-                    if (result.RequiresTwoFactor)
-                    {
-                        return RedirectToAction("LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                    }
-                    if (result.IsLockedOut)
-                    {
-                        _logger.LogWarning("User account locked out.");
-                        return RedirectToAction("Lockout");
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                        return RedirectToAction("InvalidLoginAttempt");
-                }
-                }
-
-                // If we got this far, something failed, redisplay form
-                return View();
-            }
-            public IActionResult InvalidLoginAttempt()
-            {
-                return View();
-            }
-            public IActionResult ForgotPassword()
-            {
-                return View();
-            }
-            public IActionResult ResendEmailConfirmation()
-            {
-                return View();
-            }
-
-            public IActionResult Lockout()
-            {
-                return View();
-            } 
-            public IActionResult LoginWith2fa()
-            {
-                return View();
-            }
-
-            public IActionResult LoginSuccesful()
-            {
-                return View();
-            }
-
-            #nullable disable
-            [HttpGet]
-            public IActionResult Logout()
-             {
-                return View();
-             }
-
-            [HttpPost]
-            public async Task<IActionResult> LogoutConfirmed()
-            {
-                await _signInManager.SignOutAsync();
-                _logger.LogInformation("User logged out.");
-
-                return RedirectToAction("Login");
+                // the view should get empty model, the model's fields will be populated by the user using a form.
+                return View(new SignupViewModel());
 
             }
 
-
-            // The following are Action methods related to Signup 
-            public async  Task<IActionResult>    Register (string returnUrl = null)
-            {
-                ReturnUrl = returnUrl;
-                ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-                return View(new SignupViewModel() );
-            }
-
-            public async Task<IActionResult> RegisterAlgorithm(SignupViewModel SignupInput, string returnUrl = null)
-            {
-                returnUrl ??= Url.Content("~/");
-                ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-                
-                if (ModelState.IsValid) 
-                {
-                    var user = CreateUser();
-               
-                     await _userStore.SetUserNameAsync(user, SignupInput.Email, CancellationToken.None);
-                    await _emailStore.SetEmailAsync(user, SignupInput.Email, CancellationToken.None);
-                    var result = await _userManager.CreateAsync(user, SignupInput.Password);
-
-
-                // Note : the following code does not work, it's still uses some Razor-pages specific syntax like the RedirectToPage functions
-                if (result.Succeeded)
-                    {
-                        _logger.LogInformation("User created a new account with password.");
-
-                        var userId = await _userManager.GetUserIdAsync(user);
-                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                        var callbackUrl = Url.Page(
-                            "/Account/ConfirmEmail",
-                            pageHandler: null,
-                            values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                            protocol: Request.Scheme);
-
-                        await _emailSender.SendEmailAsync(SignupInput.Email, "Confirm your email",
-                            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
-                        if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                        {
-                            return RedirectToPage("/RegisterConfirmation", new { email = SignupInput.Email, returnUrl = returnUrl });
-                        }
-                        else
-                        {
-                            await _signInManager.SignInAsync(user, isPersistent: false);
-                            return LocalRedirect(returnUrl);
-                        }
-                    }
-                    
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error.Description);
-                    }
-                }
-
-                    // If we got this far, something failed, redisplay form or show Error UI
-                    return RedirectToAction("SignupError");
-            }
-
-            private ApplicationUser CreateUser()
-            {
-                try
-                {
-                    return Activator.CreateInstance<ApplicationUser>();
-                }
-                catch
-                {
-                    throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
-                        $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
-                        $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
-                }
-            }
-
-            private IUserEmailStore<ApplicationUser> GetEmailStore()
-            {
-                if (!(_userManager.SupportsUserEmail))
-                {
-                    throw new NotSupportedException("The default UI requires a user store with email support.");
-                }
-                return (IUserEmailStore<ApplicationUser>)_userStore;
-            }
         
+            public async Task<IActionResult> RegisterAlgorithm(SignupViewModel SignupInput)
+            {
+
+            // JUSTIFICATION : why I used Asyncrouns programming instead of Syncrouns Programming:
+            /*
+                I treated creating the user as a task, I can create many users at the same time without the need to make this a sequential process.
+
+                When the compiler reaches the line 81, because there is await, the enclosing action method will be suspended - yields control to the caller-.
+
+                The Thread is free to do other work; handling new request, this enhances performance.
+
+             */
+
+                AccountService service = new AccountService(_userStore, _userManager, SignupInput);
+                bool success =  await service.RegisterUser(); // line 81. next lines of code will not be executed unless this line complete it's work, but the thread will be able to handle new request
+                  
+                // the following 'if-statement' is not considered 'business logic'; it's just a 'presentational (UI) logic', I'm deciding which UI should be rendered based on the result of the 'bussines logic'.
+                // so the following if statement should not be inside the Services Folder, it should be inside the Action Method in the controller.
+                 if (success)
+                    {
+                        return RedirectToAction("SignupSuccessful");
+                    }
+                    return RedirectToAction("SignupError");
+                }
+            
             public IActionResult SignupError()
             {
                 return View();
             }
+            public IActionResult SignupSuccessful()
+            {
+                return View();
+            }
 
 
+        // The following 4 action methods are related to Login
 
-        // End of AccountController
+            [HttpGet]
+            public IActionResult Login()
+            {
+
+                // the view should get empty model, the model's fields will be populated by the user using a form.
+                return View(new LoginViewModel());
+            }
+
+            [HttpPost]
+            public async Task<IActionResult> ProcessLoginRequest(LoginViewModel model)
+            {
+
+                if (ModelState.IsValid)
+                {
+
+                    // Note : there is no need to put the following line of code in the Services folder, it's just single line of code.
+                    // 'false' parameter here means : don't lockout. it's just a required parameter, I'm forced to specify it, otherwise I will get error, there is no deeper meaning behind why I specified this value
+                    var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+
+                    // we need options.SignIn.RequireConfirmedAccount =false, otherwise, result will be "NotAllowed"
+
+                    // the following is just a presentational logic
+                    if (result.Succeeded)
+                    {
+
+                        return RedirectToAction("LoginSuccess");
+                   
+                    }
+
+                    else
+                    {
+                 
+                    
+                        return RedirectToAction("LoginError");
+                    }
+                }
+
+               // data validation error.
+                return RedirectToAction("LoginError");
+            }
+            public IActionResult LoginSuccess()
+            {
+                return View();
+            }
+            public IActionResult LoginError()
+            {
+                return View();
+            }
+
+        
     }
 
-//End of the namespace
+   
 }
 
 
