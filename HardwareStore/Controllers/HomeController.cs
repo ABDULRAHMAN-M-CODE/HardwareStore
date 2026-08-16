@@ -10,34 +10,17 @@ namespace HardwareStore.Controllers
 
     public class AccountController : Controller
     {
+        private readonly IAccount _account; // account may be UserAccount or AdminAccount, right qutaiba ? should I make implementation for AdminAccount?
+             
 
-
-
-            
-            //  The reason I used  readonly is to ensure that the instance is
-            //  not accidentally modified by any of the controller's methods. 
-
-            private readonly IUserStore<ApplicationUser> _userStore;        // to set the user name
-            
-            private readonly UserManager<ApplicationUser> _userManager;   //  actually create the user in the database, given password and 
-
-            private readonly SignInManager<ApplicationUser> _signInManager;
-        
-
-            public AccountController
-                (
-                    
-                    SignInManager<ApplicationUser> signInManager, 
-                    IUserStore<ApplicationUser> userStore,
-                    UserManager<ApplicationUser> userManager
-                )
+        public AccountController( IAccount account)
             {
                 
-                _signInManager = signInManager;
-                _userManager = userManager;
-                _userStore = userStore;
-            }
-            public IActionResult Index()
+                _account=account;
+           }
+            
+        
+        public IActionResult Index()
             {
                 return View();
             }
@@ -45,7 +28,8 @@ namespace HardwareStore.Controllers
 
 
         // the following 4 Action methods are related to Signup.
-            public IActionResult Register()
+            
+        public IActionResult Register()
             {
 
                 // the view should get empty model, the model's fields will be populated by the user using a form.
@@ -54,7 +38,8 @@ namespace HardwareStore.Controllers
             }
 
         
-            public async Task<IActionResult> RegisterAlgorithm(SignupViewModel SignupInput)
+            
+        public async Task<IActionResult> RegisterAlgorithm(SignupViewModel signupInput)
             {
 
             // JUSTIFICATION : why I used Asyncrouns programming instead of Syncrouns Programming:
@@ -67,8 +52,8 @@ namespace HardwareStore.Controllers
 
              */
 
-                AccountService service = new AccountService(_userStore, _userManager, SignupInput);
-                bool success =  await service.RegisterUser(); // line 81. next lines of code will not be executed unless this line complete it's work, but the thread will be able to handle new request
+                
+                bool success =  await _account.RegisterUser(signupInput); // line 81. next lines of code will not be executed unless this line complete it's work, but the thread will be able to handle new request
                   
                 // the following 'if-statement' is not considered 'business logic'; it's just a 'presentational (UI) logic', I'm deciding which UI should be rendered based on the result of the 'bussines logic'.
                 // so the following if statement should not be inside the Services Folder, it should be inside the Action Method in the controller.
@@ -76,14 +61,16 @@ namespace HardwareStore.Controllers
                     {
                         return RedirectToAction("SignupSuccessful");
                     }
-                    return RedirectToAction("SignupError");
-                }
+                    return RedirectToAction("SignupError"); 
+        }
             
-            public IActionResult SignupError()
+            
+        public IActionResult SignupError()
             {
                 return View();
             }
-            public IActionResult SignupSuccessful()
+            
+        public IActionResult SignupSuccessful()
             {
                 return View();
             }
@@ -92,7 +79,8 @@ namespace HardwareStore.Controllers
         // The following 4 action methods are related to Login
 
             [HttpGet]
-            public IActionResult Login()
+            
+        public IActionResult Login()
             {
 
                 // the view should get empty model, the model's fields will be populated by the user using a form.
@@ -100,42 +88,30 @@ namespace HardwareStore.Controllers
             }
 
             [HttpPost]
-            public async Task<IActionResult> ProcessLoginRequest(LoginViewModel model)
+            
+        public async Task<IActionResult> ProcessLoginRequest(LoginViewModel loginModel)
             {
 
-                if (ModelState.IsValid)
+                bool success = await _account.LoginUser(loginModel);
+
+                if (success)
                 {
-
-                    // Note : there is no need to put the following line of code in the Services folder, it's just single line of code.
-                    // 'false' parameter here means : don't lockout. it's just a required parameter, I'm forced to specify it, otherwise I will get error, there is no deeper meaning behind why I specified this value
-                    var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
-
-                    // we need options.SignIn.RequireConfirmedAccount =false, otherwise, result will be "NotAllowed"
-
-                    // the following is just a presentational logic
-                    if (result.Succeeded)
-                    {
-
-                        return RedirectToAction("LoginSuccess");
-                   
-                    }
-
-                    else
-                    {
-                 
-                    
-                        return RedirectToAction("LoginError");
-                    }
+                    return RedirectToAction("LoginSuccess");
                 }
-
-               // data validation error.
-                return RedirectToAction("LoginError");
+                
+                else
+                {
+                    return RedirectToAction("LoginError");
+                }
+                
             }
-            public IActionResult LoginSuccess()
+            
+        public IActionResult LoginSuccess()
             {
                 return View();
             }
-            public IActionResult LoginError()
+            
+        public IActionResult LoginError()
             {
                 return View();
             }

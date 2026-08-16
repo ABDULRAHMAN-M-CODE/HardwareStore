@@ -1,7 +1,9 @@
-using HardwareStoreNameSpace;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using HardwareStore.Models;
+using HardwareStore.Services;
+using HardwareStore.ViewModel.AccountViewModels;
+using HardwareStoreNameSpace;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,10 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount =false) // I intentionally used value of false, because I do not require the user to be confirmed
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+// I think we can use also AddSingleton  ?
+builder.Services.AddScoped<IAccount, UserAccount>(); // fresh  instance of the UserAccount per request, avoiding race condition.
+
+builder.Services.AddScoped<SignupViewModel>();
 builder.Services.AddRazorPages();
 
 builder.Services.Configure<IdentityOptions>(options =>
@@ -42,13 +48,14 @@ app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseAuthorization();
-app.UseAuthentication();
+app.UseAuthentication(); 
+app.UseAuthorization(); 
+
 app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Index}/{id?}")
+    pattern: "{controller=Account}/{action=Home}/{id?}")
     .WithStaticAssets();
 app.MapRazorPages();
 
