@@ -49,5 +49,6 @@
             An unhandled exception occurred while processing the request.
             InvalidOperationException: The following sections have been defined but have not been rendered by the page at '/Views/Shared/_Layout.cshtml': 'Scripts'. To ignore an unrendered section call IgnoreSection("sectionName").
     *@
+    @await RenderSectionAsync("Styles", required: false)
 </body>
 </html>

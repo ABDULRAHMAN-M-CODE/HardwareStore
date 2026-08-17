@@ -1,0 +1,155 @@
+﻿@using System.Diagnostics
+
+@model AdminViewModel//This model is used in both directions : AdminPanel View → Action method @ Action Method → AdminPanel view
+@{
+    ViewData["Title"] = "Home page";
+}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+<h1>Users</h1>
+<h1>
+    <form method="get" class="mb-4" asp-controller="Account" asp-action="AdminPanel">
+        
+        <div class="input-group">
+            <input asp-for="KeyWord" class="form-control"  aria-required="true" placeholder="search user" />
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+
+    </form>
+</h1>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            <th>Email</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.SpecificPageUsers)
+        {
+            <tr>
+                <td>@user.Name</td> @*Name is wrong ?*@
+                <td>@user.EmailOrPhoneNumber</td>
+@*                 <form method="post" asp-controller="Account" asp-action="DeleteUser" asp-route-Id="@user.Id">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form> *@
+
+                @*Decide whether the edit functionality will be called using the model or using the button directly*@
+                <td><button class="btn btn-primary" asp-controller="Account" asp-action="EditUser">Edit</button></td>
+                
+                <td>
+                      <button  class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                            Delete
+                        </button>
+                    
+                </td>
+            </tr>
+            @*The following Modal will not appear unless the user clicks the button*@
+            @*The modal is the the thing that is responsible for calling the Action method inside the controller.*@
+            <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmModalLabel">Confirm Deletion</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <i class="fas fa-exclamation-triangle warning-icon"></i>
+                            <p class="mb-0">Are you sure you want to delete this item?<br>This action cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </button>
+                            <form method="post"
+                                  asp-controller="Account"
+                                  asp-action="DeleteUserConfirmed"
+                                  asp-route-Id="@user.Id">
+                                <button type="submit" class="btn btn-danger">
+                                    @*problem 500 : the name user does not exist in the current scope*@
+                                    <i class="fas fa-trash-alt me-2"></i>Delete
+                                </button>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        }
+    </tbody>
+</table>
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        
+ 
+        @{
+            @if (Model.PageNumber > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" as asp-controller="Account" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber-1)">Previous</a>
+                </li>
+            }
+
+           
+            
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                    <a class="page-link" asp-controller="Account" asp-action="AdminPanel" asp-route-PageNumber="@i">@i</a>
+                </li>
+            }
+            @if (Model.PageNumber <Model.TotalPages)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-controller="Account" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber+1)">Next</a>
+                </li>
+            }
+        }
+        
+
+        
+    </ul>
+</nav>
+
+
+@*SUCCESS MODAL, it is not inside the for loop, because it does not need to access the @user.Id like the confirmation modal*@
+@*THe following  Modal is always shown, how to show it only whe the deletion operation complets successfully?*@
+@*Should I use conditional rendering? or is there better trick in aso.net?*@
+@{
+    Debug.WriteLine("Flag value is :"+Model.DeletionSucceed);
+}
+
+
+
+
+@if (Model.DeletionSucceed){
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="successModalLabel">Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">The operation was completed successfully!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal" >Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+    <script>
+        new bootstrap.Modal(document.getElementById('successModal')).show();
+    </script>
+}
+
+
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+}

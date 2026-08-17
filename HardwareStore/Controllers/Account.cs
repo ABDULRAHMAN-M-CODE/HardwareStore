@@ -1,9 +1,12 @@
 using HardwareStore.Models;
+using HardwareStore.Services;
+using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using HardwareStore.ViewModel.AccountViewModels;
-using HardwareStore.Services;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 namespace HardwareStore.Controllers
 {
 
@@ -20,7 +23,7 @@ namespace HardwareStore.Controllers
            }
             
         
-        public IActionResult Index()
+        public IActionResult Home()
             {
                 return View();
             }
@@ -115,8 +118,67 @@ namespace HardwareStore.Controllers
             {
                 return View();
             }
-
         
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminPanel( AdminViewModel options)
+        {
+
+            
+            //The Service should only be responisble for domain logic
+            // That is, the service did not return ViewModel, it was only responsible for Data Access.
+            //Service should not return ViewModel, because it's UI-specific, application-specific, or presentation-specific.
+            IQueryable<ApplicationUser> applicationUsers =_account.GetUsers(options);
+            
+            // Now I want to materialize the result, so, I want to convert the deferred LINQ sequence to  in-memory collection, such as list. 
+            // I used .ToListAsync(); this will execute the underlying deferred expression.
+
+            //Note for my self: 'Email' column in the database currently has either value of  email or phone number, which is wrong, I should separate those two columns.
+            
+            Task<List<User>> SpecificPageUsers=   applicationUsers.OrderBy(user => user.UserName).Skip((options.PageNumber - 1) * options.PageSize).Take(options.PageSize).Select(user=> new User {Name=user.UserName,EmailOrPhoneNumber=user.Email,Id=user.Id }).ToListAsync();
+
+            
+
+            // Can do some work while this Task finishes, but here I don't need to do any other tasks.....
+            
+            options.SpecificPageUsers = await SpecificPageUsers;
+            
+            int numberOfUsersInDatabase= applicationUsers.Count();
+            options. TotalPages = (int)Math.Ceiling((double)numberOfUsersInDatabase / options.PageSize);
+            options.DeletionSucceed = TempData["UserDeletionSucceed"] as bool? ?? false; // using null-coalescing operator here is perfect.
+            return View(options); 
+        }
+
+
+        public IActionResult DeleteUserConfirmation()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> DeleteUserConfirmed(string Id)
+        {
+            bool result = await  _account.DeleteUser(Id);
+            
+            if (result)
+
+            {
+                // I will use the POST-REDIRECT_GET pattern, I want to pass data - a bool value- between two action methods in the same controller.
+                TempData["UserDeletionSucceed"] = true;
+                return RedirectToAction("AdminPanel"); // is this what I need ?
+            }
+            else
+            {
+                TempData["UserDeletionSucceed"] = false; // maybe this is not needed, for now, unless I want add "Deletion failed Modal"
+                return RedirectToAction("CouldNotDeleteUser");
+            }
+        }
+
+        public IActionResult CouldNotDeleteUser()
+        {
+            return View();
+        }
+
+
     }
 
    
