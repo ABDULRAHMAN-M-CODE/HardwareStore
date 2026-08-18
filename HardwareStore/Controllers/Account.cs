@@ -1,12 +1,9 @@
 using HardwareStore.Models;
 using HardwareStore.Services;
 using HardwareStore.ViewModel.AccountViewModels;
-using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 namespace HardwareStore.Controllers
 {
 
@@ -90,15 +87,19 @@ namespace HardwareStore.Controllers
                 return View(new LoginViewModel());
             }
 
-            [HttpPost]
-            
+
+        [HttpPost]
         public async Task<IActionResult> ProcessLoginRequest(LoginViewModel loginModel)
             {
 
-                bool success = await _account.LoginUser(loginModel);
+                (  bool success,  bool isAdmin) = await _account.LoginUser(loginModel);
 
                 if (success)
                 {
+                    if (isAdmin)
+                    {
+                      return RedirectToAction("AdminPanel");
+                    }
                     return RedirectToAction("LoginSuccess");
                 }
                 
@@ -128,14 +129,15 @@ namespace HardwareStore.Controllers
             //The Service should only be responisble for domain logic
             // That is, the service did not return ViewModel, it was only responsible for Data Access.
             //Service should not return ViewModel, because it's UI-specific, application-specific, or presentation-specific.
-            IQueryable<ApplicationUser> applicationUsers =_account.GetUsers(options);
-            
+            IQueryable<ApplicationUser>applicationUsers = await _account.GetUsers(options);
+
             // Now I want to materialize the result, so, I want to convert the deferred LINQ sequence to  in-memory collection, such as list. 
             // I used .ToListAsync(); this will execute the underlying deferred expression.
 
+            
             //Note for my self: 'Email' column in the database currently has either value of  email or phone number, which is wrong, I should separate those two columns.
             
-            Task<List<User>> SpecificPageUsers=   applicationUsers.OrderBy(user => user.UserName).Skip((options.PageNumber - 1) * options.PageSize).Take(options.PageSize).Select(user=> new User {Name=user.UserName,EmailOrPhoneNumber=user.Email,Id=user.Id }).ToListAsync();
+            Task<List<User>> SpecificPageUsers=    applicationUsers.OrderBy(user => user.UserName).Skip((options.PageNumber - 1) * options.PageSize).Take(options.PageSize).Select(user=> new User {Name=user.UserName,EmailOrPhoneNumber=user.Email,Id=user.Id }).ToListAsync();
 
             
 
@@ -150,10 +152,7 @@ namespace HardwareStore.Controllers
         }
 
 
-        public IActionResult DeleteUserConfirmation()
-        {
-            return View();
-        }
+
         [HttpPost]
         public async Task<IActionResult> DeleteUserConfirmed(string Id)
         {
@@ -178,7 +177,56 @@ namespace HardwareStore.Controllers
             return View();
         }
 
+        public  async Task<IActionResult> Logout()
+        {
+            Task<bool> success = _account.Logout();
+            if (await success)
+            {
+                return RedirectToAction("Login");
+            }
+            else
+            {
+                // use the tempData to show a modal that says "Logout was not successful"
+                return RedirectToAction("AdminPanel");
+            }
+                
+        }
 
+
+
+
+
+        /// <summary>
+        /// This function Initiates the user editing process. it does not edit anything yet.
+        /// </summary>
+        /// <param name="id">The unique identifier of the user, mapped automatically from the URL route or query string via Model Binding.</param>
+        /// <returns>An asynchronous task that renders the user edit view.</returns>
+        public async Task<IActionResult> EditUser(string Id)
+        {
+           ApplicationUser? au= await _account.FindByIdAsync(Id);
+            User user = new User
+            {
+                Name = au?.UserName,
+                EmailOrPhoneNumber=au?.Email, // currently, Email in the database holds either Email or phone number, I will change that so that Email will contain the email only if it's email, other wise I will use phoneNumber column.
+                Id=au?.Id
+            };
+
+            return View(user);
+        }
+        public async Task<IActionResult> EditConfirmed(User user)
+        {
+
+            bool success = await _account.EditUser(user);
+            if ( success)
+            {
+                return RedirectToAction("AdminPanel"); // NOTE:  maybe I can decide if I want to  use the modal or not  with tempData
+            }
+            else
+            {
+                return RedirectToAction("EditUser"); // NOTE: I can also use TempData to show Error message on the UI, for better user experience.
+            }
+            
+        }
     }
 
    

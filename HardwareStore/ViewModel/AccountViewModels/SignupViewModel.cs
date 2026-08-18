@@ -6,6 +6,12 @@ namespace HardwareStore.ViewModel.AccountViewModels
     {
 
 
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Name")]
+        public string? Name { get; set; }
+
         [Required]
 
         // other solution : I can create custome attribute; [EmailOrPhoneNumber].
@@ -26,6 +32,7 @@ namespace HardwareStore.ViewModel.AccountViewModels
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public   string? ConfirmPassword { get; set; }
+
        
        
     }

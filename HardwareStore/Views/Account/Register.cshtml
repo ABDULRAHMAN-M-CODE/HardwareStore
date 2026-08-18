@@ -10,8 +10,14 @@
         <h1>@ViewData["Title"]</h1>
             <hr />
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
             <div class="form-floating mb-3">
-                <input asp-for="EmailOrPhoneNumber" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" type="text" />
+                <input asp-for="Name" class="form-control"  aria-required="true" placeholder="Qutiba" type="text" />
+                <label asp-for="Name"></label>
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="EmailOrPhoneNumber" class="form-control"  aria-required="true" placeholder="name@example.com" type="text" />
                 <label asp-for="EmailOrPhoneNumber">Email or phone number</label>
                 <span asp-validation-for="EmailOrPhoneNumber" class="text-danger"></span>
             </div>

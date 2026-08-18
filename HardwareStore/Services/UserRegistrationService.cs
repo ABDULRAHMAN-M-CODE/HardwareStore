@@ -1,11 +1,13 @@
 ﻿using HardwareStore.Models;
 using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
+using Humanizer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 
 
 namespace HardwareStore.Services
@@ -15,12 +17,17 @@ namespace HardwareStore.Services
         //public async Task<bool> RegisterUser(SignupViewModel SignupInput); // I will  get error : async should be used with methods that have body
         //  async Task<bool> is wrong.
         Task<bool> RegisterUser(SignupViewModel SignupInput);
-        Task<bool> LoginUser(LoginViewModel loginInput);
-        IQueryable<ApplicationUser> GetUsers(AdminViewModel options);
+        Task<(bool,bool)> LoginUser(LoginViewModel loginInput); // THe second bool value indicates whether the logged-in user is admin or not.
+        Task<IQueryable<ApplicationUser>> GetUsers(AdminViewModel options);
         Task<bool> DeleteUser(string id);
+        Task<bool> Logout();
+        Task<ApplicationUser?> FindByIdAsync(string Id);
+        Task<bool> EditUser(User user);
+
+
     }
 
-    public class UserAccount : IAccount //We can implement AdminAccount
+    public class UserAccount : IAccount 
     {
 
 
@@ -58,7 +65,7 @@ namespace HardwareStore.Services
 
 
             ApplicationUser user = new ApplicationUser();
-            await _userStore.SetUserNameAsync(user, SignupInput.EmailOrPhoneNumber, CancellationToken.None); //CancellationToken parameter is required
+            await _userStore.SetUserNameAsync(user, SignupInput.Name, CancellationToken.None); //CancellationToken parameter is just required, there is no deeper meaning behind why I used it, it's just a required parameter, so I choosed to set it as null, as I only care about setting the name.
 
 
 
@@ -87,7 +94,7 @@ namespace HardwareStore.Services
         }
 
 
-        public async Task<bool> LoginUser(LoginViewModel loginInput)
+        public async Task<(bool,bool)> LoginUser(LoginViewModel loginInput)
         {
 
             //check whether the model is valid or not.
@@ -96,7 +103,7 @@ namespace HardwareStore.Services
             bool valid = Validator.TryValidateObject(loginInput, context, results, validateAllProperties: true);
             if (!valid)
             {
-                return false;
+                return (false,false);
             }
 
             // if model is valid
@@ -105,25 +112,36 @@ namespace HardwareStore.Services
             // in Program.cs we need options.SignIn.RequireConfirmedAccount =false, otherwise, result will be "NotAllowed"
             var result = await _signInManager.PasswordSignInAsync(loginInput.EmailOrPhoneNumber, loginInput.Password, loginInput.RememberMe, false);
 
-
+            
+            
 
 
             if (result.Succeeded)
             {
-                return true;
+                // further check if logged-in   user is admin or not.
+                IList<ApplicationUser> admins = await _userManager.GetUsersInRoleAsync("Admin");
+                bool isAdmin = admins.Contains(await _userManager.FindByEmailAsync(loginInput.EmailOrPhoneNumber));
+                if (isAdmin){
+                    return (true,true);
+                }
+                else
+                {
+                    return (true, false);
+                }
+                
             }
             else
             {
-                return false;
+                return (false,false);
             }
         }
 
 
 
         /// <summary>
-        ///  this method  returns either all the users in the database or some of the users based on filtering policy.
+        ///  This method  returns either all the non-admin users in the database or some of the non-admin users in the database based on a filtering policy.
         /// </summary>
-        public IQueryable<ApplicationUser> GetUsers(AdminViewModel options)
+        public  async Task<IQueryable<ApplicationUser>> GetUsers(AdminViewModel options)
         {
             ArgumentNullException.ThrowIfNull(options);
             // page size can be constant, while the page number should be dynamic.
@@ -134,7 +152,10 @@ namespace HardwareStore.Services
 
             //wantAllUsers will be true when options.keyWord is null or empty.
             var wantAllUsers = string.IsNullOrWhiteSpace(options.KeyWord);
-            IQueryable<ApplicationUser> applicationUsers = _userManager.Users; // Deferred execution
+            var admins = await _userManager.GetUsersInRoleAsync("Admin"); // I do not want to show the admin user on the Admin panel, because I do not want the admin to delete him self
+            // if admins array contains some user, then that user is admin, I do not want to return him.
+            IQueryable<ApplicationUser> applicationUsers = _userManager.Users.Where(user => !admins.Contains(user)); ; // Deferred execution
+            
 
             if (!wantAllUsers)
             {
@@ -152,7 +173,10 @@ namespace HardwareStore.Services
 
         }
 
-        
+
+        /// <summary>
+        ///  a user with the specified id is deleted if exist in the database.
+        /// </summary>
         public async Task<bool> DeleteUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -177,6 +201,61 @@ namespace HardwareStore.Services
                 
             }
         }
-    }
+   
+    
+        // Logout does not need the Id of the user to log the user out.
+        public async Task<bool> Logout()
+        {
+            try
+            {
+                //SignOutAsync() DOES NOT Delete the ".AspNetCore.Antiforgery.dHaNJbBC9RM"  cookie. I saw this in the browser's Dev tools.
+                //SignOutAsync() Deletes the ".AspNetCore.Identity.Application." cookie. I saw this in the browser's Dev tools.
+                await _signInManager.SignOutAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Logout failed\n");
+                Debug.WriteLine("Logout failed\n"+e+"\n");
+                return false;
+            }
+            
+            
+        } 
 
-}
+        public async Task<ApplicationUser?> FindByIdAsync( string Id)
+        {
+            
+            
+             return await _userManager.FindByIdAsync(Id);
+           
+        }
+
+
+        public  async Task<bool> EditUser(User user)
+        {
+            // fetch the data.
+            ApplicationUser? au= await _userManager.FindByIdAsync(user.Id);
+            if (au is not null)
+            {
+                // modify the data
+                au.UserName = user.Name;
+                au.Email = user.EmailOrPhoneNumber;
+
+                //Write-back to disk. just like cache concepts in computer engineering.
+                IdentityResult result =await _userManager.UpdateAsync(au);
+                if (result.Succeeded)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            // if user is not found, return false.
+            return false;
+        }
+    } // this is the End of the class
+
+} // this is the  End of the name
