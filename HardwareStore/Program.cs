@@ -68,13 +68,16 @@ var app = builder.Build(); // but this returns a configured webApplication, not 
 using (var scope = app.Services.CreateScope())
 {
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    UserAccount userAccount = new UserAccount(scope.ServiceProvider.GetRequiredService<IUserStore<ApplicationUser>>(), userManager, scope.ServiceProvider.GetRequiredService<SignInManager<ApplicationUser>>()
-);
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userStore = scope.ServiceProvider.GetRequiredService<IUserStore<ApplicationUser>>();
+    var signInManager = scope.ServiceProvider.GetRequiredService<SignInManager<ApplicationUser>>();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    UserAccount userAccount = new UserAccount(userStore, userManager,signInManager, roleManager,context);
     CustomRoleManager customeRoleManager = new CustomRoleManager(userAccount,userManager, scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>() ); 
      Task<bool> success= customeRoleManager.CreateRoles();
     if (await success)
     {
-        await customeRoleManager.AddRoleToUser("abd@gmai.com", "admin", "abd","2811998@Ma@7799NeonShadowX1ADMINTlaonAniviaZedLeagueOfLegends");
+        await customeRoleManager.AddRoleToUser("abd@gmai.com", "Admin", "abd","2811998@Ma@7799NeonShadowX1ADMINTlaonAniviaZedLeagueOfLegends");
     }
        
 }

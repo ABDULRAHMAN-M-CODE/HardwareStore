@@ -1,7 +1,10 @@
 ﻿using HardwareStore.Models;
 using HardwareStore.ViewModel.AccountViewModels;
+using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Diagnostics;
 
 
@@ -20,6 +23,7 @@ namespace HardwareStore.Services
         Task<bool> EditUser(User user);
 
 
+
     }
 
     public class UserAccount : IAccount 
@@ -32,12 +36,17 @@ namespace HardwareStore.Services
         private readonly UserManager<ApplicationUser> _userManager;   //  actually create the user in the database, given password and 
         private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public UserAccount(IUserStore<ApplicationUser> userStore, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _context;
+        public UserAccount(IUserStore<ApplicationUser> userStore, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context)
+        
         {
 
             _userManager = userManager;
             _userStore = userStore;
             _signInManager = signInManager;
+            _roleManager= roleManager;
+            _context = context;
 
         }
 
@@ -102,33 +111,48 @@ namespace HardwareStore.Services
             }
 
             // if model is valid
-            // Note : there is no need to put the following line of code in the Services folder, it's just single line of code.
+
             // 'false' parameter here means : don't lockout. it's just a required parameter, I'm forced to specify it, otherwise I will get error, there is no deeper meaning behind why I specified this value
             // in Program.cs we need options.SignIn.RequireConfirmedAccount =false, otherwise, result will be "NotAllowed"
-            var result = await _signInManager.PasswordSignInAsync(loginInput.EmailOrPhoneNumber, loginInput.Password, loginInput.RememberMe, false);
+            ApplicationUser? au=await _userManager.FindByEmailAsync(loginInput.EmailOrPhoneNumber);
 
-            
-            
-
-
-            if (result.Succeeded)
+            if (au is not null) // why this is needed : If user try to log-in with non-existing email, then the following error will occur :  "Value cannot be null. (Parameter  'user')"
             {
-                // further check if logged-in   user is admin or not.
-                IList<ApplicationUser> admins = await _userManager.GetUsersInRoleAsync("Admin");
-                bool isAdmin = admins.Contains(await _userManager.FindByEmailAsync(loginInput.EmailOrPhoneNumber));
-                if (isAdmin){
-                    return (true,true);
+                var result = await _signInManager.PasswordSignInAsync(au, loginInput.Password, loginInput.RememberMe, false);
+
+
+                if (result.Succeeded)
+                {
+                    // further check if logged-in   user is admin or not.
+
+
+                    // I changed the approach; instead of getting admins and checking if the logged-in user is one of them, let's check the logged-in user directly.
+                    Task<bool> isAdmin = _userManager.IsInRoleAsync(au, "Admin");
+                    if (await isAdmin)
+                    {
+                        return (true, true);
+                    }
+                    else
+                    {
+                        return (true, false);
+                    }
+
                 }
                 else
                 {
-                    return (true, false);
+                    return (false, false);
                 }
-                
             }
+
             else
             {
-                return (false,false);
+                return (false, false);
             }
+            
+            
+            
+
+
         }
 
 
@@ -147,10 +171,25 @@ namespace HardwareStore.Services
 
             //wantAllUsers will be true when options.keyWord is null or empty.
             var wantAllUsers = string.IsNullOrWhiteSpace(options.KeyWord);
-            var admins = await _userManager.GetUsersInRoleAsync("Admin"); // I do not want to show the admin user on the Admin panel, because I do not want the admin to delete him self
+            // I do not want to show the admin user on the Admin panel, because I do not want the admin to delete him self
             // if admins array contains some user, then that user is admin, I do not want to return him.
-            IQueryable<ApplicationUser> applicationUsers = _userManager.Users.Where(user => !admins.Contains(user)); ; // Deferred execution
-            
+            // Deferred execution, Where clause returns IQueryable<ApplicationUser>, the enclosing method should return IQueryable<ApplicationUser>, that's better.
+
+
+
+
+            string adminId=await _roleManager.GetRoleIdAsync(await _roleManager.FindByNameAsync("Admin"));
+
+            // Syntax source is the following article "https://learn.microsoft.com/en-us/dotnet/csharp/linq/get-started/write-linq-queries#example---mixed-query-and-method-syntax"
+            var nonAdminUsers = from user in _context.Users
+                                join userRole in _context.UserRoles
+                                on user.Id equals userRole.UserId
+                                where userRole.RoleId != adminId// Instead of hardcoding the value, because the Id of the Admin might change, I  think I should do that.
+                                select new ApplicationUser  // if I do not explicitly specify the object type to be ApplicatonUser , anonymous type will be used by default, I do not want that.
+                                {
+                                    UserName = user.UserName,
+                                    Email = user.Email
+                                };
 
             if (!wantAllUsers)
             {
@@ -158,15 +197,17 @@ namespace HardwareStore.Services
                 // options.keyWord can't be null or empty, because wantAllUsers is false 
 
                 // users is still  IQueryable<ApplicationUser>, no SQL was executed  yet.
-                applicationUsers = applicationUsers.Where(au => au.UserName.Contains(options.KeyWord!));
+                nonAdminUsers = nonAdminUsers.Where(au => au.UserName.Contains(options.KeyWord!));
             }
             
 
 
 
-            return applicationUsers; 
+            return nonAdminUsers; 
 
         }
+
+
 
 
         /// <summary>
