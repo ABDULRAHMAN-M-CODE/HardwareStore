@@ -32,12 +32,11 @@ namespace HardwareStore.Services
 
         // My code, which is considered high-level policy, will use this abstraction instead of using concrete implementation.
         private readonly IUserStore<ApplicationUser> _userStore;        //Explanation: this is built- in abstraction for managing users, it's exampleof the repository pattern just for managing user 
-
         private readonly UserManager<ApplicationUser> _userManager;   //  actually create the user in the database, given password and 
         private readonly SignInManager<ApplicationUser> _signInManager;
-
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApplicationDbContext _context;
+        
         public UserAccount(IUserStore<ApplicationUser> userStore, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context)
         
         {
@@ -181,7 +180,9 @@ namespace HardwareStore.Services
             string adminId=await _roleManager.GetRoleIdAsync(await _roleManager.FindByNameAsync("Admin"));
 
             // Syntax source is the following article "https://learn.microsoft.com/en-us/dotnet/csharp/linq/get-started/write-linq-queries#example---mixed-query-and-method-syntax"
-            var nonAdminUsers = from user in _context.Users
+            
+            
+            IQueryable<ApplicationUser> nonAdminUsers = from user in _context.Users
                                 join userRole in _context.UserRoles
                                 on user.Id equals userRole.UserId
                                 where userRole.RoleId != adminId// Instead of hardcoding the value, because the Id of the Admin might change, I  think I should do that.
