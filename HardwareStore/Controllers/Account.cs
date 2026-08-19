@@ -10,7 +10,7 @@ namespace HardwareStore.Controllers
 
     public class AccountController : Controller
     {
-        private readonly IAccount _account; // account may be UserAccount or AdminAccount, right qutaiba ? should I make implementation for AdminAccount?
+        private readonly IAccount _account;
              
 
         public AccountController( IAccount account)

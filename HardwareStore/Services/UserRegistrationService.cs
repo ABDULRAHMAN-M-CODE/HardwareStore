@@ -1,11 +1,6 @@
 ﻿using HardwareStore.Models;
 using HardwareStore.ViewModel.AccountViewModels;
-using HardwareStoreNameSpace;
-using Humanizer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 

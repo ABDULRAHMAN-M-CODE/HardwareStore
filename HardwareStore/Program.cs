@@ -64,15 +64,18 @@ var app = builder.Build(); // but this returns a configured webApplication, not 
 
 
 
+
 using (var scope = app.Services.CreateScope())
 {
-    UserAccount userAccount = new UserAccount(
-    scope.ServiceProvider.GetRequiredService<IUserStore<ApplicationUser>>(), // Here I want specific service, not  the service provider.
-    scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>(),// Here I want specific service, not  the service provider.
-    scope.ServiceProvider.GetRequiredService<SignInManager<ApplicationUser>>()// Here I want specific service, not  the service provider.
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    UserAccount userAccount = new UserAccount(scope.ServiceProvider.GetRequiredService<IUserStore<ApplicationUser>>(), userManager, scope.ServiceProvider.GetRequiredService<SignInManager<ApplicationUser>>()
 );
-    myClass x = new myClass(userAccount ); // Note for myself : x is not defined outside the scope.
-    await x.CreateRoles(scope.ServiceProvider); // Here, I want the service provider it self, not a specific service.
+    CustomRoleManager customeRoleManager = new CustomRoleManager(userAccount,userManager, scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>() ); 
+     Task<bool> success= customeRoleManager.CreateRoles();
+    if (await success)
+    {
+        await customeRoleManager.AddRoleToUser("abd@gmai.com", "admin", "abd","2811998@Ma@7799NeonShadowX1ADMINTlaonAniviaZedLeagueOfLegends");
+    }
        
 }
 app.UseDefaultFiles();
