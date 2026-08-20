@@ -4,35 +4,51 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - EF_learning</title>
-    <script type="importmap"></script>
+    
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/EF_learning.styles.css" asp-append-version="true" />
+   
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="ShowMessage">Hardware Store</a>
 
-               
-
-        </nav>
     </header>
     <div class="container">
         <main role="main" class="pb-3">
-            @RenderBody()
+            @RenderBody() @*What is Rendered here is a specific view content, not the shared content*@
+            
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - EF_learning - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    @*Why I used the following three scripts ?
+
+        Purpose: because I want to copy the server-side validation logic to the client.
+
+        How will I  achieve that purpose ?
+        Without jQuery Unobtrusive Validation, I would have to code the same validation logic in two places: once in the server-side validation attributes on model properties, and then again in client-side scripts
+        Instead, I will use tag helpers in the view, tag helpers will use the validation attributes from the model properties to  generate data- attributes that will be parsed by the jQuery Unobtrusive Validation.
+
+        the jQuery Unobtrusive Validation will send the validation logic to the jQuery.
+
+    *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.js"></script> @*CDN*@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.js"></script>@*CDN*@
+    
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> @*needed for bootstrap to work*@
+    @*<script src="~/js/site.js" asp-append-version="true"></script>*@ @* My JavaScript code, currently empty because I do not need JavaScript for Login and Signup*@
+    @await RenderSectionAsync("Scripts", required: false)  @*This is needed because I defined sections inside the cshtml files*@
+    @*
+        For example, I have the following inside the Login.cshtml file:
+
+        @section Scripts {
+                <partial name="_ValidationScriptsPartial" />
+            }
+
+            so I should render the sections here, otherwise I will get error that says :
+            An unhandled exception occurred while processing the request.
+            InvalidOperationException: The following sections have been defined but have not been rendered by the page at '/Views/Shared/_Layout.cshtml': 'Scripts'. To ignore an unrendered section call IgnoreSection("sectionName").
+    *@
+    @await RenderSectionAsync("Styles", required: false)
 </body>
 </html>

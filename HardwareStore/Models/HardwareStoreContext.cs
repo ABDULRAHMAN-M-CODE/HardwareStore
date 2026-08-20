@@ -1,29 +1,17 @@
 
+using HardwareStore.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Collections.Generic;
-// add a reference to System.ComponentModel.DataAnnotations DLL
-using System.ComponentModel.DataAnnotations;
-
-using System.Reflection.Emit;
-
 namespace HardwareStoreNameSpace
 {
 
 
-    public class HardwareStoreDbContext: DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-
-
-        public HardwareStoreDbContext(DbContextOptions <HardwareStoreDbContext> options):base(options)
+        public DbSet<Microsoft.AspNetCore.Identity.IdentityUserClaim<Guid>> IdentityUserClaims { get; set; }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options):base(options)
         {
             
         }
-
-
     }
-
-
 }
