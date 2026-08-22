@@ -8,9 +8,15 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Users</h1>
-    <form method="post" asp-controller="Account" asp-action="Logout">
-        <button type="submit" class="btn btn-secondary">Logout</button>
-    </form>
+    <div class="d-flex justify-content-between" id="logout-productPage-buttons-div">
+        <form method="post" asp-controller="Account" asp-action="Logout">
+            <button type="submit" class="btn btn-secondary">Logout</button>
+        </form>
+        <form method="get" asp-controller="Admin" asp-action="ProductsPage">
+            <button type="submit" class="btn btn-success ">Products page</button>
+        </form>
+    </div>
+  
     
 </div>
 <h1>

@@ -77,7 +77,8 @@ using (var scope = app.Services.CreateScope())
      Task<bool> success= customeRoleManager.CreateRoles();
     if (await success)
     {
-        await customeRoleManager.AddRoleToUser("abd@gmai.com", "Admin", "abd","2811998@Ma@7799NeonShadowX1ADMINTlaonAniviaZedLeagueOfLegends");
+       
+        await customeRoleManager.AddRoleToUser("abd@gmail.com", "Admin", "abdulrahman","2811998@Ma@7799NeonShadowX1ADMINTlaonAniviaZedLeagueOfLegends");
     }
        
 }

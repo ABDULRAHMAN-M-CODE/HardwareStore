@@ -287,4 +287,8 @@ form .btn-primary {
         font-size: 0.8rem;
     }
 }
+#logout-productPage-buttons-div{
+    
+    width: 250px;
+}
 

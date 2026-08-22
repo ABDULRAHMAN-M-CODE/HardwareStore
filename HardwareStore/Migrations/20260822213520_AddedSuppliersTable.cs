@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HardwareStore.Migrations
 {
     /// <inheritdoc />
-    public partial class initialMigrations : Migration
+    public partial class AddedSuppliersTable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -64,6 +64,23 @@ namespace HardwareStore.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_IdentityUserClaims", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Suppliers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EnglishName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false,defaultValueSql:"GETUTCDATE()"),
+                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Suppliers", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -232,6 +249,9 @@ namespace HardwareStore.Migrations
 
             migrationBuilder.DropTable(
                 name: "IdentityUserClaims");
+
+            migrationBuilder.DropTable(
+                name: "Suppliers");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
