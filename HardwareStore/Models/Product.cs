@@ -19,13 +19,24 @@
         public string? Status { get; set; }
 
         public int Id { get; set; } // Primary key, also Idenitity.
-        public int CategoryId { get; set; } //FK_Categories
         public float VAT { get; set; }
-        public int UnitId { get; set; } // FK_Units
-        public int SupplierId { get; set; } // part of FK_BrandsSuppliers
-        public Unit Unit { get; set; } = null!; // Question to qutiba: Difference between optional and required  one to many
-        public int BrandId { get; set; } // part of FK_BrandsSuppliers
 
+        public int CategoryId { get; set; } //FK_Categories
         public Category Category { get; set; } = null!;
+        
+
+        public int UnitId { get; set; } // FK_Units
+        public Unit Unit { get; set; } = null!; // Question to qutiba: Difference between optional and required  one to many relation
+      
+
+        public int SupplierId { get; set; } // part of FK_BrandsSuppliers
+        public int BrandId { get; set; } // part of FK_BrandsSuppliers
+        
+        // Number of Foregin keys is 3, but the number of navigation properties is 4.
+        public BrandSupplier BrandSupplier { get; set; } = null!;
+        public IEnumerable<ProductCountry> ProductCountries { get; } = new List<ProductCountry>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
+
+        public Supplier Supplier { get; set; } = null!; //should I add this?
+        public Brand Brand { get; set; } = null!; // should i add this ?
     }
 }

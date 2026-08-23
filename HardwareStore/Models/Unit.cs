@@ -11,6 +11,7 @@
 
 
         // IEnumerable<T>, which provides a read-only view that cannot be randomly modified by application code
+       
         public IEnumerable<Product> Products{ get; } = new List<Product>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
     }
 }
