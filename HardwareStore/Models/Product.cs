@@ -32,6 +32,9 @@
         public int SupplierId { get; set; } // part of FK_BrandsSuppliers
         public int BrandId { get; set; } // part of FK_BrandsSuppliers
         
+        
+        
+        
         // Number of Foregin keys is 3, but the number of navigation properties is 4.
         public BrandSupplier BrandSupplier { get; set; } = null!;
         public IEnumerable<ProductCountry> ProductCountries { get; } = new List<ProductCountry>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations

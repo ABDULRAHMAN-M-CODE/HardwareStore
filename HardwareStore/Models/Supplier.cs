@@ -13,6 +13,8 @@ namespace HardwareStore.Models
         // THe following is just a navigation property, not column
         public IEnumerable<BrandSupplier>BrandSuppliers { get; } = new List<BrandSupplier>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
 
+        public IEnumerable<Product> Products { get; } = new List<Product>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
+
 
     }
 }

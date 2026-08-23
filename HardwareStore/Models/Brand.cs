@@ -12,5 +12,6 @@ namespace HardwareStore.Models
         public string? ArabicName { get; set; }
 
         public IEnumerable<BrandSupplier> BrandSuppliers { get; } = new List<BrandSupplier>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
+        public IEnumerable<Product> Products { get; } = new List<Product>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
     }
 }

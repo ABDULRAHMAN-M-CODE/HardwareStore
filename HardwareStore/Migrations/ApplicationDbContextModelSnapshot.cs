@@ -253,13 +253,13 @@ namespace HardwareStore.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("BrandId");
 
-                    b.HasIndex("SupplierId");
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("UnitId");
 
-                    b.HasIndex("BrandId", "SupplierId");
+                    b.HasIndex("SupplierId", "BrandId");
 
                     b.ToTable("Products");
                 });
@@ -527,9 +527,9 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Product", b =>
                 {
                     b.HasOne("HardwareStore.Models.Brand", "Brand")
-                        .WithMany()
+                        .WithMany("Products")
                         .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("HardwareStore.Models.Category", "Category")
@@ -539,9 +539,9 @@ namespace HardwareStore.Migrations
                         .IsRequired();
 
                     b.HasOne("HardwareStore.Models.Supplier", "Supplier")
-                        .WithMany()
+                        .WithMany("Products")
                         .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("HardwareStore.Models.Unit", "Unit")
@@ -552,7 +552,7 @@ namespace HardwareStore.Migrations
 
                     b.HasOne("HardwareStore.Models.BrandSupplier", "BrandSupplier")
                         .WithMany("Products")
-                        .HasForeignKey("BrandId", "SupplierId")
+                        .HasForeignKey("SupplierId", "BrandId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -651,6 +651,8 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Brand", b =>
                 {
                     b.Navigation("BrandSuppliers");
+
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.BrandSupplier", b =>
@@ -678,6 +680,8 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Supplier", b =>
                 {
                     b.Navigation("BrandSuppliers");
+
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Unit", b =>

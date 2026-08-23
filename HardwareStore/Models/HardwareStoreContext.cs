@@ -72,7 +72,7 @@ namespace HardwareStoreNameSpace
             modelBuilder.Entity<Unit>().Property(u => u.Id).UseIdentityColumn();
 
 
-            //// Products  has one PK and three FK, one of them is composite FK.
+            //// Products  has one PK and five (instead of 3) FK, one of them is composite FK.
             modelBuilder.Entity<Product>().HasKey(p => p.Id); // Primary key with identity
             modelBuilder.Entity<Product>().Property(p => p.Id).UseIdentityColumn();
             modelBuilder.Entity<Product>()
@@ -83,10 +83,23 @@ namespace HardwareStoreNameSpace
                 .HasOne(p => p.Category)
                 .WithMany(c => c.Products)
                 .HasForeignKey(p => p.CategoryId);
+
+            
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.BrandSupplier)
                 .WithMany(bs => bs.Products)
-                .HasForeignKey(p => new { p.BrandId, p.SupplierId });
+                .HasForeignKey(p => new { p.SupplierId, p.BrandId  });
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Brand)
+                .WithMany(b => b.Products)
+                .HasForeignKey(p => p.BrandId)
+                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<Product>()
+            .HasOne(p => p.Supplier)
+            .WithMany(s => s.Products)
+            .HasForeignKey(p => p.SupplierId)
+            .OnDelete(DeleteBehavior.NoAction);
+
 
 
             //SubCategories has one Idenitity-PK and  one FK
