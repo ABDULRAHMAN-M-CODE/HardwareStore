@@ -38,7 +38,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>
 
 // I think we can't use  AddSingleton  because it may cause race condition ?
 builder.Services.AddScoped<IAccount, UserAccount>(); // fresh  instance of the UserAccount per request, avoiding race condition.
-
+builder.Services.AddScoped<IOmniReader, ReadExcelWriteDatabase>();
 builder.Services.AddScoped<SignupViewModel>();
 builder.Services.AddRazorPages();
 
@@ -95,7 +95,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Home}/{id?}")
+    pattern: "{controller=Welcome}/{action=index}/{id?}")
     .WithStaticAssets();
 app.MapRazorPages();
 

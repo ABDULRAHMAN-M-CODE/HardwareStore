@@ -1,9 +1,13 @@
 
+using HardwareStore.Migrations;
 using HardwareStore.Models;
 using HardwareStore.ViewModel;
+using HardwareStore.ViewModel.AccountViewModels;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.Contracts;
 using System.Reflection.Emit;
 using System.Reflection.Metadata;
 namespace HardwareStoreNameSpace
@@ -33,6 +37,52 @@ namespace HardwareStoreNameSpace
         {
             
         }
+
+        // Overriding the methods does not force me to generate a migration
+        
+        // The main problem the following methods solve is the following : I want to automate the process of populating the UpdatedAt Field 
+        public override int SaveChanges()
+        {
+            AddTimestamps();// I Added this functionality, that's why I override the method
+            return base.SaveChanges();// Functionality of the Base stays the same
+        }
+
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            AddTimestamps();// I Added this functionality, that's why I override the method
+            return await base.SaveChangesAsync(); // Functionality of the base stays the same.
+        }
+
+        /// <summary>
+        /// 
+        /// This method either populates 'CreatedAt' or 'UpdatedAt' properties or both of them. 
+        /// 
+        /// if Entity is added, it  populates  CreatedAt and UpdatedAt.
+        /// 
+        /// if Entity is only Modified but not added, the method will  populate  UpdatedAt   only
+        /// 
+        /// if Unchanged : neither.
+        /// 
+        /// if Deleted : neither
+        /// </summary>
+        private void AddTimestamps()
+        {
+            var entities = ChangeTracker.Entries()
+                .Where(x => x.Entity is Timestampable && (x.State == EntityState.Added || x.State == EntityState.Modified));
+
+
+            foreach (var entity in entities)
+            {
+                var now = DateTime.UtcNow; // current datetime
+
+                if (entity.State == EntityState.Added)
+                {
+                    ((Timestampable)entity.Entity).CreatedAt = now;
+                }
+                ((Timestampable)entity.Entity).UpdatedAt = now;
+            }
+        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             //some relevant documentation : https://learn.microsoft.com/en-us/ef/ef6/modeling/code-first/fluent/types-and-properties
@@ -44,9 +94,16 @@ namespace HardwareStoreNameSpace
             modelBuilder.Entity<Supplier>().HasKey(s => s.Id);
             modelBuilder.Entity<Supplier>().Property(s => s.Id).UseIdentityColumn();
 
+            modelBuilder.Entity<Supplier>().HasIndex(s => s.EnglishName).IsUnique();
+
             //Brands PK, NO FK
             modelBuilder.Entity<Brand>().HasKey(b => b.Id); 
             modelBuilder.Entity<Brand>().Property(b => b.Id).UseIdentityColumn();
+
+
+            modelBuilder.Entity<Brand>().HasIndex(b => b.EnglishName).IsUnique();
+
+            modelBuilder.Entity<Brand>().Property(b => b.EnglishName).IsRequired();
 
 
 
@@ -67,9 +124,13 @@ namespace HardwareStoreNameSpace
             modelBuilder.Entity<Category>().HasKey(c => c.Id); 
             modelBuilder.Entity<Category>().Property(c => c.Id).UseIdentityColumn();
 
+            modelBuilder.Entity<Category>().HasIndex(c => c.EnglishName).IsUnique();
+
             //Units PK, NO Fk
             modelBuilder.Entity<Unit>().HasKey(u => u.Id); 
             modelBuilder.Entity<Unit>().Property(u => u.Id).UseIdentityColumn();
+ 
+            modelBuilder.Entity<Unit>().HasIndex(u => u.EnglishName).IsUnique();
 
 
             //// Products  has one PK and five (instead of 3) FK, one of them is composite FK.
@@ -102,6 +163,7 @@ namespace HardwareStoreNameSpace
 
 
 
+
             //SubCategories has one Idenitity-PK and  one FK
             modelBuilder.Entity<SubCategory>().HasKey(sc=> sc.Id);
             modelBuilder.Entity<SubCategory>().Property(sc=> sc.Id).UseIdentityColumn();
@@ -110,10 +172,14 @@ namespace HardwareStoreNameSpace
             .WithMany(c => c.SubCategories)
             .HasForeignKey(sc =>sc.CategoryId);
 
+            modelBuilder.Entity<SubCategory>().HasIndex(sc => sc.EnglishName).IsUnique();
+
 
             // Countries has  Identity-PK, NO FK
             modelBuilder.Entity<Country>().HasKey(c => c.Id);
             modelBuilder.Entity<Country>().Property(c => c.Id).UseIdentityColumn();
+
+            modelBuilder.Entity<Country>().HasIndex(c => c.EnglishName).IsUnique();
 
 
             // ProductsCountries has one composite primary key and two FKs (configure Fks on the many side only)

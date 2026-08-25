@@ -4,6 +4,7 @@ using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HardwareStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260825170452_AddedIndexToBrand")]
+    partial class AddedIndexToBrand
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,16 +158,12 @@ namespace HardwareStore.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
 
                     b.ToTable("Categories");
                 });
@@ -187,16 +186,12 @@ namespace HardwareStore.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
 
                     b.ToTable("Countries");
                 });
@@ -312,7 +307,7 @@ namespace HardwareStore.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -320,10 +315,6 @@ namespace HardwareStore.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
 
                     b.ToTable("SubCategories");
                 });
@@ -346,16 +337,12 @@ namespace HardwareStore.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
 
                     b.ToTable("Suppliers");
                 });
@@ -378,16 +365,12 @@ namespace HardwareStore.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
 
                     b.ToTable("Units");
                 });

@@ -1,7 +1,49 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿
 @{
     ViewData["Title"] = "Products page";
 }
 <h1>Products Page</h1>
+<label for="avatar">Choose a file:</label>
+
+<input class="form-control form-control-lg" id="formFileLg" type="file" accept=".xlsx" />
+
+<script>
+    document.getElementById("formFileLg").addEventListener("change", importFile);
+    console.log("hello world");
+
+    async function importFile() {
+        console.log("The JS handler was started...")
+        const formData = new FormData();
+        formData.append("file", this.files[0]);
+
+        try {
+            console.log("Try block executed.")
+            response = await fetch('/Admin/Import', {
+                method: 'POST',
+                body: formData,
+            })
+            if (!response.ok) {
+                console.log("response is not ok")
+                throw new Error(`Response status: ${response.status}`);
+                return;
+            }
+
+            console.log("response is ok");
+
+            // logic : after admin upload the excel file, he will not be redirected to new view, he should stay in this same view, the only difference is that the admin will be able to see the data he uploaded in the UI.
+            
+           
+           
+            window.location.href = "/Admin/ProductsPage"; // return RedirectToAction in the action method won't fucking work. because it must return control to the caller, which is the fetch-api
+            
+        }
+        catch (error) {
+
+
+            console.error(error.message);
+        }
+    }
+
+
+
+</script>
