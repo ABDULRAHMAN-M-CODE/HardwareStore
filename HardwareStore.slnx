@@ -2,5 +2,8 @@
   <Folder Name="/Solution Items/">
     <File Path="Class1.cs" />
   </Folder>
+  <Folder Name="/Solution Items/DTOs/">
+    <File Path="CategorySubCategoryLookupTable.cs" />
+  </Folder>
   <Project Path="HardwareStore/HardwareStore.csproj" />
 </Solution>

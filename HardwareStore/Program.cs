@@ -5,6 +5,7 @@ using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Spire.Xls;
 
 //Mental Model about the DI container: 
 /*
@@ -35,10 +36,45 @@ builder.Services.AddDefaultIdentity<ApplicationUser>
 
 
 
-
+builder.Services.AddHttpContextAccessor();
 // I think we can't use  AddSingleton  because it may cause race condition ?
 builder.Services.AddScoped<IAccount, UserAccount>(); // fresh  instance of the UserAccount per request, avoiding race condition.
-builder.Services.AddScoped<IOmniReader, ReadExcelWriteDatabase>();
+
+
+
+
+//builder.Services.AddScoped<Workbook>(); // bad
+//builder.Services.AddScoped<Workbook>(sp => // bad, also did not work
+
+
+//{
+//    var context = sp.GetRequiredService<IHttpContextAccessor>().HttpContext!;
+//    var file = context.Request.Form.Files["file"];
+//    //// Some validation
+//    if (file == null || file.Length == 0)
+//    {
+
+//        throw new ArgumentException("Please upload a valid Excel file.");
+//    }
+
+//    var extension = Path.GetExtension(file.FileName);
+
+//    if (extension != ".xlsx" && extension != ".xls")
+//    {
+
+//        throw new ArgumentException("Only Excel files are supported");
+//    }
+//    var workbook = new Workbook();
+
+
+
+//    using var stream = file!.OpenReadStream();
+//    workbook.LoadFromStream(stream);
+
+//    return workbook; // Consumed by the ReadExcelWriteDatabase Class.
+//});
+builder.Services.AddScoped<IOmniReader, ReadExcelWriteDatabase>();//ReadExcelWriteDatabase is reader.
+builder.Services.AddScoped<IOmniWriter, ReadExcelWriteDatabase>();//ReadExcelWriteDatabase is also writer.
 builder.Services.AddScoped<SignupViewModel>();
 builder.Services.AddRazorPages();
 

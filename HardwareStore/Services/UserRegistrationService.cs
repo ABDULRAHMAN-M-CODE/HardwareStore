@@ -98,7 +98,7 @@ namespace HardwareStore.Services
 
 
         public async Task<(bool,bool)> LoginUser(LoginViewModel loginInput)
-        {
+        {   
 
             //check whether the model is valid or not.
             var context = new ValidationContext(loginInput);

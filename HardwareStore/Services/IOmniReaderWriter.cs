@@ -18,7 +18,7 @@ namespace HardwareStore.Services
     }
     public interface IOmniWriter
     {
-        public void WriteData();   // I want to be able to write data to any where
+        public async  Task WriteData<T>(List<T> entities) where T : class, IHasEnglishAndArabicName { }   // I want to be able to write data to any where
     }
 
 

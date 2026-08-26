@@ -52,7 +52,7 @@ namespace HardwareStoreNameSpace
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             AddTimestamps();// I Added this functionality, that's why I override the method
-            return await base.SaveChangesAsync(); // Functionality of the base stays the same.
+            return await base.SaveChangesAsync(); // Note ZZZ: This line caused the following error "Microsoft.Data.SqlClient.SqlException: 'The MERGE statement conflicted with the FOREIGN KEY constraint "FK_SubCategories_Categories_CategoryId". The conflict occurred in database "HardwareDB", table "dbo.Categories", column 'Id'.'"
         }
 
         /// <summary>

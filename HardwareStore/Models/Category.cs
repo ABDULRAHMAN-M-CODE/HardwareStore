@@ -1,6 +1,8 @@
-﻿namespace HardwareStore.Models
+﻿using HardwareStore.Services;
+
+namespace HardwareStore.Models
 {
-    public class Category: Timestampable
+    public class Category: Timestampable,IHasEnglishAndArabicName
     {
         //notes for my self in the comments.
         public string? EnglishName { get; set; } // if I do not use  property , this column will not be created in the database unless I explicitly specifiy it using Fluent API configuration.

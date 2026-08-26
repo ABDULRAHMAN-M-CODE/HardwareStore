@@ -23,10 +23,10 @@ namespace HardwareStore.Controllers
     {
 
         public IOmniReader reader;
-        public   IOmniReader writer;
+        public   IOmniWriter writer;
         private readonly IAccount _account;
         private readonly ApplicationDbContext _context;
-        public AdminController(IOmniReader reader, IOmniReader writer, IAccount account, ApplicationDbContext context)
+        public AdminController(IOmniReader reader, IOmniWriter writer, IAccount account, ApplicationDbContext context)
         {
 
             this. reader = reader;
@@ -141,28 +141,13 @@ namespace HardwareStore.Controllers
 
         [HttpPost]
         [Route("Admin/Import")] // but the URL in the fetch should be /Admin/Import
-        public  async Task<IActionResult> Import([FromForm] IFormFile file)
+        public  async Task<IActionResult> Import([FromForm] IFormFile file) // PROBLEM : THIs method is no longer reached by the request
         {
 
-            Console.Write("Action method is called\n");
-
-            //// don't forget to refactor the code.
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("Please upload a valid Excel file.");
-            }
+            Debug.WriteLine("I'm executed");
 
 
 
-
-
-            // Excel processing logic goes here
-            var extension = Path.GetExtension(file.FileName);
-
-            if (extension != ".xlsx" && extension != ".xls")
-            {
-                return BadRequest("Only Excel files are supported.");
-            }
 
 
             // I learned that In C#, the using statement is a
@@ -171,234 +156,218 @@ namespace HardwareStore.Controllers
             // cleanup, that is, properly releasing the resources
             // (such as files, streams, network connections) of an
             // object after it is used.
-            using var stream = file.OpenReadStream(); // using = 'with open' keyword in python, conceptually
-            Workbook workbook = new Workbook();
-            workbook.LoadFromStream(stream);
 
-            Worksheet sheet = workbook.Worksheets[0];
 
-            //////////////////////////////////////////////////////////
-            /// ######Populate  Units#####
-            /// 
-            List<string> relevantUnitPropertiesNames = new List<string>
+
+
+
+            List<object> objects =(List<object>)reader.ReadData(); // For later : changer the return type.
+                                                     
+            
+
+
+
+            // populating the parent tables first, worked completely
+            foreach (object obj in objects)
             {
-                "EnglishName",
+                //if (obj is List<Unit>)
+                //    await writer.WriteData<Unit>(obj); cannot convert from obj to List<Unit>
+                if (obj is List<Unit> units) // solution
+                        await writer.WriteData(units);
 
-            };
+                else if (obj is List<Brand> brands)
+                    await writer.WriteData(brands);
 
-           List<Unit> units = new List<Unit>(); // MAKE Type Generic, genralise variable name
-            List<object> unitsNamesDuplicates = new List<object>();
-            // Logic : I want loop over all the rows
-            for (int row = 2; row <= sheet.LastRow; row++)//assuming row 1 is header, want skip it.
-            {
+                else if (obj is List<Category> categories)
+                    await writer.WriteData(categories);
 
-                Unit unit = new Unit(); // MAKE MAKE this type generic
-                Type type = typeof(Unit); // MAKE type generic
+                else if (obj is List<Country> countries)
+                    await writer.WriteData(countries);
 
-                // Populate all the relevant properties of a single Entity
-                for (int i = 0; i < relevantUnitPropertiesNames.Count; i++)// method parameter
+
+
+                else if (obj is List<Supplier> suppliers)
+                    await writer.WriteData(suppliers);
+                else
                 {
-
-
-                    string relevantPropertyName = relevantUnitPropertiesNames[i];//Update
-                    var property = type.GetProperty(relevantPropertyName);
-                    // Inserts a space before any uppercase letter that follows a lowercase letter
-
-                    //string relevantHeaderName = Regex.Replace(relevantPropertyName, "(?<=[a-z])(?=[A-Z])", " ");
-
-                    //int relevantColumnNumber = sheet.FindString(relevantHeaderName, false, false).Column;
-                    int relevantColumnNumber = sheet.FindString("Unit", false, false).Column; // Make string as parameter
-
-                    
-                  
-                    var value = Convert.ChangeType(sheet.Range[row, relevantColumnNumber].Value, property!.PropertyType);
-
-
-                    property.SetValue(unit, value); // MAKE this generic
-
-
-
-                } // end of inner for loop
-
-
-
-                if (!unitsNamesDuplicates.Contains(unit.EnglishName!))
-                {
-                    units.Add(unit);
-                    unitsNamesDuplicates.Add(unit.EnglishName!);
+                    continue; // For later : I should change this.
                 }
 
-
-
-            }// end of outermost for loop
-
-
-            foreach (Unit unit in units)
+            }
+            foreach (object obj in objects)
             {
-
-                // check if the entity already in the database or not
-                var foundEntity = await _context.Units
-.FirstOrDefaultAsync(u => u.EnglishName == unit.EnglishName);
-
-                if (foundEntity == null)
-                {
-
-                  
-                        
-
-                        _context.Units.Add(unit);
-                      
-
-
-                }
+                if (obj is List<SubCategory> subCategories) // solution
+                    await writer.WriteData(subCategories);
             }
 
+                //// populating the child tables (the many sides) only after populating the parents., but it's caused error
+                //foreach (object obj in objects)
+                //{
+                //    if (obj is List<SubCategory> subCategories)
+                //    {
+                //        // Get the real Category IDs from the database
+                //        var categoriesFromDb = await _context.Categories.ToListAsync();
 
-            await _context.SaveChangesAsync(); 
+                //        foreach (var subCategory in subCategories)
+                //        {
+                //            // Find the Category corresponding to this SubCategory
+                //            var category = categoriesFromDb
+                //                .First(c => c.EnglishName == subCategory.CategoryName);
+
+                //            subCategory.CategoryId = category.Id;
+                //        }
+
+                //        await writer.WriteData(subCategories);
+                //    }
+                //}
+
+                Debug.WriteLine("Success");
+
+            //await _context.SaveChangesAsync(); 
             /// # Populate Units END
             //////////////////////
           
 
             // ####Populate suppliers#########
-            List<string> relevantSupplierPropertiesNames = new List<string>
-            {
-                "EnglishName",
+            //List<string> relevantSupplierPropertiesNames = new List<string>
+            //{
+            //    "EnglishName",
 
-            };
+            //};
            
 
-            List<Supplier> suppliers = new List<Supplier>();
-            List<object> suppliersDuplicates = new List<object>();
-            // Logic : I want loop over all the rows
-            for (int row = 2; row <= sheet.LastRow; row++)//assuming row 1 is header, want skip it.
-            {
+            //List<Supplier> suppliers = new List<Supplier>();
+            //List<object> suppliersDuplicates = new List<object>();
+            //// Logic : I want loop over all the rows
+            //for (int row = 2; row <= sheet.LastRow; row++)//assuming row 1 is header, want skip it.
+            //{
 
-                Supplier supplier = new Supplier(); // MAKE MAKE this type generic
-                Type type = typeof(Supplier); // MAKE type generic
+            //    Supplier supplier = new Supplier(); // MAKE MAKE this type generic
+            //    Type type = typeof(Supplier); // MAKE type generic
 
-                // Logic : I'm trying to populate the Product object, I'm not interested about all the columns
-                for (int i = 0; i < relevantSupplierPropertiesNames.Count; i++)//MAKE this method parameter
-                {
-
-
-                    string relevantPropertyName = relevantSupplierPropertiesNames[i];//MAKE this method parameter
-
-                    // Inserts a space before any uppercase letter that follows a lowercase letter
-
-                    //string relevantHeaderName = Regex.Replace(relevantPropertyName, "(?<=[a-z])(?=[A-Z])", " ");
-
-                    //int relevantColumnNumber = sheet.FindString(relevantHeaderName, false, false).Column;
-                    int relevantColumnNumber = sheet.FindString("Supplier", false, false).Column; // Make string as parameter
-
-                    var property = type.GetProperty(relevantPropertyName);
-                    // value is the english name.
-                    var value = Convert.ChangeType(sheet.Range[row, relevantColumnNumber].Value, property!.PropertyType);
+            //    // Logic : I'm trying to populate the Product object, I'm not interested about all the columns
+            //    for (int i = 0; i < relevantSupplierPropertiesNames.Count; i++)//MAKE this method parameter
+            //    {
 
 
-                    property.SetValue(supplier, value); // MAKE this generic
+            //        string relevantPropertyName = relevantSupplierPropertiesNames[i];//MAKE this method parameter
+
+            //        // Inserts a space before any uppercase letter that follows a lowercase letter
+
+            //        //string relevantHeaderName = Regex.Replace(relevantPropertyName, "(?<=[a-z])(?=[A-Z])", " ");
+
+            //        //int relevantColumnNumber = sheet.FindString(relevantHeaderName, false, false).Column;
+            //        int relevantColumnNumber = sheet.FindString("Supplier", false, false).Column; // Make string as parameter
+
+            //        var property = type.GetProperty(relevantPropertyName);
+            //        // value is the english name.
+            //        var value = Convert.ChangeType(sheet.Range[row, relevantColumnNumber].Value, property!.PropertyType);
 
 
-
-                } // end of inner for loop
-
-
-                if (suppliersDuplicates.Contains(supplier.EnglishName) is false)
-                {
-                    suppliers.Add(supplier);
-                    suppliersDuplicates.Add(supplier.EnglishName);
-                }
+            //        property.SetValue(supplier, value); // MAKE this generic
 
 
 
-            }// end of outermost for loop
+            //    } // end of inner for loop
 
-            foreach (Supplier supplier in suppliers) // MAKE MAKE MAKE
-            {
 
-                //_context.Products.Add(brandSupplier);
-                _context.Suppliers.Add(supplier);
-            }
+            //    if (suppliersDuplicates.Contains(supplier.EnglishName) is false)
+            //    {
+            //        suppliers.Add(supplier);
+            //        suppliersDuplicates.Add(supplier.EnglishName);
+            //    }
+
+
+
+            //}// end of outermost for loop
+
+            //foreach (Supplier supplier in suppliers) // MAKE MAKE MAKE
+            //{
+
+            //    //_context.Products.Add(brandSupplier);
+            //    _context.Suppliers.Add(supplier);
+            //}
 
             
-            // populate supplpiers END
-            //////////////////////////
+            //// populate supplpiers END
+            ////////////////////////////
             
-            List<string> relevantBrandPropertiesNames = new List<string>
-            {
-                "EnglishName",
+            //List<string> relevantBrandPropertiesNames = new List<string>
+            //{
+            //    "EnglishName",
 
-            };
+            //};
 
-            List<Brand> brands = new List<Brand>();
-            List<object> duplicates = new List<object>();
-            // Logic : I want loop over all the rows
-            for (int row = 2; row <= sheet.LastRow; row++)//assuming row 1 is header, want skip it.
-            {
+            //List<Brand> brands = new List<Brand>();
+            //List<object> duplicates = new List<object>();
+            //// Logic : I want loop over all the rows
+            //for (int row = 2; row <= sheet.LastRow; row++)//assuming row 1 is header, want skip it.
+            //{
 
-                Brand brand = new Brand(); // MAKE this type generic
-                Type type = typeof(Brand); // MAKE type generic
+            //    Brand brand = new Brand(); // MAKE this type generic
+            //    Type type = typeof(Brand); // MAKE type generic
 
-                // Logic : I'm trying to populate the Product object, I'm not interested about all the columns
-                for (int i = 0; i < relevantBrandPropertiesNames.Count; i++)//MAKE this method parameter
-                {
-
-
-                    string relevantPropertyName = relevantBrandPropertiesNames[i];//MAKE this method parameter
-
-                    // Inserts a space before any uppercase letter that follows a lowercase letter
-
-                    //string relevantHeaderName = Regex.Replace(relevantPropertyName, "(?<=[a-z])(?=[A-Z])", " ");
-
-                    //int relevantColumnNumber = sheet.FindString(relevantHeaderName, false, false).Column;
-                    int relevantColumnNumber = sheet.FindString("Brand", false, false).Column; // Make string as parameter
-
-                    var property = type.GetProperty(relevantPropertyName);
-                    // value is the english name.
-                    var value = Convert.ChangeType(sheet.Range[row, relevantColumnNumber].Value, property!.PropertyType);
+            //    // Logic : I'm trying to populate the Product object, I'm not interested about all the columns
+            //    for (int i = 0; i < relevantBrandPropertiesNames.Count; i++)//MAKE this method parameter
+            //    {
 
 
-                    property.SetValue(brand, value); // MAKE this generic
+            //        string relevantPropertyName = relevantBrandPropertiesNames[i];//MAKE this method parameter
+
+            //        // Inserts a space before any uppercase letter that follows a lowercase letter
+
+            //        //string relevantHeaderName = Regex.Replace(relevantPropertyName, "(?<=[a-z])(?=[A-Z])", " ");
+
+            //        //int relevantColumnNumber = sheet.FindString(relevantHeaderName, false, false).Column;
+            //        int relevantColumnNumber = sheet.FindString("Brand", false, false).Column; // Make string as parameter
+
+            //        var property = type.GetProperty(relevantPropertyName);
+            //        // value is the english name.
+            //        var value = Convert.ChangeType(sheet.Range[row, relevantColumnNumber].Value, property!.PropertyType);
 
 
-
-                }
-
-
-                if (duplicates.Contains(brand.EnglishName) is false)
-                {
-                    brands.Add(brand);
-                    duplicates.Add(brand.EnglishName);
-                }
+            //        property.SetValue(brand, value); // MAKE this generic
 
 
 
-            }
+            //    }
+
+
+            //    if (duplicates.Contains(brand.EnglishName) is false)
+            //    {
+            //        brands.Add(brand);
+            //        duplicates.Add(brand.EnglishName);
+            //    }
 
 
 
-            foreach (Brand brand in brands)
-            {
-
-                //_context.Products.Add(brandSupplier);
-                _context.Brands.Add(brand);
-            }
-
-
-            await _context.SaveChangesAsync();
+            //}
 
 
 
-            for (int i=0;i<brands.Count;i++)
-            {
-                BrandSupplier bs = new BrandSupplier
-                {
-                    BrandId = brands[i].Id,
-                    SupplierId = suppliers[i].Id
-                };
-                _context.BrandsSuppliers.Add(bs);
+            //foreach (Brand brand in brands)
+            //{
 
-            }
-            await _context.SaveChangesAsync();
+            //    //_context.Products.Add(brandSupplier);
+            //    _context.Brands.Add(brand);
+            //}
+
+
+            //await _context.SaveChangesAsync();
+
+
+
+            //for (int i=0;i<brands.Count;i++)
+            //{
+            //    BrandSupplier bs = new BrandSupplier
+            //    {
+            //        BrandId = brands[i].Id,
+            //        SupplierId = suppliers[i].Id
+            //    };
+            //    _context.BrandsSuppliers.Add(bs);
+
+            //}
+            //await _context.SaveChangesAsync();
 
 
 

@@ -18,9 +18,10 @@
 
         try {
             console.log("Try block executed.")
-            response = await fetch('/Admin/Import', {
+            response = await fetch('/Admin/Import', { // NoteXXX: this fetch still sends data to the action method, how to tell it to send it to the DI container instead
                 method: 'POST',
                 body: formData,
+               
             })
             if (!response.ok) {
                 console.log("response is not ok")
