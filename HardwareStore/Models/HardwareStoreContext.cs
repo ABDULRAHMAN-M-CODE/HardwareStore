@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Diagnostics.Contracts;
 using System.Reflection.Emit;
 using System.Reflection.Metadata;
@@ -160,7 +161,11 @@ namespace HardwareStoreNameSpace
             .WithMany(s => s.Products)
             .HasForeignKey(p => p.SupplierId)
             .OnDelete(DeleteBehavior.NoAction);
-
+            modelBuilder.Entity<Product>().HasIndex(p => new { p.UnitId, p.EnglishName }).IsUnique();// my bussiness rules, product must have only one unit, or, product must be unique within the Unit
+            modelBuilder.Entity<Product>().HasIndex(p => new { p.CategoryId, p.EnglishName }).IsUnique(); //my bussiness rules,  same logic
+            modelBuilder.Entity<Product>().HasIndex(p => new { p.CategoryId, p.EnglishName }).IsUnique();//my bussiness rules, same logic
+            modelBuilder.Entity<Product>().HasIndex(p => new { p.SupplierId, p.EnglishName }).IsUnique();
+            modelBuilder.Entity<Product>().HasIndex(p => new { p.BrandId, p.EnglishName }).IsUnique();
 
 
 
@@ -172,7 +177,7 @@ namespace HardwareStoreNameSpace
             .WithMany(c => c.SubCategories)
             .HasForeignKey(sc =>sc.CategoryId);
 
-            modelBuilder.Entity<SubCategory>().HasIndex(sc => sc.EnglishName).IsUnique();
+            modelBuilder.Entity<SubCategory>().HasIndex(sc =>  new { sc.CategoryId, sc.EnglishName }).IsUnique();
 
 
             // Countries has  Identity-PK, NO FK

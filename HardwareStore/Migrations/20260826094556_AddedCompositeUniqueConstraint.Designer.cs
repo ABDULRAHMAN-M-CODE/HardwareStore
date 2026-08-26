@@ -4,6 +4,7 @@ using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HardwareStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260826094556_AddedCompositeUniqueConstraint")]
+    partial class AddedCompositeUniqueConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -234,7 +237,7 @@ namespace HardwareStore.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Manufacturer")
                         .HasColumnType("nvarchar(max)");
@@ -265,23 +268,13 @@ namespace HardwareStore.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BrandId", "EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
+                    b.HasIndex("BrandId");
 
-                    b.HasIndex("CategoryId", "EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("UnitId");
 
                     b.HasIndex("SupplierId", "BrandId");
-
-                    b.HasIndex("SupplierId", "EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
-
-                    b.HasIndex("UnitId", "EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
 
                     b.ToTable("Products");
                 });
@@ -329,7 +322,9 @@ namespace HardwareStore.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId", "EnglishName")
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("EnglishName", "CategoryId")
                         .IsUnique()
                         .HasFilter("[EnglishName] IS NOT NULL");
 

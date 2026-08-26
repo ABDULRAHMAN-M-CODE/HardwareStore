@@ -187,7 +187,7 @@ namespace HardwareStore.Controllers
             };
 
            List<Unit> units = new List<Unit>(); // MAKE Type Generic, genralise variable name
-            List<object> unitsDuplicates = new List<object>();
+            List<object> unitsNamesDuplicates = new List<object>();
             // Logic : I want loop over all the rows
             for (int row = 2; row <= sheet.LastRow; row++)//assuming row 1 is header, want skip it.
             {
@@ -195,7 +195,7 @@ namespace HardwareStore.Controllers
                 Unit unit = new Unit(); // MAKE MAKE this type generic
                 Type type = typeof(Unit); // MAKE type generic
 
-                // Logic : I'm trying to populate the Product object, I'm not interested about all the columns
+                // Populate all the relevant properties of a single Entity
                 for (int i = 0; i < relevantUnitPropertiesNames.Count; i++)// method parameter
                 {
 
@@ -216,32 +216,43 @@ namespace HardwareStore.Controllers
 
                     property.SetValue(unit, value); // MAKE this generic
 
-                    var foundEntity = await _context.Units
-        .FirstOrDefaultAsync(u => u.EnglishName == unit.EnglishName);
-
-                    if (foundEntity == null)
-                    {
-
-                        if (unitsDuplicates.Contains(unit.EnglishName) is false)
-                        {
-                            // check if the object already in the database or not
-
-                            _context.Units.Add(unit);
-                            unitsDuplicates.Add(unit.EnglishName);
-                        }
-
-
-                    }
 
 
                 } // end of inner for loop
 
 
 
+                if (!unitsNamesDuplicates.Contains(unit.EnglishName!))
+                {
+                    units.Add(unit);
+                    unitsNamesDuplicates.Add(unit.EnglishName!);
+                }
 
 
 
             }// end of outermost for loop
+
+
+            foreach (Unit unit in units)
+            {
+
+                // check if the entity already in the database or not
+                var foundEntity = await _context.Units
+.FirstOrDefaultAsync(u => u.EnglishName == unit.EnglishName);
+
+                if (foundEntity == null)
+                {
+
+                  
+                        
+
+                        _context.Units.Add(unit);
+                      
+
+
+                }
+            }
+
 
             await _context.SaveChangesAsync(); 
             /// # Populate Units END
