@@ -12,13 +12,13 @@ namespace HardwareStore.Services
     public interface IOmniReader
     {
 
-        public object  ReadData(); // I want to be able to read data from anywhere
+        public void  ReadAndWriteData(); // I want to be able to read data from anywhere, but I failed to do it.
         
 
     }
     public interface IOmniWriter
     {
-        public async  Task WriteData<T>(List<T> entities) where T : class, IHasEnglishAndArabicName { }   // I want to be able to write data to any where
+        public void  WriteData<T>(List<T> entities) where T : class, IHasEnglishAndArabicName { }   // I want to be able to write data to any where
     }
 
 

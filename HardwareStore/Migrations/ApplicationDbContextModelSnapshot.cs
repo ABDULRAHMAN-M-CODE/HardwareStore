@@ -218,9 +218,6 @@ namespace HardwareStore.Migrations
                     b.Property<string>("Bin")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("BrandId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -251,9 +248,6 @@ namespace HardwareStore.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SupplierId")
-                        .HasColumnType("int");
-
                     b.Property<int>("UnitId")
                         .HasColumnType("int");
 
@@ -265,17 +259,7 @@ namespace HardwareStore.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BrandId", "EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
-
                     b.HasIndex("CategoryId", "EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
-
-                    b.HasIndex("SupplierId", "BrandId");
-
-                    b.HasIndex("SupplierId", "EnglishName")
                         .IsUnique()
                         .HasFilter("[EnglishName] IS NOT NULL");
 
@@ -284,6 +268,21 @@ namespace HardwareStore.Migrations
                         .HasFilter("[EnglishName] IS NOT NULL");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductBrand", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BrandId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "BrandId");
+
+                    b.HasIndex("BrandId");
+
+                    b.ToTable("ProductsBrands");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.ProductCountry", b =>
@@ -299,6 +298,21 @@ namespace HardwareStore.Migrations
                     b.HasIndex("CountryId");
 
                     b.ToTable("ProductsCountries");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductSupplier", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "SupplierId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("ProductsSuppliers");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
@@ -542,13 +556,13 @@ namespace HardwareStore.Migrations
                     b.HasOne("HardwareStore.Models.Brand", "Brand")
                         .WithMany("BrandSuppliers")
                         .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("HardwareStore.Models.Supplier", "Supplier")
                         .WithMany("BrandSuppliers")
                         .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Brand");
@@ -558,45 +572,40 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Product", b =>
                 {
-                    b.HasOne("HardwareStore.Models.Brand", "Brand")
-                        .WithMany("Products")
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("HardwareStore.Models.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("HardwareStore.Models.Supplier", "Supplier")
-                        .WithMany("Products")
-                        .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("HardwareStore.Models.Unit", "Unit")
                         .WithMany("Products")
                         .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("HardwareStore.Models.BrandSupplier", "BrandSupplier")
-                        .WithMany("Products")
-                        .HasForeignKey("SupplierId", "BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.Navigation("Category");
+
+                    b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductBrand", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Brand", "Brand")
+                        .WithMany("ProductBrands")
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Product", "Product")
+                        .WithMany("ProductBrands")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Brand");
 
-                    b.Navigation("BrandSupplier");
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Supplier");
-
-                    b.Navigation("Unit");
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.ProductCountry", b =>
@@ -604,13 +613,13 @@ namespace HardwareStore.Migrations
                     b.HasOne("HardwareStore.Models.Country", "Country")
                         .WithMany("ProductCountries")
                         .HasForeignKey("CountryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("HardwareStore.Models.Product", "Product")
                         .WithMany("ProductCountries")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Country");
@@ -618,12 +627,31 @@ namespace HardwareStore.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("HardwareStore.Models.ProductSupplier", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Product", "Product")
+                        .WithMany("ProductSuppliers")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Supplier", "Supplier")
+                        .WithMany("ProductSuppliers")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Supplier");
+                });
+
             modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
                 {
                     b.HasOne("HardwareStore.Models.Category", "Category")
                         .WithMany("SubCategories")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -684,12 +712,7 @@ namespace HardwareStore.Migrations
                 {
                     b.Navigation("BrandSuppliers");
 
-                    b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.BrandSupplier", b =>
-                {
-                    b.Navigation("Products");
+                    b.Navigation("ProductBrands");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Category", b =>
@@ -706,14 +729,18 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Product", b =>
                 {
+                    b.Navigation("ProductBrands");
+
                     b.Navigation("ProductCountries");
+
+                    b.Navigation("ProductSuppliers");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Supplier", b =>
                 {
                     b.Navigation("BrandSuppliers");
 
-                    b.Navigation("Products");
+                    b.Navigation("ProductSuppliers");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Unit", b =>

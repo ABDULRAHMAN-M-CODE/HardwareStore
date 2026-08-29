@@ -2,7 +2,7 @@
 
 namespace HardwareStore.Models
 {
-    public class Category: Timestampable,IHasEnglishAndArabicName
+    public class Category: Timestampable,IHasEnglishAndArabicName,IHasIdentification
     {
         //notes for my self in the comments.
         public string? EnglishName { get; set; } // if I do not use  property , this column will not be created in the database unless I explicitly specifiy it using Fluent API configuration.

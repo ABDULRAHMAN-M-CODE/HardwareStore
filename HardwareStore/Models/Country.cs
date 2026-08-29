@@ -2,7 +2,7 @@
 
 namespace HardwareStore.Models
 {
-    public class Country:Timestampable,IHasEnglishAndArabicName
+    public class Country:Timestampable,IHasEnglishAndArabicName,IHasIdentification
     {
         public string? EnglishName { get; set; } // if I do not use  property , this column will not be created in the database unless I explicitly specifiy it using Fluent API configuration.
         public int Id { get; set; }// if I do not use  property , this column will not be created in the database unless I explicitly specifiy it using Fluent API configuration.

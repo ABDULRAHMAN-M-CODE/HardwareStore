@@ -25,7 +25,8 @@ builder.Services.AddControllersWithViews();
 
 // the options are callback; they are not executed now, when some code needs the service, the options will be executed.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("HardwareDB")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("HardwareDB") , 
+    providerOptions => providerOptions.EnableRetryOnFailure()));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -96,9 +97,8 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.RequireUniqueEmail = false;
 });
 
+
 var app = builder.Build(); // but this returns a configured webApplication, not IserviceProvider
-
-
 
 
 using (var scope = app.Services.CreateScope())

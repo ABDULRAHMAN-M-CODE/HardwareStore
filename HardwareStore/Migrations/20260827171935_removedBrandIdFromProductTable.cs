@@ -5,24 +5,25 @@
 namespace HardwareStore.Migrations
 {
     /// <inheritdoc />
-    public partial class RenamedManufatcurerToManufacturer : Migration
+    public partial class removedBrandIdFromProductTable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "Manufatcurer",
-                table: "Products",
-                newName: "Manufacturer");
+            migrationBuilder.DropColumn(
+                name: "BrandId",
+                table: "Products");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "Manufacturer",
+            migrationBuilder.AddColumn<int>(
+                name: "BrandId",
                 table: "Products",
-                newName: "Manufatcurer");
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
         }
     }
 }

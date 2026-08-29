@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HardwareStore.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class test : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -57,13 +57,11 @@ namespace HardwareStore.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EnglishName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    
-                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    EnglishName = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -76,11 +74,11 @@ namespace HardwareStore.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EnglishName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    EnglishName = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -93,11 +91,11 @@ namespace HardwareStore.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EnglishName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    EnglishName = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -110,11 +108,11 @@ namespace HardwareStore.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EnglishName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    EnglishName = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -127,11 +125,11 @@ namespace HardwareStore.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EnglishName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    EnglishName = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -250,12 +248,12 @@ namespace HardwareStore.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EnglishName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EnglishName = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -264,8 +262,7 @@ namespace HardwareStore.Migrations
                         name: "FK_SubCategories_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -282,14 +279,12 @@ namespace HardwareStore.Migrations
                         name: "FK_BrandsSuppliers_Brands_BrandId",
                         column: x => x.BrandId,
                         principalTable: "Brands",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_BrandsSuppliers_Suppliers_SupplierId",
                         column: x => x.SupplierId,
                         principalTable: "Suppliers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -300,11 +295,8 @@ namespace HardwareStore.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     SKU = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Barcode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Manufatcurer = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EnglishName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Manufacturer = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EnglishName = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     ArabicName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MinStock = table.Column<float>(type: "real", nullable: false),
                     ReorderQty = table.Column<float>(type: "real", nullable: false),
@@ -314,40 +306,46 @@ namespace HardwareStore.Migrations
                     VAT = table.Column<float>(type: "real", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
                     UnitId = table.Column<int>(type: "int", nullable: false),
-                    SupplierId = table.Column<int>(type: "int", nullable: false),
-                    BrandId = table.Column<int>(type: "int", nullable: false)
+                    BrandId = table.Column<int>(type: "int", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DeleatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Products", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Products_BrandsSuppliers_SupplierId_BrandId",
-                        columns: x => new { x.SupplierId, x.BrandId },
-                        principalTable: "BrandsSuppliers",
-                        principalColumns: new[] { "SupplierId", "BrandId" },
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Products_Brands_BrandId",
-                        column: x => x.BrandId,
-                        principalTable: "Brands",
-                        principalColumn: "Id");
-                    table.ForeignKey(
                         name: "FK_Products_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Products_Suppliers_SupplierId",
-                        column: x => x.SupplierId,
-                        principalTable: "Suppliers",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Products_Units_UnitId",
                         column: x => x.UnitId,
                         principalTable: "Units",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductsBrands",
+                columns: table => new
+                {
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    BrandId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductsBrands", x => new { x.ProductId, x.BrandId });
+                    table.ForeignKey(
+                        name: "FK_ProductsBrands_Brands_BrandId",
+                        column: x => x.BrandId,
+                        principalTable: "Brands",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ProductsBrands_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -364,14 +362,34 @@ namespace HardwareStore.Migrations
                         name: "FK_ProductsCountries_Countries_CountryId",
                         column: x => x.CountryId,
                         principalTable: "Countries",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ProductsCountries_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductsSuppliers",
+                columns: table => new
+                {
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    SupplierId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductsSuppliers", x => new { x.ProductId, x.SupplierId });
+                    table.ForeignKey(
+                        name: "FK_ProductsSuppliers_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ProductsSuppliers_Suppliers_SupplierId",
+                        column: x => x.SupplierId,
+                        principalTable: "Suppliers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -414,29 +432,48 @@ namespace HardwareStore.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Brands_EnglishName",
+                table: "Brands",
+                column: "EnglishName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_BrandsSuppliers_BrandId",
                 table: "BrandsSuppliers",
                 column: "BrandId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Products_BrandId",
+                name: "IX_Categories_EnglishName",
+                table: "Categories",
+                column: "EnglishName",
+                unique: true,
+                filter: "[EnglishName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Countries_EnglishName",
+                table: "Countries",
+                column: "EnglishName",
+                unique: true,
+                filter: "[EnglishName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_CategoryId_EnglishName",
                 table: "Products",
+                columns: new[] { "CategoryId", "EnglishName" },
+                unique: true,
+                filter: "[EnglishName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_UnitId_EnglishName",
+                table: "Products",
+                columns: new[] { "UnitId", "EnglishName" },
+                unique: true,
+                filter: "[EnglishName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductsBrands_BrandId",
+                table: "ProductsBrands",
                 column: "BrandId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Products_CategoryId",
-                table: "Products",
-                column: "CategoryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Products_SupplierId_BrandId",
-                table: "Products",
-                columns: new[] { "SupplierId", "BrandId" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Products_UnitId",
-                table: "Products",
-                column: "UnitId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductsCountries_CountryId",
@@ -444,9 +481,30 @@ namespace HardwareStore.Migrations
                 column: "CountryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubCategories_CategoryId",
+                name: "IX_ProductsSuppliers_SupplierId",
+                table: "ProductsSuppliers",
+                column: "SupplierId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubCategories_CategoryId_EnglishName",
                 table: "SubCategories",
-                column: "CategoryId");
+                columns: new[] { "CategoryId", "EnglishName" },
+                unique: true,
+                filter: "[EnglishName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Suppliers_EnglishName",
+                table: "Suppliers",
+                column: "EnglishName",
+                unique: true,
+                filter: "[EnglishName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Units_EnglishName",
+                table: "Units",
+                column: "EnglishName",
+                unique: true,
+                filter: "[EnglishName] IS NOT NULL");
         }
 
         /// <inheritdoc />
@@ -468,7 +526,16 @@ namespace HardwareStore.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "BrandsSuppliers");
+
+            migrationBuilder.DropTable(
+                name: "ProductsBrands");
+
+            migrationBuilder.DropTable(
                 name: "ProductsCountries");
+
+            migrationBuilder.DropTable(
+                name: "ProductsSuppliers");
 
             migrationBuilder.DropTable(
                 name: "SubCategories");
@@ -480,25 +547,22 @@ namespace HardwareStore.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
+                name: "Brands");
+
+            migrationBuilder.DropTable(
                 name: "Countries");
 
             migrationBuilder.DropTable(
                 name: "Products");
 
             migrationBuilder.DropTable(
-                name: "BrandsSuppliers");
+                name: "Suppliers");
 
             migrationBuilder.DropTable(
                 name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "Units");
-
-            migrationBuilder.DropTable(
-                name: "Brands");
-
-            migrationBuilder.DropTable(
-                name: "Suppliers");
         }
     }
 }

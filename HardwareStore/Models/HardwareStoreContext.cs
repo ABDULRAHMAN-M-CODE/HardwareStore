@@ -1,11 +1,12 @@
 
-using HardwareStore.Migrations;
+
 using HardwareStore.Models;
 using HardwareStore.ViewModel;
 using HardwareStore.ViewModel.AccountViewModels;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Diagnostics.Contracts;
@@ -34,9 +35,12 @@ namespace HardwareStoreNameSpace
         public DbSet<Country> Countries { get; set; }
 
         public DbSet<ProductCountry> ProductsCountries { get; set; }
+
+        public DbSet<ProductBrand> ProductsBrands { get; set; }
+        public DbSet<ProductSupplier> ProductsSuppliers { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options):base(options)
         {
-            
+
         }
 
         // Overriding the methods does not force me to generate a migration
@@ -91,19 +95,15 @@ namespace HardwareStoreNameSpace
 
 
             //// documentation : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/many-to-many
-            // Supppliers PK, NO FK
+            //Supppliers has PK, NO FK
             modelBuilder.Entity<Supplier>().HasKey(s => s.Id);
             modelBuilder.Entity<Supplier>().Property(s => s.Id).UseIdentityColumn();
-
             modelBuilder.Entity<Supplier>().HasIndex(s => s.EnglishName).IsUnique();
 
-            //Brands PK, NO FK
+            //Brands has PK, NO FK
             modelBuilder.Entity<Brand>().HasKey(b => b.Id); 
             modelBuilder.Entity<Brand>().Property(b => b.Id).UseIdentityColumn();
-
-
             modelBuilder.Entity<Brand>().HasIndex(b => b.EnglishName).IsUnique();
-
             modelBuilder.Entity<Brand>().Property(b => b.EnglishName).IsRequired();
 
 
@@ -114,11 +114,13 @@ namespace HardwareStoreNameSpace
             modelBuilder.Entity<BrandSupplier>()
                 .HasOne(bs => bs.Supplier)
                 .WithMany(s=> s.BrandSuppliers)
-                .HasForeignKey(bs=>bs.SupplierId);
+                .HasForeignKey(bs=>bs.SupplierId)
+                .OnDelete(DeleteBehavior.NoAction);
             modelBuilder.Entity<BrandSupplier>()
                 .HasOne(bs => bs.Brand)
                 .WithMany(b => b.BrandSuppliers)
-                .HasForeignKey(bs => bs.BrandId);
+                .HasForeignKey(bs => bs.BrandId)
+                .OnDelete(DeleteBehavior.NoAction); 
 
 
             //Categories PK, No FK
@@ -140,32 +142,21 @@ namespace HardwareStoreNameSpace
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Unit)
                 .WithMany(u => u.Products)
-                .HasForeignKey(p => p.UnitId);
+                .HasForeignKey(p => p.UnitId)
+                .OnDelete(DeleteBehavior.NoAction);
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Category)
                 .WithMany(c => c.Products)
-                .HasForeignKey(p => p.CategoryId);
-
-            
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.BrandSupplier)
-                .WithMany(bs => bs.Products)
-                .HasForeignKey(p => new { p.SupplierId, p.BrandId  });
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Brand)
-                .WithMany(b => b.Products)
-                .HasForeignKey(p => p.BrandId)
+                .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.NoAction);
-            modelBuilder.Entity<Product>()
-            .HasOne(p => p.Supplier)
-            .WithMany(s => s.Products)
-            .HasForeignKey(p => p.SupplierId)
-            .OnDelete(DeleteBehavior.NoAction);
+
+
+
             modelBuilder.Entity<Product>().HasIndex(p => new { p.UnitId, p.EnglishName }).IsUnique();// my bussiness rules, product must have only one unit, or, product must be unique within the Unit
             modelBuilder.Entity<Product>().HasIndex(p => new { p.CategoryId, p.EnglishName }).IsUnique(); //my bussiness rules,  same logic
-            modelBuilder.Entity<Product>().HasIndex(p => new { p.CategoryId, p.EnglishName }).IsUnique();//my bussiness rules, same logic
-            modelBuilder.Entity<Product>().HasIndex(p => new { p.SupplierId, p.EnglishName }).IsUnique();
-            modelBuilder.Entity<Product>().HasIndex(p => new { p.BrandId, p.EnglishName }).IsUnique();
+            
+           
+            
 
 
 
@@ -175,7 +166,8 @@ namespace HardwareStoreNameSpace
             modelBuilder.Entity<SubCategory>()
             .HasOne(sc => sc.Category)
             .WithMany(c => c.SubCategories)
-            .HasForeignKey(sc =>sc.CategoryId);
+            .HasForeignKey(sc =>sc.CategoryId)
+            .OnDelete(DeleteBehavior.NoAction); 
 
             modelBuilder.Entity<SubCategory>().HasIndex(sc =>  new { sc.CategoryId, sc.EnglishName }).IsUnique();
 
@@ -192,11 +184,41 @@ namespace HardwareStoreNameSpace
             modelBuilder.Entity<ProductCountry>()
                 .HasOne(pc => pc.Product)
                 .WithMany(p=> p.ProductCountries)
-                .HasForeignKey(pc => pc.ProductId);
+                .HasForeignKey(pc => pc.ProductId)
+            .OnDelete(DeleteBehavior.NoAction);
             modelBuilder.Entity<ProductCountry>()
                 .HasOne(pc => pc.Country)
                 .WithMany(c => c.ProductCountries)
-                .HasForeignKey(pc => pc.CountryId);
+                .HasForeignKey(pc => pc.CountryId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+
+            //ProductSupplier has one composite PK and two FK
+            modelBuilder.Entity<ProductSupplier>().HasKey(ps => new { ps.ProductId, ps.SupplierId });
+            modelBuilder.Entity<ProductSupplier>()
+                .HasOne(p => p.Product)
+                .WithMany(ps => ps.ProductSuppliers)
+                .HasForeignKey(ps => ps.ProductId)
+                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<ProductSupplier>() 
+                .HasOne(ps => ps.Supplier)
+                .WithMany(s => s.ProductSuppliers)
+                .HasForeignKey(ps => ps.SupplierId)
+                .OnDelete(DeleteBehavior.NoAction);// note 1000 : but I'm already doing that
+
+            modelBuilder.Entity<ProductBrand>().HasKey(pb => new { pb.ProductId, pb.BrandId });
+            modelBuilder.Entity<ProductBrand>()
+                .HasOne(pb => pb.Product)
+                .WithMany(p => p.ProductBrands)
+                .HasForeignKey(pb => pb.ProductId)
+                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<ProductBrand>()
+                .HasOne(pb => pb.Brand)
+                .WithMany(b => b.ProductBrands)
+                .HasForeignKey(pb => pb.BrandId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+
 
         }
     }
