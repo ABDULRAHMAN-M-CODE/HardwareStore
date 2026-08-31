@@ -1,7 +1,4 @@
 <Solution>
   <Folder Name="/Solution Items/" />
-  <Folder Name="/Solution Items/DTOs/">
-    <File Path="CategorySubCategoryLookupTable.cs" />
-  </Folder>
   <Project Path="HardwareStore/HardwareStore.csproj" />
 </Solution>

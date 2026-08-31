@@ -1,5 +1,6 @@
 ﻿using Azure;
 using HardwareStore.Services;
+using Microsoft.AspNetCore.Identity;
 
 namespace HardwareStore.Models
 {
@@ -10,7 +11,9 @@ namespace HardwareStore.Models
        
         public string? ArabicName { get; set; }
 
+        
         public IEnumerable<BrandSupplier> BrandSuppliers { get; } = new List<BrandSupplier>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
         public IEnumerable<ProductBrand> ProductBrands { get; } = new List<ProductBrand>();
+        public ApplicationUser User { get; set; } = null!;
     }
 }

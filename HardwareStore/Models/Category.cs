@@ -15,5 +15,6 @@ namespace HardwareStore.Models
         public IEnumerable<Product> Products{ get; } = new List<Product>(); // Collection navigation 
         // that means category has many subcategories, WHICH MEANS the subcategories is the 'many side' in the relation
         public IEnumerable<SubCategory> SubCategories { get; }=new List<SubCategory>();
+        public ApplicationUser User { get; set; } = null!;
     }
 }

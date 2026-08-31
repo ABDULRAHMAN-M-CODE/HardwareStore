@@ -27,7 +27,9 @@ namespace HardwareStore.Models
         public IEnumerable<ProductBrand> ProductBrands { get; } = new List<ProductBrand>();// for junction table
         public IEnumerable<ProductCountry> ProductCountries { get; } = new List<ProductCountry>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
 
-       
-        
+        public ApplicationUser User { get; set; } = null!;
+
+
+
     }
 }

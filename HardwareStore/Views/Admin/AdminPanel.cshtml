@@ -54,7 +54,7 @@
                 <td>
                     @*Editing USer*@
                     @*Model binding will map the query parameter to the  Action method parameter *@
-                    <form method="post" asp-controller="Admin" asp-action="EditUser" asp-route-Id="@user.Id" >
+                    <form method="get" asp-controller="Admin" asp-action="EditUser" asp-route-Id="@user.Id" >
                         <button class="btn btn-primary">Edit</button>
                     </form>
                 </td>

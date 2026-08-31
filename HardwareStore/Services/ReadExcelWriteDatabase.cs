@@ -55,8 +55,6 @@ namespace HardwareStore.Services
             WriteData(suppliers);
 
 
-            //Excel file does not provide the data for the brandsSuppliers,
-            // brandsSuppliers is not inherently unique
             List<BrandSupplier> brandSuppliers = new List<BrandSupplier>();
             for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
             {
@@ -64,22 +62,12 @@ namespace HardwareStore.Services
                 brandSuppliers.Add(new BrandSupplier());
             }
             PopulateForeignKeyPropertyForEachChild<BrandSupplier, Brand>("Supplier", "Brand", "BrandId", brandSuppliers);
-            //brandSuppliers = brandSuppliers.OrderBy(bs => bs.SupplierId).ToList();// Wrong
-            brandSuppliers = brandSuppliers.
-                OrderBy(bs => bs.BrandId).
-                ToList();
-
-
-            // At this point, all values for SupplierId are still 0, therefore, filtering using the 'where caluse' should not be applied here,  
             PopulateForeignKeyPropertyForEachChild<BrandSupplier, Supplier>("Brand", "Supplier", "SupplierId", brandSuppliers);
-            
-
-                // very necessary before the distinct.
-                brandSuppliers=brandSuppliers
-                .Where(bs => bs.SupplierId != 0 && bs.BrandId!=0) // filtering the non-zero records
+            brandSuppliers=brandSuppliers
+                .Where(bs => bs.SupplierId != 0 && bs.BrandId!=0) 
                 .DistinctBy(bs => new { bs.SupplierId, bs.BrandId })
                 .ToList();
-            //WriteData(brandsSuppliers); // Wrong, can't do this, brandsSuppliers does not have English Name
+            
             foreach (BrandSupplier bs in brandSuppliers)
             {
 
@@ -99,7 +87,7 @@ namespace HardwareStore.Services
                 }
             }
 
-
+            _context.SaveChanges();
             
 
             //Reading and Writing for Products table.
@@ -360,13 +348,13 @@ namespace HardwareStore.Services
         /// 
         ///  <para>
         ///  If you want to set a <strong>single foreign key</strong> column, call this method once, 
-        ///  the foreign key is not guaranteed to contain non-zero values, so it's up to the caller
+        ///  the populated foreign key is not guaranteed to contain non-zero values, so it's up to the caller
         ///  to filter out the zero values.
         /// </para>
         /// 
         /// <para>
         ///  if you want to set the values for <strong>two foreing keys</strong>, call this method twice, the first call
-        ///  is to set the first foreign key, the second call is to set the second foreign key,
+        ///  is to set the values for the first foreign key, the second call is to set the values for the second foreign key,
         ///  only after the second call you are allowed to filter out the non-zero values,
         ///  you should not filter out the non-zero values after the first call of this method.
         ///  
@@ -430,14 +418,20 @@ namespace HardwareStore.Services
         /// <param name="foreignKeyPropertyName"></param>
         /// <param name="childs"></param>
         /// <exception cref="ArgumentException"></exception>        
-        public void PopulateForeignKeyPropertyForEachChild<Child,Parent>(string childTablNameInExcel, string parentTableNameInExcel, string foreignKeyPropertyName,List<Child> childs) where Parent:class,IHasEnglishAndArabicName,IHasIdentification where Child:new()
+        public void PopulateForeignKeyPropertyForEachChild<Child,Parent>(string childTablNameInExcel, string parentTableNameInExcel, string foreignKeyPropertyName,List<Child> childs) where Parent:class,IHasEnglishAndArabicName, IHasIdentification 
 
 
 
         {
-            // 1.Construct a lookup table.
 
-            List<RelationshipLookupRecord> records =CreateLookupTable( childTablNameInExcel,  parentTableNameInExcel);
+            // Suppose we have two tables; Category and SubCategory, the relation is one-to-many.
+            // The SubCategory Table  has two columns; EnglishName and CategoryId.
+            // The job of this method is  to populate the CategoryId with the correct values.
+            // EnglishName  alone is not sufficient to complete the job; a mapping  between  SubCategory and Category tables is required. 
+            // This mapping is called 'lookup table', it has more than one record, each record contains a mapping between  one SubCategory and one Category.
+            ///For each record, we can query the  relevant row in the Category Table; the row with the same EnglishName as the record.
+            // The row that we found contains the Id; it's value will be used  as the value for the foreign key.
+            List<RelationshipLookupRecord> records =CreateLookupTable( childTablNameInExcel,  parentTableNameInExcel);// Constructs a lookup table.
 
 
 
@@ -447,38 +441,27 @@ namespace HardwareStore.Services
                 .OrderBy(r => r.LeftColumnCellValue)
                 .ToList();
 
-            // analogy : like small empty bucket of water that is filled by bigger bucket of water, water will eventually overflow
-            // similarly, if the records (the bigger bucket) is bigger than the childs (smaller bucket), index out of bound will happen.
+
             if (records.Count > childs.Count)
             {
-                
+
                 throw new ArgumentException("childs length can't be less than the number of the records in the lookup table.\n");
-
-
             }
-            //childs = childs // does not work
-            //.OrderBy(c => c.EnglishName)
-            //.ToList();
+
 
             //Refer to the parent to be able to set the foreign key.
             DbSet<Parent> dbSet = _context.Set<Parent>();
-            //List<Child> result = new List<Child>();
-                    
-            //foreach (RelationshipLookupRecord record in records)  {}
-
-            for (int i=0; i < records.Count; i++) // looping over childs is wrong, either single child is populated or Index out of about occur
-            {
-
-                //  did not use .FirstAsync for specific purpose.
+            for (int i=0; i < records.Count; i++) 
+            {      
                 Parent foundEntity = dbSet
-                    .First(e => e.EnglishName == records[i].RightColumnCellValue);// PROBLEM : EnglishName is harcoded.
+                    .First(e => e.EnglishName == records[i].RightColumnCellValue);
 
                 //reflection : because c# is not dynamic language
                 typeof(Child).GetProperty(foreignKeyPropertyName)!.SetValue(childs[i], foundEntity.Id); 
             }            
-                //result.Add(child);// changed my approach
+                
             
-            //return result;// changed my approach
+            
         }
 
  

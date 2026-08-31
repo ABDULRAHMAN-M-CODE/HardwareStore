@@ -1,6 +1,8 @@
+using AutoMapper;
 using HardwareStore.AtStartup;
 using HardwareStore.Models;
 using HardwareStore.Services;
+using HardwareStore.Services.AdminServices;
 using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Identity;
@@ -19,8 +21,11 @@ using Spire.Xls;
  */
 
 var builder = WebApplication.CreateBuilder(args);
+string amlickey = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ikx1Y2t5UGVubnlTb2Z0d2FyZUxpY2Vuc2VLZXkvYmJiMTNhY2I1OTkwNGQ4OWI0Y2IxYzg1ZjA4OGNjZjkiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2x1Y2t5cGVubnlzb2Z0d2FyZS5jb20iLCJhdWQiOiJMdWNreVBlbm55U29mdHdhcmUiLCJleHAiOiIxODE5NTg0MDAwIiwiaWF0IjoiMTc4ODExMTAwNiIsImFjY291bnRfaWQiOiIwMWEwNTM3M2YxOTg3OTE0YTUxZWUwMWJkOTcwYzBmYiIsImN1c3RvbWVyX2lkIjoiMDFhMDUzNzNmMTk4NzkxNGE1MWVlMDFiZDk3MGMwZmIiLCJzdWJfaWQiOiItIiwiZWRpdGlvbiI6IjAiLCJ0eXBlIjoiMiJ9.o3aACPQzkt57aSJTef6XmOGI-h9vLnsYjCjeG8yhQl7EXQLuLBbLLxhnBo5NSy8Xufa9I4IDAPOzFxfmV6FUEUrFpxYSRDhud9lLe69k4EimmTXOi5zvCgd5XgLtc_ir_RqMwXL7toFKFAwMpJyxMwPXg1WIu9DS9xDfi_6QdINZO2BdlBkVkwM-QEaKzFcJGM8opN2pH3I6Cyv2HrZv7mOfzBfKrta2jF2ozWWTRRr2nHDiRub6tkRnylvbys5QNxeG-4HCoysrrPVZUZWL35s4WUS1GyBIKZScXBo6dEy9RFxVkW7ikg5crsJKskD6O8SSp0sa1gxQzur6R2scvg";
 
 
+
+builder.Services.AddAutoMapper(cfg => cfg.LicenseKey = amlickey, typeof(Program));
 builder.Services.AddControllersWithViews();
 
 // the options are callback; they are not executed now, when some code needs the service, the options will be executed.
@@ -44,38 +49,11 @@ builder.Services.AddScoped<IAccount, UserAccount>(); // fresh  instance of the U
 
 
 
-//builder.Services.AddScoped<Workbook>(); // bad
-//builder.Services.AddScoped<Workbook>(sp => // bad, also did not work
 
+builder.Services.AddScoped<IOmniReader, ReadExcelWriteDatabase>();
+builder.Services.AddScoped<IOmniWriter, ReadExcelWriteDatabase>();
+builder.Services.AddScoped<IAdmin, AdminPanel>();
 
-//{
-//    var context = sp.GetRequiredService<IHttpContextAccessor>().HttpContext!;
-//    var file = context.Request.Form.Files["file"];
-//    //// Some validation
-//    if (file == null || file.Length == 0)
-//    {
-
-//        throw new ArgumentException("Please upload a valid Excel file.");
-//    }
-
-//    var extension = Path.GetExtension(file.FileName);
-
-//    if (extension != ".xlsx" && extension != ".xls")
-//    {
-
-//        throw new ArgumentException("Only Excel files are supported");
-//    }
-//    var workbook = new Workbook();
-
-
-
-//    using var stream = file!.OpenReadStream();
-//    workbook.LoadFromStream(stream);
-
-//    return workbook; // Consumed by the ReadExcelWriteDatabase Class.
-//});
-builder.Services.AddScoped<IOmniReader, ReadExcelWriteDatabase>();//ReadExcelWriteDatabase is reader.
-builder.Services.AddScoped<IOmniWriter, ReadExcelWriteDatabase>();//ReadExcelWriteDatabase is also writer.
 builder.Services.AddScoped<SignupViewModel>();
 builder.Services.AddRazorPages();
 
@@ -108,7 +86,8 @@ using (var scope = app.Services.CreateScope())
     var userStore = scope.ServiceProvider.GetRequiredService<IUserStore<ApplicationUser>>();
     var signInManager = scope.ServiceProvider.GetRequiredService<SignInManager<ApplicationUser>>();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    UserAccount userAccount = new UserAccount(userStore, userManager,signInManager, roleManager,context);
+    IMapper mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
+    UserAccount userAccount = new UserAccount(userStore, userManager,signInManager, roleManager,context,mapper);
     CustomRoleManager customeRoleManager = new CustomRoleManager(userAccount,userManager, scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>() ); 
      Task<bool> success= customeRoleManager.CreateRoles();
     if (await success)

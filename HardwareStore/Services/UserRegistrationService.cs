@@ -1,4 +1,5 @@
-﻿using HardwareStore.Models;
+﻿using AutoMapper;
+using HardwareStore.Models;
 using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Identity;
@@ -19,7 +20,8 @@ namespace HardwareStore.Services
         Task<IQueryable<ApplicationUser>> GetUsers(AdminViewModel options);
         Task<bool> DeleteUser(string id);
         Task<bool> Logout();
-        Task<ApplicationUser?> FindByIdAsync(string Id);
+        //Task<ApplicationUser?> FindByIdAsync(string Id); : Old
+        Task<User?> GetUserForEdit(string id); // new.
         Task<bool> EditUser(User user);
 
 
@@ -36,8 +38,13 @@ namespace HardwareStore.Services
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApplicationDbContext _context;
-        
-        public UserAccount(IUserStore<ApplicationUser> userStore, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context)
+        private readonly IMapper _mapper;
+        public UserAccount(IUserStore<ApplicationUser> userStore, 
+            UserManager<ApplicationUser> userManager, 
+            SignInManager<ApplicationUser> signInManager, 
+            RoleManager<IdentityRole> roleManager, 
+            ApplicationDbContext context,
+            IMapper mapper)
         
         {
 
@@ -46,6 +53,7 @@ namespace HardwareStore.Services
             _signInManager = signInManager;
             _roleManager= roleManager;
             _context = context;
+            _mapper = mapper;
 
         }
 
@@ -82,6 +90,7 @@ namespace HardwareStore.Services
             await _emailStore.SetEmailAsync(user, SignupInput.EmailOrPhoneNumber, CancellationToken.None);
             var result = await _userManager.CreateAsync(user, SignupInput.Password); // only create the user after specifying his name and password.
 
+            await _userManager.AddToRoleAsync(user, "Normal-User");
             if (result.Succeeded)
             {
 
@@ -180,17 +189,31 @@ namespace HardwareStore.Services
             string adminId=await _roleManager.GetRoleIdAsync(await _roleManager.FindByNameAsync("Admin"));
 
             // Syntax source is the following article "https://learn.microsoft.com/en-us/dotnet/csharp/linq/get-started/write-linq-queries#example---mixed-query-and-method-syntax"
-            
-            
-            IQueryable<ApplicationUser> nonAdminUsers = from user in _context.Users
-                                join userRole in _context.UserRoles
-                                on user.Id equals userRole.UserId
-                                where userRole.RoleId != adminId// Instead of hardcoding the value, because the Id of the Admin might change, I  think I should do that.
-                                select new ApplicationUser  // if I do not explicitly specify the object type to be ApplicatonUser , anonymous type will be used by default, I do not want that.
-                                {
-                                    UserName = user.UserName,
-                                    Email = user.Email
-                                };
+
+
+            DbSet<IdentityUserRole<string>> usersRoles = _context.UserRoles;
+    //        IQueryable<ApplicationUser> nonAdminUsers = from user in _context.Users // PROBLEM 2000: Enumeration yielded no results.
+    //                            join userRole in usersRoles
+    //                            .Where(user => !_context.UserRoles
+    //.                           Any(ur => ur.UserId == user.Id && ur.RoleId == adminId))// Instead of hardcoding the value, because the Id of the Admin might change, I  think I should do that.
+    //                            select new ApplicationUser  // if I do not explicitly specify the object type to be ApplicatonUser , anonymous type will be used by default, I do not want that.
+    //                            {
+    //                                UserName = user.UserName,
+    //                                Email = user.Email
+    //                            };
+            IQueryable<ApplicationUser> nonAdminUsers =
+                    from user in _context.Users
+                    join userRole in usersRoles
+                        on user.Id equals userRole.UserId into roles
+                    where !roles.Any(r => r.RoleId == adminId)
+                    select new ApplicationUser
+                    {
+                        Id=user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email
+                    };
+
+
 
             if (!wantAllUsers)
             {
@@ -198,7 +221,7 @@ namespace HardwareStore.Services
                 // options.keyWord can't be null or empty, because wantAllUsers is false 
 
                 // users is still  IQueryable<ApplicationUser>, no SQL was executed  yet.
-                nonAdminUsers = nonAdminUsers.Where(au => au.UserName.Contains(options.KeyWord!));
+                nonAdminUsers = nonAdminUsers.Where(nau => nau.UserName.Contains(options.KeyWord!));
             }
             
 
@@ -269,6 +292,7 @@ namespace HardwareStore.Services
         }
 
 
+        
         public  async Task<bool> EditUser(User user)
         {
             // fetch the data.
@@ -293,6 +317,20 @@ namespace HardwareStore.Services
             // if user is not found, return false.
             return false;
         }
+
+        public async Task<User?> GetUserForEdit(string id) // PROBLEM 5000: this method get different id each time it's called, even though we want to edit the same user
+        {
+            ApplicationUser? au = await _userManager.FindByIdAsync(id);
+
+            if (au is null)
+                return null;
+            //Two notes for myself:
+            // 1-User is the destination or the required type
+            // 2-au is the source or the domain specific object.
+            return _mapper.Map<User>(au); 
+        }
+
+
     } // this is the End of the class
 
 } // this is the  End of the name

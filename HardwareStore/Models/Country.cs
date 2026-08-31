@@ -12,5 +12,6 @@ namespace HardwareStore.Models
        
 
         public IEnumerable<ProductCountry> ProductCountries { get; } = new List<ProductCountry>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
+        public ApplicationUser User { get; set; } = null!;
     }
 }

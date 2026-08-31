@@ -1,4 +1,4 @@
-﻿using HardwareStore.Models;
+﻿
 namespace HardwareStore.ViewModel.AccountViewModels
 {
     public class AdminViewModel 
