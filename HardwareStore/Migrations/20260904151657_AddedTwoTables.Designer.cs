@@ -4,6 +4,7 @@ using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HardwareStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260904151657_AddedTwoTables")]
+    partial class AddedTwoTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -306,14 +309,8 @@ namespace HardwareStore.Migrations
                     b.Property<string>("Manufacturer")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MinStock")
-                        .HasColumnType("int");
-
                     b.Property<float>("Price")
                         .HasColumnType("real");
-
-                    b.Property<int>("ReorderQTY")
-                        .HasColumnType("int");
 
                     b.Property<string>("SKU")
                         .HasColumnType("nvarchar(max)");
@@ -327,8 +324,8 @@ namespace HardwareStore.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("VAT")
-                        .HasColumnType("int");
+                    b.Property<float>("VAT")
+                        .HasColumnType("real");
 
                     b.HasKey("Id");
 

@@ -10,26 +10,21 @@ namespace HardwareStore.Models
         public string? Manufacturer{ get; set; }
         public string? EnglishName { get; set; } 
         public string? ArabicName { get; set; }
-        public float MinStock { get; set; }
-        public float ReorderQty { get; set; }
-        public string? Bin { get; set; }
-        public string? Description { get; set; } // Note: string is by default nvarchar, not varchar.
+        public string? Description { get; set; } 
         public string? Status { get; set; }
-        public float VAT { get; set; }
-        public int CategoryId { get; set; } //FK_Categories
-        public int UnitId { get; set; } // FK_Units
         
+        
+        public int MinStock { get; set; }
+        public int VAT { get; set; }
+        public int ReorderQTY { get; set; }
+        public float Price { get; set; }
 
-
-        public Category Category { get; set; } = null!;
-        public Unit Unit { get; set; } = null!; 
         public IEnumerable< ProductSupplier> ProductSuppliers { get; } = new List<ProductSupplier>(); // for Junction table
         public IEnumerable<ProductBrand> ProductBrands { get; } = new List<ProductBrand>();// for junction table
         public IEnumerable<ProductCountry> ProductCountries { get; } = new List<ProductCountry>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
-
         public ApplicationUser User { get; set; } = null!;
-
-
-
+        public IEnumerable<ProductBin> ProductBins { get; } = new List<ProductBin>();
+        public IEnumerable<ProductCategory> ProductCategories { get; } = new List<ProductCategory>(); // for Junction table
+        public IEnumerable<ProductUnit> ProductUnits { get; } = new List<ProductUnit>(); // for Junction table
     }
 }

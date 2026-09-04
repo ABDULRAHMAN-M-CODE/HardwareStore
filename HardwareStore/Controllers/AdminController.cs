@@ -118,6 +118,7 @@ namespace HardwareStore.Controllers
 
         public IActionResult ProductsPage()
         {
+
             return View();
         }
 
@@ -127,18 +128,9 @@ namespace HardwareStore.Controllers
         public  async Task<IActionResult> Import([FromForm] IFormFile file) // PROBLEM : THIs method is no longer reached by the request
         {
 
-            Debug.WriteLine("I'm executed");
-
-
+          
             reader.ReadAndWriteData();
-
-            Debug.WriteLine("Success");
-
-
-           
-
-            
-            return Ok();
+            return RedirectToAction("ProductsPage", "Admin");
 
 
         }

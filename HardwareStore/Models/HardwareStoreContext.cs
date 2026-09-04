@@ -1,19 +1,10 @@
 
-
-using HardwareStore.Models;
-using HardwareStore.ViewModel;
-using HardwareStore.ViewModel.AccountViewModels;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Data;
-using System.Diagnostics.Contracts;
-using System.Reflection.Emit;
-using System.Reflection.Metadata;
 namespace HardwareStoreNameSpace
 {
+    using HardwareStore.Models;
+    using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore;
+    using System.Data;
 
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
@@ -38,6 +29,13 @@ namespace HardwareStoreNameSpace
 
         public DbSet<ProductBrand> ProductsBrands { get; set; }
         public DbSet<ProductSupplier> ProductsSuppliers { get; set; }
+        
+        public DbSet<ProductBin> ProductsBins { get; set; }
+        public DbSet<ProductCategory> ProductsCategories { get; set; }
+        public DbSet<ProductUnit> ProductsUnits { get; set; }
+        public DbSet<Bin> Bins { get; set; }
+       
+        
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options):base(options)
         {
 
@@ -152,7 +150,7 @@ namespace HardwareStoreNameSpace
                 .OnDelete(DeleteBehavior.NoAction); 
 
 
-            //Categories PK, No FK
+            //Categories: 1 PK
             modelBuilder.Entity<Category>().HasKey(c => c.Id); 
             modelBuilder.Entity<Category>().Property(c => c.Id).UseIdentityColumn();
             modelBuilder.Entity<Category>().HasIndex(c => c.EnglishName).IsUnique();
@@ -161,19 +159,19 @@ namespace HardwareStoreNameSpace
                 .WithMany(u => u.Categories)
                 .HasForeignKey(c => c.CreatedBy)
                 .OnDelete(DeleteBehavior.NoAction);
-
             modelBuilder.Entity<Category>()
                   .HasOne(c => c.User)
                 .WithMany(u => u.Categories)
                 .HasForeignKey(c => c.UpdatedBy)
                 .OnDelete(DeleteBehavior.NoAction);
-
             modelBuilder.Entity<Category>()
                   .HasOne(c => c.User)
                 .WithMany(u => u.Categories)
                 .HasForeignKey(c => c.DeletedBy)
                 .OnDelete(DeleteBehavior.NoAction);
-            //Units PK, NO Fk
+            
+            
+            //Units: 1 PK
             modelBuilder.Entity<Unit>().HasKey(u => u.Id); 
             modelBuilder.Entity<Unit>().Property(u => u.Id).UseIdentityColumn();
             modelBuilder.Entity<Unit>().HasIndex(u => u.EnglishName).IsUnique();
@@ -185,26 +183,15 @@ namespace HardwareStoreNameSpace
                   .HasOne(u => u.User)
                 .WithMany(u => u.Units)
                 .HasForeignKey(u => u.UpdatedBy);
-
             modelBuilder.Entity<Unit>()
                   .HasOne(u => u.User)
                 .WithMany(u => u.Units)
                 .HasForeignKey(u => u.DeletedBy);
-            //// Products  has one PK and five (instead of 3) FK, one of them is composite FK.
-            modelBuilder.Entity<Product>().HasKey(p => p.Id); // Primary key with identity
+
+
+            ////Products: 1 Identity PK,  and 3 FKs. 
+            modelBuilder.Entity<Product>().HasKey(p => p.Id); 
             modelBuilder.Entity<Product>().Property(p => p.Id).UseIdentityColumn();
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Unit)
-                .WithMany(u => u.Products)
-                .HasForeignKey(p => p.UnitId)
-                .OnDelete(DeleteBehavior.NoAction);
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Category)
-                .WithMany(c => c.Products)
-                .HasForeignKey(p => p.CategoryId)
-                .OnDelete(DeleteBehavior.NoAction);
-            modelBuilder.Entity<Product>().HasIndex(p => new { p.UnitId, p.EnglishName }).IsUnique();// my bussiness rules, product must have only one unit, or, product must be unique within the Unit
-            modelBuilder.Entity<Product>().HasIndex(p => new { p.CategoryId, p.EnglishName }).IsUnique(); //my bussiness rules,  same logic
             modelBuilder.Entity<Product>()
                   .HasOne(p => p.User)
                 .WithMany(u => u.Products)
@@ -213,7 +200,6 @@ namespace HardwareStoreNameSpace
                   .HasOne(p => p.User)
                 .WithMany(u => u.Products)
                 .HasForeignKey(p => p.UpdatedBy);
-
             modelBuilder.Entity<Product>()
                   .HasOne(p => p.User)
                 .WithMany(u => u.Products)
@@ -297,6 +283,48 @@ namespace HardwareStoreNameSpace
                 .HasForeignKey(pb => pb.BrandId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+
+            // ProductsBins has one composite primary key and two FKs
+            modelBuilder.Entity<ProductBin>().HasKey(pb => new { pb.ProductId, pb.BinId });
+            modelBuilder.Entity<ProductBin>()
+                .HasOne(pb => pb.Product)
+                .WithMany(p => p.ProductBins)
+                .HasForeignKey(pb => pb.ProductId)
+            .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<ProductBin>()
+                .HasOne(pb => pb.Bin)
+                .WithMany(b => b.ProductBins)
+                .HasForeignKey(pb => pb.BinId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ProductUnit>().
+             HasKey(pu => new { pu.ProductId, pu.UnitId });
+            modelBuilder.Entity<ProductUnit>()
+            .HasOne(pu => pu.Unit)
+            .WithMany(u => u.ProductUnits)
+            .HasForeignKey(pu => pu.UnitId)
+            .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<ProductUnit>()
+            .HasOne(pu => pu.Product)
+            .WithMany(p => p.ProductUnits)
+            .HasForeignKey(pu => pu.ProductId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+            //ProductsCategories : 1 composite PK, 2 FKs
+            modelBuilder.Entity<ProductCategory>().
+             HasKey(pc => new { pc.ProductId, pc.CategoryId });
+            modelBuilder.Entity<ProductCategory>()
+                .HasOne(pc => pc.Category)
+                .WithMany(c => c.ProductCategories)
+                .HasForeignKey(pc => pc.CategoryId)
+                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<ProductCategory>()
+                .HasOne(pc => pc.Product)
+                .WithMany(c => c.ProductCategories)
+                .HasForeignKey(pc => pc.ProductId)
+                .OnDelete(DeleteBehavior.NoAction);
+           
+           
 
 
         }

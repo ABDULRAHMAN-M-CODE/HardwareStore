@@ -4,6 +4,7 @@ using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HardwareStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260904111357_RemovedBinColumnFromProductsTable")]
+    partial class RemovedBinColumnFromProductsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -285,6 +288,9 @@ namespace HardwareStore.Migrations
                     b.Property<string>("Barcode")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -301,19 +307,13 @@ namespace HardwareStore.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Manufacturer")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MinStock")
-                        .HasColumnType("int");
-
                     b.Property<float>("Price")
                         .HasColumnType("real");
-
-                    b.Property<int>("ReorderQTY")
-                        .HasColumnType("int");
 
                     b.Property<string>("SKU")
                         .HasColumnType("nvarchar(max)");
@@ -321,18 +321,29 @@ namespace HardwareStore.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("UnitId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("VAT")
-                        .HasColumnType("int");
+                    b.Property<float>("VAT")
+                        .HasColumnType("real");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedBy");
+
+                    b.HasIndex("CategoryId", "EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
+                    b.HasIndex("UnitId", "EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
 
                     b.ToTable("Products");
                 });
@@ -367,21 +378,6 @@ namespace HardwareStore.Migrations
                     b.ToTable("ProductsBrands");
                 });
 
-            modelBuilder.Entity("HardwareStore.Models.ProductCategory", b =>
-                {
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProductId", "CategoryId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("ProductsCategories");
-                });
-
             modelBuilder.Entity("HardwareStore.Models.ProductCountry", b =>
                 {
                     b.Property<int>("ProductId")
@@ -410,21 +406,6 @@ namespace HardwareStore.Migrations
                     b.HasIndex("SupplierId");
 
                     b.ToTable("ProductsSuppliers");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.ProductUnit", b =>
-                {
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UnitId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProductId", "UnitId");
-
-                    b.HasIndex("UnitId");
-
-                    b.ToTable("ProductsUnits");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
@@ -746,9 +727,25 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Product", b =>
                 {
+                    b.HasOne("HardwareStore.Models.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("HardwareStore.Models.ApplicationUser", "User")
                         .WithMany("Products")
                         .HasForeignKey("DeletedBy");
+
+                    b.HasOne("HardwareStore.Models.Unit", "Unit")
+                        .WithMany("Products")
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Unit");
 
                     b.Navigation("User");
                 });
@@ -791,25 +788,6 @@ namespace HardwareStore.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("HardwareStore.Models.ProductCategory", b =>
-                {
-                    b.HasOne("HardwareStore.Models.Category", "Category")
-                        .WithMany("ProductCategories")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("HardwareStore.Models.Product", "Product")
-                        .WithMany("ProductCategories")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("HardwareStore.Models.ProductCountry", b =>
                 {
                     b.HasOne("HardwareStore.Models.Country", "Country")
@@ -846,25 +824,6 @@ namespace HardwareStore.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.ProductUnit", b =>
-                {
-                    b.HasOne("HardwareStore.Models.Product", "Product")
-                        .WithMany("ProductUnits")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("HardwareStore.Models.Unit", "Unit")
-                        .WithMany("ProductUnits")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Unit");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
@@ -985,7 +944,7 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Category", b =>
                 {
-                    b.Navigation("ProductCategories");
+                    b.Navigation("Products");
 
                     b.Navigation("SubCategories");
                 });
@@ -1001,13 +960,9 @@ namespace HardwareStore.Migrations
 
                     b.Navigation("ProductBrands");
 
-                    b.Navigation("ProductCategories");
-
                     b.Navigation("ProductCountries");
 
                     b.Navigation("ProductSuppliers");
-
-                    b.Navigation("ProductUnits");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Supplier", b =>
@@ -1019,7 +974,7 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Unit", b =>
                 {
-                    b.Navigation("ProductUnits");
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

@@ -4,6 +4,7 @@ using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HardwareStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260904144053_RemovedForeignKeysFromProductsTable")]
+    partial class RemovedForeignKeysFromProductsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -285,6 +288,9 @@ namespace HardwareStore.Migrations
                     b.Property<string>("Barcode")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -306,14 +312,8 @@ namespace HardwareStore.Migrations
                     b.Property<string>("Manufacturer")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MinStock")
-                        .HasColumnType("int");
-
                     b.Property<float>("Price")
                         .HasColumnType("real");
-
-                    b.Property<int>("ReorderQTY")
-                        .HasColumnType("int");
 
                     b.Property<string>("SKU")
                         .HasColumnType("nvarchar(max)");
@@ -327,10 +327,12 @@ namespace HardwareStore.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("VAT")
-                        .HasColumnType("int");
+                    b.Property<float>("VAT")
+                        .HasColumnType("real");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("DeletedBy");
 
@@ -379,7 +381,7 @@ namespace HardwareStore.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("ProductsCategories");
+                    b.ToTable("ProductCategory");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.ProductCountry", b =>
@@ -424,7 +426,7 @@ namespace HardwareStore.Migrations
 
                     b.HasIndex("UnitId");
 
-                    b.ToTable("ProductsUnits");
+                    b.ToTable("ProductUnit");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
@@ -746,6 +748,10 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Product", b =>
                 {
+                    b.HasOne("HardwareStore.Models.Category", null)
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId");
+
                     b.HasOne("HardwareStore.Models.ApplicationUser", "User")
                         .WithMany("Products")
                         .HasForeignKey("DeletedBy");
@@ -986,6 +992,8 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Category", b =>
                 {
                     b.Navigation("ProductCategories");
+
+                    b.Navigation("Products");
 
                     b.Navigation("SubCategories");
                 });

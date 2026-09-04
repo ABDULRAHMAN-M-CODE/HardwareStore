@@ -44,7 +44,7 @@ namespace HardwareStore.Services
             PopulateForeignKeyPropertyForEachChild<SubCategory, Category>("Subcategory", "Category", "CategoryId", subCategories);
             WriteData(subCategories);// I know I'm mixing  reading and writing in the same method, but I had no choice, I suffered alot.
 
-
+            
             List<Country> countries = ReadSpecificColumns<Country>(new List<string> { "EnglishName" }, new List<string> { "Country" });
             WriteData(countries);
             List<Unit> units = ReadSpecificColumns<Unit>(new List<string> { "EnglishName" }, new List<string> { "Unit" });
@@ -87,15 +87,15 @@ namespace HardwareStore.Services
                 }
             }
 
-            _context.SaveChanges();
+            
             
 
             //Reading and Writing for Products table.
             List<Product> products = ReadSpecificColumns<Product>(
 
-            new List<string> { "SKU", "Barcode", "Manufacturer", "EnglishName", "ArabicName", "MinStock", "ReorderQty", "Bin", "Description", "Status", "VAT" },
+            new List<string> { "SKU", "Barcode", "Manufacturer", "EnglishName", "ArabicName", "Description", "Status", "VAT","Price" },
 
-            new List<string> { "SKU", "Barcode", "Manufacturer", "English Name", "Arabic Name", "MinStock", "ReorderQty", "Bin", "Description", "Status", "VAT" }
+            new List<string> { "SKU", "Barcode", "Manufacturer", "English Name", "Arabic Name", "Description", "Status", "VAT","Price" }
 
             );
             products = products 
@@ -118,15 +118,10 @@ namespace HardwareStore.Services
                 productCountries.Add(new ProductCountry());
             }
             PopulateForeignKeyPropertyForEachChild<ProductCountry, Product>("Country", "English Name", "ProductId", productCountries);
-            productCountries = productCountries
 
-                
-                .OrderBy(bc => bc.ProductId)
-                .ToList();
             //problema was not solved
             PopulateForeignKeyPropertyForEachChild<ProductCountry, Country>("English Name", "Country", "CountryId", productCountries);
             productCountries = productCountries
-
                 .Where(bc => bc.CountryId != 0 && bc.ProductId != 0)
                 .DistinctBy(bs => new { bs.ProductId, bs.CountryId })
                 .ToList();
@@ -159,16 +154,8 @@ namespace HardwareStore.Services
                 productSuppliers.Add(new ProductSupplier());
             }// note :at this point, productSuppliers length is 5000.
             PopulateForeignKeyPropertyForEachChild<ProductSupplier, Product>("Supplier", "English Name", "ProductId", productSuppliers);
-            productSuppliers = productSuppliers
-
-
-
-
-                .OrderBy(ps => ps.ProductId)
-                .ToList();
             PopulateForeignKeyPropertyForEachChild<ProductSupplier, Supplier>("English Name","Supplier", "SupplierId", productSuppliers);
             productSuppliers = productSuppliers
-
                 //.Where(ps => ps.SupplierId != 0) // Wrong, because some values of the ProductId might be zero.
                 .Where(ps => ps.SupplierId != 0 && ps.ProductId != 0) // analogy L: cut the unwanted, the empty or the unwanted  portion pucket.
                 .DistinctBy(ps => new { ps.ProductId, ps.SupplierId })
@@ -203,13 +190,6 @@ namespace HardwareStore.Services
                 productBrands.Add(new ProductBrand());
             }
             PopulateForeignKeyPropertyForEachChild<ProductBrand, Product>( "Brand", "English Name", "ProductId", productBrands);
-            productBrands = productBrands
-
-
-
-
-                .OrderBy(pb => pb.ProductId)
-                .ToList();
             PopulateForeignKeyPropertyForEachChild<ProductBrand, Brand>( "English Name", "Brand", "BrandId", productBrands);
             productBrands = productBrands
 
@@ -276,11 +256,17 @@ namespace HardwareStore.Services
              _context.SaveChanges();
        }
 
+
+        /// 
+        /// 
+        /// 
         /// <summary>
-        /// Reads Data from the specified   Excel sheet that is related 
-        /// to tables that DO NOT contain any foreign key,
-        /// i.e., the parent tables only.
+        /// Normal relational sql table contains key attributes, like primary keys and foreign keys,
+        /// and non-key attributes. this method  reads data from the specified excel sheet, the data
+        /// will be used to populate the non-key attributes.
         /// this entities returned by this method are unique.
+        /// 
+        /// Constraint : the order of the excel column names must match the order of the properties names
         /// </summary>
         /// <typeparam name="T">d</typeparam>
         /// <param name="relevantEntityPropertiesNames"></param>
@@ -309,10 +295,10 @@ namespace HardwareStore.Services
                     //scan specific columns
                     // Populate all the relevant properties of a single Entity 
                     T entity = new T();
-                    Type type = typeof(T);
+                    
                     for (int i = 0; i < relevantEntityPropertiesNames.Count; i++)
                     { 
-                        var entityProperty = type.GetProperty(relevantEntityPropertiesNames[i]);
+                        var entityProperty = typeof(T).GetProperty(relevantEntityPropertiesNames[i]);
                         int relevantColumnNumber = _sheet.FindString(relevantExcelColumnsNames[i], false, false).Column; // Make string as parameter
                         var excelCellValue = Convert.ChangeType(_sheet.Range[row, relevantColumnNumber].Value, entityProperty!.PropertyType);
                         entityProperty.SetValue(entity, excelCellValue); 
@@ -336,6 +322,8 @@ namespace HardwareStore.Services
 
 
 
+
+
         /// <summary>
         /// 
         /// <para>
@@ -355,61 +343,46 @@ namespace HardwareStore.Services
         /// <para>
         ///  if you want to set the values for <strong>two foreing keys</strong>, call this method twice, the first call
         ///  is to set the values for the first foreign key, the second call is to set the values for the second foreign key,
-        ///  only after the second call you are allowed to filter out the non-zero values,
-        ///  you should not filter out the non-zero values after the first call of this method.
+        ///  only after the second call you are allowed to filter out the zero values,
+        ///  you should not filter out the zero values after the first call of this method.
         ///  
+        /// <para>
+        /// Below is an example on how to populate a 
+        /// <strong>Junction table</strong> that contains 
+        /// two foreign keys columns, initially, each column 
+        /// is zeroed, i.e., all the values in the column are
+        /// zeros.
+        /// </para>
         ///  <para>
         ///  
-        ///  For example, if you have two foreing keys;  <strong>CategoryId</strong> and <strong>ProductId</strong>, call this method
-        ///  once to set the values for the <strong>ProductId</strong>, some values might be zero, but <strong>don't</strong> filter them
-        ///  out yet. then, <strong>Sort</strong> the values of the <strong>ProductId</strong> then  call this method again to set the values for the <strong>CategoryId</strong>,
+        ///  A junction table called <strong>ProductsCategories</strong>
+        ///  has  two foreing keys;  <strong>CategoryId</strong>
+        ///  and <strong>ProductId</strong>, call this method
+        ///  once to set the values for the <strong>ProductId</strong>
+        ///  , some values might still be zero , but <strong>don't</strong>
+        ///  filter them out yet. then, <strong>Don't Sort</strong> the values of the <strong>ProductId</strong>, then  call this method again 
+        ///  to set the values for the <strong>CategoryId</strong>,
         ///  After the second call, you can filter out the zeros, both <strong>CategoryId</strong>
         ///  and <strong>ProductId</strong> are not allowed to contain zeros.
         ///  </para>
         ///  </para>
         ///   
-        /// 
-        /// 
-        ///   <strong>Notes for my self</strong>
-        ///   <para>In the case of many-to-1 relationship, there is a child and parent tables.</para>
-        /// 
-        ///   
-        ///    Child is the table that contains one or more foreing keys, while parent is the table that is referenced by the foreign key.
-        ///       
-        /// 
-        ///    <para>in database terms: This method sets the values of the foreign-key column that is inside the child table. </para>
-        ///     
-        ///    <para> in objects terms: each row in the Child table is considered object.</para>   
-        ///    
-        ///    <para>As a single row can have multiple columns, a single object my have multiple properties,</para>
-        ///     
-        ///    <para>one or more of those properties  might be mapped to a foreign key in the database</para>  
+        ///  <para>
+        ///  If the table is not a <strong> junction table</strong>,i.e. it's a
+        ///  a table at the <strong>Many</strong> side in a <strong>1:M</strong>
+        ///  relation that, at least, contains three columns; Id , EnglishName,
+        ///  and a foreign-key column, then to populate the foreign key, it is
+        ///  <strong>required to sort</strong> the table by the EnglishName 
+        ///  before calling this method <strong>once</strong>
+        /// , 
         ///  
-        /// 
-        ///     
-        ///     <para>
-        ///     The  passed child table is called <strong>Special Child</strong> if: <br/>
-        ///     1- It's a <strong>junction</strong> table; only contains foreing keys <br/> 
-        ///     2- It is not populated with values , i.e., <strong>either empty or zeroed</strong><br/>
-        ///     </para>
-        ///     
-        ///      <para>
-        ///     If the passed child does not qualify as a 
-        ///     <strong>Special Child</strong>strong>', then 
-        ///     it's  rows must be <strong>sorted</strong> by the
-        ///     primary key before calling  this method, <strong>otherwise</strong>
-        ///     , there is <strong>no need </strong>  for sorting.
-        ///     </para>
-        ///     <para>
-        ///       
-        ///     A lookup table, called records
-        ///     will will
-        ///     Child table's size must be
-        ///     greater or equal than the records
-        ///     , 
-        ///     THis method does not write the values to the database, it's completely a read operation, the destination if the  foreign key property, not the foreign key in the database.
-        /// 
-        ///     </para>
+        ///</para>
+        ///<para>    
+        ///  This method does not write the values to the database, it's 
+        ///  completely a read operation, the destination that this method
+        ///  writes to is the  foreign key property in the C# model, not the 
+        ///  foreign key column in the database.
+        ///</para>
         /// </summary>
         /// <typeparam name="Child"></typeparam>
         /// <typeparam name="Parent"></typeparam>
@@ -417,7 +390,9 @@ namespace HardwareStore.Services
         /// <param name="parentTableNameInExcel"></param>
         /// <param name="foreignKeyPropertyName"></param>
         /// <param name="childs"></param>
-        /// <exception cref="ArgumentException"></exception>        
+        /// <exception cref="ArgumentException">
+        /// </exception>        
+
         public void PopulateForeignKeyPropertyForEachChild<Child,Parent>(string childTablNameInExcel, string parentTableNameInExcel, string foreignKeyPropertyName,List<Child> childs) where Parent:class,IHasEnglishAndArabicName, IHasIdentification 
 
 

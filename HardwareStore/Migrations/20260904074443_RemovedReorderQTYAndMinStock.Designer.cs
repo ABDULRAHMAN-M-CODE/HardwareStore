@@ -4,6 +4,7 @@ using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HardwareStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260904074443_RemovedReorderQTYAndMinStock")]
+    partial class RemovedReorderQTYAndMinStock
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -88,43 +91,6 @@ namespace HardwareStore.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.Bin", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ArabicName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Bins");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Brand", b =>
@@ -285,6 +251,12 @@ namespace HardwareStore.Migrations
                     b.Property<string>("Barcode")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Bin")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -301,19 +273,13 @@ namespace HardwareStore.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Manufacturer")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MinStock")
-                        .HasColumnType("int");
-
                     b.Property<float>("Price")
                         .HasColumnType("real");
-
-                    b.Property<int>("ReorderQTY")
-                        .HasColumnType("int");
 
                     b.Property<string>("SKU")
                         .HasColumnType("nvarchar(max)");
@@ -321,35 +287,31 @@ namespace HardwareStore.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("UnitId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("VAT")
-                        .HasColumnType("int");
+                    b.Property<float>("VAT")
+                        .HasColumnType("real");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DeletedBy");
 
+                    b.HasIndex("CategoryId", "EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
+                    b.HasIndex("UnitId", "EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
                     b.ToTable("Products");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.ProductBin", b =>
-                {
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BinId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProductId", "BinId");
-
-                    b.HasIndex("BinId");
-
-                    b.ToTable("ProductsBins");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.ProductBrand", b =>
@@ -365,21 +327,6 @@ namespace HardwareStore.Migrations
                     b.HasIndex("BrandId");
 
                     b.ToTable("ProductsBrands");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.ProductCategory", b =>
-                {
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProductId", "CategoryId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("ProductsCategories");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.ProductCountry", b =>
@@ -410,21 +357,6 @@ namespace HardwareStore.Migrations
                     b.HasIndex("SupplierId");
 
                     b.ToTable("ProductsSuppliers");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.ProductUnit", b =>
-                {
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UnitId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProductId", "UnitId");
-
-                    b.HasIndex("UnitId");
-
-                    b.ToTable("ProductsUnits");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
@@ -746,30 +678,27 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Product", b =>
                 {
+                    b.HasOne("HardwareStore.Models.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("HardwareStore.Models.ApplicationUser", "User")
                         .WithMany("Products")
                         .HasForeignKey("DeletedBy");
 
+                    b.HasOne("HardwareStore.Models.Unit", "Unit")
+                        .WithMany("Products")
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Unit");
+
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.ProductBin", b =>
-                {
-                    b.HasOne("HardwareStore.Models.Bin", "Bin")
-                        .WithMany("ProductBins")
-                        .HasForeignKey("BinId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("HardwareStore.Models.Product", "Product")
-                        .WithMany("ProductBins")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Bin");
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.ProductBrand", b =>
@@ -787,25 +716,6 @@ namespace HardwareStore.Migrations
                         .IsRequired();
 
                     b.Navigation("Brand");
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.ProductCategory", b =>
-                {
-                    b.HasOne("HardwareStore.Models.Category", "Category")
-                        .WithMany("ProductCategories")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("HardwareStore.Models.Product", "Product")
-                        .WithMany("ProductCategories")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Category");
 
                     b.Navigation("Product");
                 });
@@ -846,25 +756,6 @@ namespace HardwareStore.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.ProductUnit", b =>
-                {
-                    b.HasOne("HardwareStore.Models.Product", "Product")
-                        .WithMany("ProductUnits")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("HardwareStore.Models.Unit", "Unit")
-                        .WithMany("ProductUnits")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Unit");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
@@ -971,11 +862,6 @@ namespace HardwareStore.Migrations
                     b.Navigation("Units");
                 });
 
-            modelBuilder.Entity("HardwareStore.Models.Bin", b =>
-                {
-                    b.Navigation("ProductBins");
-                });
-
             modelBuilder.Entity("HardwareStore.Models.Brand", b =>
                 {
                     b.Navigation("BrandSuppliers");
@@ -985,7 +871,7 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Category", b =>
                 {
-                    b.Navigation("ProductCategories");
+                    b.Navigation("Products");
 
                     b.Navigation("SubCategories");
                 });
@@ -997,17 +883,11 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Product", b =>
                 {
-                    b.Navigation("ProductBins");
-
                     b.Navigation("ProductBrands");
-
-                    b.Navigation("ProductCategories");
 
                     b.Navigation("ProductCountries");
 
                     b.Navigation("ProductSuppliers");
-
-                    b.Navigation("ProductUnits");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Supplier", b =>
@@ -1019,7 +899,7 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Unit", b =>
                 {
-                    b.Navigation("ProductUnits");
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,6 +1,6 @@
-﻿using Azure;
+﻿
 using HardwareStore.Services;
-using Microsoft.AspNetCore.Identity;
+
 
 namespace HardwareStore.Models
 {
