@@ -13,29 +13,26 @@ namespace HardwareStoreNameSpace
         
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Brand> Brands{ get; set; }
-        public DbSet<BrandSupplier> BrandsSuppliers { get; set; } // manaully configure foregin keys in SSMS using sql
-
         public DbSet<Category> Categories { get; set; }
         public DbSet<Unit> Units { get; set; }
-
         public DbSet<Product> Products { get; set; }
-
         public DbSet<SubCategory> SubCategories { get; set; }
-
-
         public DbSet<Country> Countries { get; set; }
+        public DbSet<Bin> Bins { get; set; }
+        public DbSet<Manufacturer> Manufacturers { get; set; }
 
         public DbSet<ProductCountry> ProductsCountries { get; set; }
-
+        public DbSet<BrandSupplier> BrandsSuppliers { get; set; }
         public DbSet<ProductBrand> ProductsBrands { get; set; }
         public DbSet<ProductSupplier> ProductsSuppliers { get; set; }
-        
         public DbSet<ProductBin> ProductsBins { get; set; }
         public DbSet<ProductCategory> ProductsCategories { get; set; }
         public DbSet<ProductUnit> ProductsUnits { get; set; }
-        public DbSet<Bin> Bins { get; set; }
-       
-        
+        public DbSet<ProductManufacturer> ProductsManufacturers { get; set; }
+
+
+
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options):base(options)
         {
 
@@ -244,6 +241,14 @@ namespace HardwareStoreNameSpace
                   .HasOne(c => c.User)
                 .WithMany(u => u.Countries)
                 .HasForeignKey(c => c.DeletedBy);
+
+            //Manufacturers: 1 PK, NO FK
+
+
+
+
+
+
             // ProductsCountries has one composite primary key and two FKs (configure Fks on the many side only)
             modelBuilder.Entity<ProductCountry>().HasKey(pc => new { pc.ProductId,pc.CountryId });
             modelBuilder.Entity<ProductCountry>()
@@ -256,6 +261,19 @@ namespace HardwareStoreNameSpace
                 .WithMany(c => c.ProductCountries)
                 .HasForeignKey(pc => pc.CountryId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ProductManufacturer>().HasKey(pm => new { pm.ProductId, pm.ManufacturerId });
+            modelBuilder.Entity<ProductManufacturer>()
+                .HasOne(pm => pm.Product)
+                .WithMany(p => p.ProductManufacturers)
+                .HasForeignKey(pm => pm.ProductId)
+            .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<ProductManufacturer>()
+                .HasOne(pm => pm.Manufacturer)
+                .WithMany(m => m.ProductManufacturers)
+                .HasForeignKey(pm => pm.ManufacturerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
 
 
             //ProductSupplier has one composite PK and two FK

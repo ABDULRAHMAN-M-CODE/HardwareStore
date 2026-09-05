@@ -7,13 +7,11 @@ namespace HardwareStore.Models
         public int Id { get; set; } // Primary key, also Idenitity.
         public string? SKU { get; set; }
         public  string? Barcode{ get; set; }
-        public string? Manufacturer{ get; set; }
+        
         public string? EnglishName { get; set; } 
         public string? ArabicName { get; set; }
         public string? Description { get; set; } 
         public string? Status { get; set; }
-        
-        
         public int MinStock { get; set; }
         public int VAT { get; set; }
         public int ReorderQTY { get; set; }
@@ -26,5 +24,7 @@ namespace HardwareStore.Models
         public IEnumerable<ProductBin> ProductBins { get; } = new List<ProductBin>();
         public IEnumerable<ProductCategory> ProductCategories { get; } = new List<ProductCategory>(); // for Junction table
         public IEnumerable<ProductUnit> ProductUnits { get; } = new List<ProductUnit>(); // for Junction table
+
+        public IEnumerable<ProductManufacturer> ProductManufacturers { get; } = new List<ProductManufacturer>();
     }
 }

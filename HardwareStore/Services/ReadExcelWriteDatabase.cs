@@ -261,11 +261,16 @@ namespace HardwareStore.Services
         /// 
         /// 
         /// <summary>
+        /// 
+        /// <para>
         /// Normal relational sql table contains key attributes, like primary keys and foreign keys,
         /// and non-key attributes. this method  reads data from the specified excel sheet, the data
         /// will be used to populate the non-key attributes.
-        /// this entities returned by this method are unique.
-        /// 
+        /// </para>
+        /// <para>
+        /// Those entities returned by this method are  not unique
+        /// it's up the caller to use LINQ expression to Distinct between the entities
+        /// </para>
         /// Constraint : the order of the excel column names must match the order of the properties names
         /// </summary>
         /// <typeparam name="T">d</typeparam>
@@ -286,7 +291,7 @@ namespace HardwareStore.Services
             }
 
                 List<T> result = new List<T>();
-                List<object> duplicatesEntitiesNames = new List<object>();
+                //List<object> duplicatesEntitiesNames = new List<object>(); : old approach
                 //scan all the rows 
                 for (int row = 2; row <= (_sheet.LastRow); row++)//assuming row 1 is header, want skip it.
                 {
@@ -307,15 +312,16 @@ namespace HardwareStore.Services
 
                     } // end of inner for loop
 
-                    if (!duplicatesEntitiesNames.Contains(entity.EnglishName!))//T : IHasEnglishAndArabicName solved that
-                    {
+                    // Old approach.
+                    //if (!duplicatesEntitiesNames.Contains(entity.EnglishName!))//T : IHasEnglishAndArabicName solved that
+                    //{
+                    //    result.Add(entity);
+                    //    duplicatesEntitiesNames.Add(entity.EnglishName!); //T : IHasEnglishAndArabicName solved that
+                    //}
                         result.Add(entity);
-                        duplicatesEntitiesNames.Add(entity.EnglishName!); //T : IHasEnglishAndArabicName solved that
-                    }
 
 
-
-                }// end of outermost for
+            }// end of outermost for
                 return result;
 
         }
