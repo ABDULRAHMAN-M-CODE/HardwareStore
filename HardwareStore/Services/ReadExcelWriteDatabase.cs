@@ -28,9 +28,9 @@ namespace HardwareStore.Services
 
             //PROBLEM : I should refactor the code later, so that the ReadData() only reads, not also writes.
 
-            
+
             var httpcontext = _httpContextAccessor.HttpContext;
-            
+
             var file = httpcontext.Request.Form.Files["file"];
             var workbook = new Workbook();
             using var stream = file.OpenReadStream();
@@ -48,18 +48,18 @@ namespace HardwareStore.Services
             categories = categories.DistinctBy(c => c.EnglishName).ToList();
             //List<T> AssignCreatorAndUpdaterToEntitis<T>(List<T> entities, string Id)
             categories = AssignCreatorAndUpdaterToEntitis<Category>(categories, adminId);
-            
+
             WriteData(categories);// I know I'm mixing reading and writing in the same method, but I had no choice, I suffered alot.
-            
+
 
             List<SubCategory> subCategories = ReadSpecificColumns<SubCategory>(new List<string> { "EnglishName" }, new List<string> { "Subcategory" });
             subCategories = subCategories.DistinctBy(sc => new { sc.EnglishName, sc.CategoryId }).ToList();
             subCategories = subCategories.OrderBy(c => c.EnglishName).ToList();
             PopulateForeignKeyPropertyForEachChild<SubCategory, Category>("Subcategory", "Category", "CategoryId", subCategories);
-            subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, adminId);     
+            subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, adminId);
             WriteData(subCategories);
 
-            
+
             List<Country> countries = ReadSpecificColumns<Country>(new List<string> { "EnglishName" }, new List<string> { "Country" });
             countries = countries.DistinctBy(c => c.EnglishName).ToList();
             countries = AssignCreatorAndUpdaterToEntitis<Country>(countries, adminId);
@@ -69,34 +69,34 @@ namespace HardwareStore.Services
             units = units.DistinctBy(u => u.EnglishName).ToList();
             units = AssignCreatorAndUpdaterToEntitis<Unit>(units, adminId);
             WriteData(units);
-            
+
             List<Brand> brands = ReadSpecificColumns<Brand>(new List<string> { "EnglishName" }, new List<string> { "Brand" });
             brands = brands.DistinctBy(b => b.EnglishName).ToList();
             brands = AssignCreatorAndUpdaterToEntitis<Brand>(brands, adminId);
             WriteData(brands);
-            
+
             List<Supplier> suppliers = ReadSpecificColumns<Supplier>(new List<string> { "EnglishName" }, new List<string> { "Supplier" });
             suppliers = suppliers.DistinctBy(s => s.EnglishName).ToList();
             suppliers = AssignCreatorAndUpdaterToEntitis<Supplier>(suppliers, adminId);
             WriteData(suppliers);
 
 
-            
-            
+
+
 
             //Reading and Writing for Products table.
             List<Product> products = ReadSpecificColumns<Product>(
 
-            new List<string> { "SKU", "Barcode",  "EnglishName", "ArabicName", "Description", "Status", "VAT","Price","MinStock","ReorderQTY" },
+            new List<string> { "SKU", "Barcode", "EnglishName", "ArabicName", "Description", "Status", "VAT", "Price", "MinStock", "ReorderQTY" },
 
-            new List<string> { "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT","Price","Min Stock", "Reorder Qty" }
-            
+            new List<string> { "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT", "Price", "Min Stock", "Reorder Qty" }
+
             );
             products = products.DistinctBy(p => p.EnglishName).ToList();
-            products =AssignCreatorAndUpdaterToEntitis<Product>(products, adminId);
+            products = AssignCreatorAndUpdaterToEntitis<Product>(products, adminId);
             WriteData<Product>(products);
 
-           
+
 
 
             // Reading and writing Bins table.
@@ -114,37 +114,46 @@ namespace HardwareStore.Services
 
 
 
-        /////#### Reading and Writing junction tables######
+            /////#### Reading and Writing junction tables######
 
             // Reading and Writing BrandsSuppliers.
             List<BrandSupplier> brandSuppliers = new List<BrandSupplier>();
-            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
-            {
-
-                brandSuppliers.Add(new BrandSupplier());
-            }
-            PopulateForeignKeyPropertyForEachChild<BrandSupplier, Brand>("Supplier", "Brand", "BrandId", brandSuppliers);
-            PopulateForeignKeyPropertyForEachChild<BrandSupplier, Supplier>("Brand", "Supplier", "SupplierId", brandSuppliers);
-            brandSuppliers = brandSuppliers
-                .Where(bs => bs.SupplierId != 0 && bs.BrandId != 0)
-                .DistinctBy(bs => new { bs.SupplierId, bs.BrandId })
+            List<RelationshipLookupRecord> brandSuppliersLookups= CreateLookupTable("Brand", "Supplier");
+            brandSuppliersLookups = brandSuppliersLookups
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                 .ToList();
-            foreach (BrandSupplier bs in brandSuppliers)
+
+            DbSet<Brand> brandDbSet = _context.Set<Brand>();
+            DbSet<Supplier> supplierDbSet = _context.Set<Supplier>();
+            List<Brand> existingBrands=brandDbSet.Select(e => new Brand { Id = e.Id, EnglishName = e.EnglishName }).ToList();
+            List<Supplier> existingSuppliers = supplierDbSet.Select(e => new Supplier { Id = e.Id, EnglishName = e.EnglishName }).ToList();
+            
+            foreach ( RelationshipLookupRecord lookup in brandSuppliersLookups)
             {
-
                 // check if the entity already in the database or not
-                var foundEntity = _context.BrandsSuppliers.FirstOrDefault(e => (e.BrandId == bs.BrandId) && (e.SupplierId == bs.SupplierId));
+                Brand retrivedBrand = existingBrands.First(b => lookup.LeftColumnCellValue == b.EnglishName);
+                Supplier retrivedSupplier = existingSuppliers.First(s => lookup.RightColumnCellValue == s.EnglishName);
 
-                if (foundEntity == null)
+                if (retrivedBrand!=null && retrivedSupplier != null)
                 {
-
-                    _context.Add(bs);
-
+                    brandSuppliers.Add(new BrandSupplier { BrandId = retrivedBrand.Id, SupplierId = retrivedSupplier.Id });
+                }
+            }
+            List<BrandSupplier> existingBrandsSuppliers = _context.BrandsSuppliers.Select(e => new BrandSupplier { BrandId = e.BrandId, SupplierId =e.SupplierId}).ToList();
+            
+            foreach (BrandSupplier obj in brandSuppliers)
+            {
+                if (!existingBrandsSuppliers.Contains<BrandSupplier>(obj))
+                {
+                    _context.Add(obj);
                 }
             }
 
+            _context.SaveChanges();
+            //#########Reading and Writing for ProductsManufacturers table.#####
+            DbSet<Product> productDbSet = _context.Set<Product>();
+            List<Product> existingProducts = productDbSet.Select(p => new Product { Id = p.Id, EnglishName = p.EnglishName }).ToList();
 
-            // #####Reading and Writing for ProductsManufacturers table.#####
             List<ProductManufacturer> productManufacturers = new List<ProductManufacturer>();
             for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
             {
@@ -170,7 +179,7 @@ namespace HardwareStore.Services
             }
 
             // Reading and Writing for ProductsBins table.
-            List <ProductBin> productBins = new List<ProductBin>();
+            List<ProductBin> productBins = new List<ProductBin>();
             for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
             {
 
@@ -197,43 +206,55 @@ namespace HardwareStore.Services
 
             // #####Reading and Writing for ProductsCountries table.#####
             List<ProductCountry> productCountries = new List<ProductCountry>();
-            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
-            {
-
-                productCountries.Add(new ProductCountry());
-            }
-            PopulateForeignKeyPropertyForEachChild<ProductCountry, Product>("Country", "English Name", "ProductId", productCountries);
-            PopulateForeignKeyPropertyForEachChild<ProductCountry, Country>("English Name", "Country", "CountryId", productCountries);
-            productCountries = productCountries
-                .Where(bc => bc.CountryId != 0 && bc.ProductId != 0)
-                .DistinctBy(bs => new { bs.ProductId, bs.CountryId })
+            List<RelationshipLookupRecord> productCountryLookups = CreateLookupTable("English Name", "Country");
+            productCountryLookups = productCountryLookups
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                 .ToList();
+
+            
+            DbSet<Country> countryDbSet = _context.Set<Country>();
+
+            foreach (var lookup in productCountryLookups)
+            {
+                Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
+                Country foundCountry = countryDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
+
+                if (foundProduct != null && foundCountry != null)
+                {
+                    productCountries.Add(new ProductCountry { ProductId = foundProduct.Id, CountryId = foundCountry.Id });
+                }
+            }
             foreach (ProductCountry pc in productCountries)
             {
                 var foundEntity = _context.ProductsCountries.FirstOrDefault(e => (e.ProductId == pc.ProductId) && (e.CountryId == pc.CountryId));
 
                 if (foundEntity == null)
                 {
-
-                   _context.Add(pc);
-
+                    _context.Add(pc);
                 }
             }
 
-           
+
             //#####Reading and Writing for ProductsSuppliers table.#####
             List<ProductSupplier> productSuppliers = new List<ProductSupplier>();
-            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
-            {
+            List<RelationshipLookupRecord> productSupplierLookups = CreateLookupTable("English Name", "Supplier");
+            productSupplierLookups = productSupplierLookups
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+                .ToList();
 
-                productSuppliers.Add(new ProductSupplier());
-            }// note :at this point, productSuppliers length is 5000.
-            PopulateForeignKeyPropertyForEachChild<ProductSupplier, Product>("Supplier", "English Name", "ProductId", productSuppliers);
-            PopulateForeignKeyPropertyForEachChild<ProductSupplier, Supplier>("English Name","Supplier", "SupplierId", productSuppliers);
-            productSuppliers = productSuppliers
-                .Where(ps => ps.SupplierId != 0 && ps.ProductId != 0) // analogy L: cut the unwanted, the empty or the unwanted  portion pucket.
-                .DistinctBy(ps => new { ps.ProductId, ps.SupplierId })
-                .ToList(); 
+   
+
+            foreach (var lookup in productSupplierLookups)
+            {
+                Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
+                Supplier foundSupplier = supplierDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
+
+                if (foundProduct != null && foundSupplier != null)
+                {
+                    productSuppliers.Add(new ProductSupplier { ProductId = foundProduct.Id, SupplierId = foundSupplier.Id });
+                }
+            }
+
             foreach (ProductSupplier ps in productSuppliers)
             {
 
@@ -246,21 +267,27 @@ namespace HardwareStore.Services
                 }
             }
 
-          
+
 
             List<ProductBrand> productBrands = new List<ProductBrand>();
-            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
-            {
-
-                productBrands.Add(new ProductBrand());
-            }
-            PopulateForeignKeyPropertyForEachChild<ProductBrand, Product>( "Brand", "English Name", "ProductId", productBrands);
-            PopulateForeignKeyPropertyForEachChild<ProductBrand, Brand>( "English Name", "Brand", "BrandId", productBrands);
-            productBrands = productBrands
-
-                .Where(pb => pb.BrandId != 0 && pb.ProductId != 0) // LINQ
-                .DistinctBy(pb => new { pb.ProductId, pb.BrandId })  
+            List<RelationshipLookupRecord> productBrandLookups = CreateLookupTable("English Name", "Brand");
+            productBrandLookups = productBrandLookups
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                 .ToList();
+
+       
+
+            foreach (var lookup in productBrandLookups)
+            {
+                Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
+                Brand foundBrand = brandDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
+
+                if (foundProduct != null && foundBrand != null)
+                {
+                    productBrands.Add(new ProductBrand { ProductId = foundProduct.Id, BrandId = foundBrand.Id });
+                }
+            }
+
             foreach (ProductBrand pb in productBrands)
             {
 
@@ -279,18 +306,24 @@ namespace HardwareStore.Services
             // Reading and Writing ProductsCategories.
             // later when refactoring code : await two dependencies.
             List<ProductCategory> productCategories = new List<ProductCategory>();
-            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
-            {
-
-                productCategories.Add(new ProductCategory());
-            }
-            PopulateForeignKeyPropertyForEachChild<ProductCategory, Product>("Category", "English Name", "ProductId", productCategories);
-            PopulateForeignKeyPropertyForEachChild<ProductCategory, Category>("English Name", "Category", "CategoryId", productCategories);
-            productCategories = productCategories
-
-                .Where(pc => pc.CategoryId != 0 && pc.ProductId != 0) // LINQ
-                .DistinctBy(pc => new { pc.ProductId, pc.CategoryId })
+            List<RelationshipLookupRecord> productCategoryLookups = CreateLookupTable("English Name", "Category");
+            productCategoryLookups = productCategoryLookups
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                 .ToList();
+
+            DbSet<Category> categoryDbSet = _context.Set<Category>();
+            
+            foreach (var lookup in productCategoryLookups)
+            {
+                Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
+                Category foundCategory = categoryDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
+
+                if (foundProduct != null && foundCategory != null)
+                {
+                    productCategories.Add(new ProductCategory { ProductId = foundProduct.Id, CategoryId = foundCategory.Id });
+                }
+            }
+
             foreach (ProductCategory pc in productCategories)
             {
 
@@ -309,17 +342,30 @@ namespace HardwareStore.Services
             // Reading and Writing ProductsUnits.
             // later when refactoring code : await two dependencies.
             List<ProductUnit> productUnits = new List<ProductUnit>();
-            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
-            {
-
-                productUnits.Add(new ProductUnit());
-            }
-            PopulateForeignKeyPropertyForEachChild<ProductUnit, Product>("Unit", "English Name", "ProductId", productUnits);
-            PopulateForeignKeyPropertyForEachChild<ProductUnit, Unit>("English Name", "Unit", "UnitId", productUnits);
-            productUnits = productUnits
-                .Where(pu => pu.UnitId != 0 && pu.ProductId != 0) // LINQ
-                .DistinctBy(pu => new { pu.ProductId, pu.UnitId })
+            List<RelationshipLookupRecord> productUnitLookups = CreateLookupTable("English Name", "Unit");
+            productUnitLookups = productUnitLookups
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                 .ToList();
+
+            DbSet<Unit> unitDbSet = _context.Set<Unit>();
+
+           
+            List<Unit> existingUnits= unitDbSet.Select(u => new Unit { Id=u.Id, EnglishName=u.EnglishName }).ToList();
+
+            foreach (var lookup in productUnitLookups)
+                
+
+            {
+                Product foundProduct= existingProducts.First(p => p.EnglishName == lookup.LeftColumnCellValue);
+                 
+                Unit foundUnit = existingUnits.First(u => u.EnglishName == lookup.RightColumnCellValue);
+
+                if (foundProduct != null && foundUnit != null)
+                {
+                    productUnits.Add(new ProductUnit { ProductId = foundProduct.Id, UnitId = foundUnit.Id });
+                }
+            }
+
             foreach (ProductUnit pu in productUnits)
             {
 
