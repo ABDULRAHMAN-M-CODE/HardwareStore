@@ -10,7 +10,9 @@ namespace HardwareStore.Models
 
         public IEnumerable<ProductBin> ProductBins { get; } = new List<ProductBin>();
 
-
+        public ApplicationUser Creator { get; set; } = null!;
+        public ApplicationUser Deleter { get; set; } = null!;
+        public ApplicationUser Updater { get; set; } = null!;
 
     }
 }

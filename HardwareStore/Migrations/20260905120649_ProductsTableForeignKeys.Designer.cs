@@ -4,6 +4,7 @@ using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HardwareStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260905120649_ProductsTableForeignKeys")]
+    partial class ProductsTableForeignKeys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,35 +107,25 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeleterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdaterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("DeleterId");
-
-                    b.HasIndex("EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
-
-                    b.HasIndex("UpdaterId");
 
                     b.ToTable("Bins");
                 });
@@ -151,13 +144,13 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeleterId")
+                    b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("EnglishName")
@@ -167,19 +160,15 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdaterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("DeleterId");
+                    b.HasIndex("DeletedBy");
 
                     b.HasIndex("EnglishName")
                         .IsUnique();
-
-                    b.HasIndex("UpdaterId");
 
                     b.ToTable("Brands");
                 });
@@ -213,13 +202,13 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeleterId")
+                    b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("EnglishName")
@@ -228,20 +217,16 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdaterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("DeleterId");
+                    b.HasIndex("DeletedBy");
 
                     b.HasIndex("EnglishName")
                         .IsUnique()
                         .HasFilter("[EnglishName] IS NOT NULL");
-
-                    b.HasIndex("UpdaterId");
 
                     b.ToTable("Categories");
                 });
@@ -260,13 +245,13 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeleterId")
+                    b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("EnglishName")
@@ -275,20 +260,16 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdaterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("DeleterId");
+                    b.HasIndex("DeletedBy");
 
                     b.HasIndex("EnglishName")
                         .IsUnique()
                         .HasFilter("[EnglishName] IS NOT NULL");
-
-                    b.HasIndex("UpdaterId");
 
                     b.ToTable("Countries");
                 });
@@ -307,35 +288,25 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeleterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EnglishName")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdaterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("DeleterId");
-
-                    b.HasIndex("EnglishName")
-                        .IsUnique()
-                        .HasFilter("[EnglishName] IS NOT NULL");
-
-                    b.HasIndex("UpdaterId");
 
                     b.ToTable("Manufacturers");
                 });
@@ -357,13 +328,13 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorId")
+                    b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeleterId")
+                    b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Description")
@@ -390,7 +361,7 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdaterId")
+                    b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("VAT")
@@ -398,11 +369,11 @@ namespace HardwareStore.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatorId");
+                    b.HasIndex("CreatedBy");
 
-                    b.HasIndex("DeleterId");
+                    b.HasIndex("DeletedBy");
 
-                    b.HasIndex("UpdaterId");
+                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("Products");
                 });
@@ -529,13 +500,13 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeleterId")
+                    b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("EnglishName")
@@ -544,16 +515,12 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdaterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("DeleterId");
-
-                    b.HasIndex("UpdaterId");
+                    b.HasIndex("DeletedBy");
 
                     b.HasIndex("CategoryId", "EnglishName")
                         .IsUnique()
@@ -576,13 +543,13 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeleterId")
+                    b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("EnglishName")
@@ -591,20 +558,16 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdaterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("DeleterId");
+                    b.HasIndex("DeletedBy");
 
                     b.HasIndex("EnglishName")
                         .IsUnique()
                         .HasFilter("[EnglishName] IS NOT NULL");
-
-                    b.HasIndex("UpdaterId");
 
                     b.ToTable("Suppliers");
                 });
@@ -623,13 +586,13 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeleterId")
+                    b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("EnglishName")
@@ -638,20 +601,16 @@ namespace HardwareStore.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdaterId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("DeleterId");
+                    b.HasIndex("DeletedBy");
 
                     b.HasIndex("EnglishName")
                         .IsUnique()
                         .HasFilter("[EnglishName] IS NOT NULL");
-
-                    b.HasIndex("UpdaterId");
 
                     b.ToTable("Units");
                 });
@@ -793,52 +752,14 @@ namespace HardwareStore.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("HardwareStore.Models.Bin", b =>
-                {
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
-                        .WithMany("CreatedBins")
-                        .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
-                        .WithMany("DeletedBins")
-                        .HasForeignKey("DeleterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
-                        .WithMany("UpdatedBins")
-                        .HasForeignKey("UpdaterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Deleter");
-
-                    b.Navigation("Updater");
-                });
-
             modelBuilder.Entity("HardwareStore.Models.Brand", b =>
                 {
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
-                        .WithMany("CreatedBrands")
-                        .HasForeignKey("CreatorId")
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "User")
+                        .WithMany("Brands")
+                        .HasForeignKey("DeletedBy")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
-                        .WithMany("DeletedBrands")
-                        .HasForeignKey("DeleterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
-                        .WithMany("UpdatedBrands")
-                        .HasForeignKey("UpdaterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Deleter");
-
-                    b.Navigation("Updater");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.BrandSupplier", b =>
@@ -862,86 +783,36 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.Category", b =>
                 {
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
-                        .WithMany("CreatedCategories")
-                        .HasForeignKey("CreatorId")
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "User")
+                        .WithMany("Categories")
+                        .HasForeignKey("DeletedBy")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
-                        .WithMany("DeletedCategories")
-                        .HasForeignKey("DeleterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
-                        .WithMany("UpdatedCategories")
-                        .HasForeignKey("UpdaterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Deleter");
-
-                    b.Navigation("Updater");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Country", b =>
                 {
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
-                        .WithMany("CreatedCountries")
-                        .HasForeignKey("CreatorId");
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "User")
+                        .WithMany("Countries")
+                        .HasForeignKey("DeletedBy");
 
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
-                        .WithMany("DeletedCountries")
-                        .HasForeignKey("DeleterId");
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
-                        .WithMany("UpdatedCountries")
-                        .HasForeignKey("UpdaterId");
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Deleter");
-
-                    b.Navigation("Updater");
-                });
-
-            modelBuilder.Entity("HardwareStore.Models.Manufacturer", b =>
-                {
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
-                        .WithMany("CreatedManufacturers")
-                        .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
-                        .WithMany("DeletedManufacturers")
-                        .HasForeignKey("DeleterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
-                        .WithMany("UpdatedManufacturers")
-                        .HasForeignKey("UpdaterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Deleter");
-
-                    b.Navigation("Updater");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Product", b =>
                 {
                     b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
                         .WithMany("CreatedProducts")
-                        .HasForeignKey("CreatorId");
+                        .HasForeignKey("CreatedBy");
 
                     b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
                         .WithMany("DeletedProducts")
-                        .HasForeignKey("DeleterId");
+                        .HasForeignKey("DeletedBy");
 
                     b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
                         .WithMany("UpdatedProducts")
-                        .HasForeignKey("UpdaterId");
+                        .HasForeignKey("UpdatedBy");
 
                     b.Navigation("Creator");
 
@@ -1091,70 +962,32 @@ namespace HardwareStore.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
-                        .WithMany("CreatedSubCategories")
-                        .HasForeignKey("CreatorId");
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
-                        .WithMany("DeletedSubCategories")
-                        .HasForeignKey("DeleterId");
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
-                        .WithMany("UpdatedSubCategories")
-                        .HasForeignKey("UpdaterId");
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "User")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("DeletedBy");
 
                     b.Navigation("Category");
 
-                    b.Navigation("Creator");
-
-                    b.Navigation("Deleter");
-
-                    b.Navigation("Updater");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Supplier", b =>
                 {
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
-                        .WithMany("CreatedSuppliers")
-                        .HasForeignKey("CreatorId")
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "User")
+                        .WithMany("Suppliers")
+                        .HasForeignKey("DeletedBy")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
-                        .WithMany("DeletedSuppliers")
-                        .HasForeignKey("DeleterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
-                        .WithMany("UpdatedSuppliers")
-                        .HasForeignKey("UpdaterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Deleter");
-
-                    b.Navigation("Updater");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Unit", b =>
                 {
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
-                        .WithMany("CreatedUnits")
-                        .HasForeignKey("CreatorId");
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "User")
+                        .WithMany("Units")
+                        .HasForeignKey("DeletedBy");
 
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
-                        .WithMany("DeletedUnits")
-                        .HasForeignKey("DeleterId");
-
-                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
-                        .WithMany("UpdatedUnits")
-                        .HasForeignKey("UpdaterId");
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Deleter");
-
-                    b.Navigation("Updater");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1210,59 +1043,23 @@ namespace HardwareStore.Migrations
 
             modelBuilder.Entity("HardwareStore.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("CreatedBins");
+                    b.Navigation("Brands");
 
-                    b.Navigation("CreatedBrands");
+                    b.Navigation("Categories");
 
-                    b.Navigation("CreatedCategories");
-
-                    b.Navigation("CreatedCountries");
-
-                    b.Navigation("CreatedManufacturers");
+                    b.Navigation("Countries");
 
                     b.Navigation("CreatedProducts");
 
-                    b.Navigation("CreatedSubCategories");
-
-                    b.Navigation("CreatedSuppliers");
-
-                    b.Navigation("CreatedUnits");
-
-                    b.Navigation("DeletedBins");
-
-                    b.Navigation("DeletedBrands");
-
-                    b.Navigation("DeletedCategories");
-
-                    b.Navigation("DeletedCountries");
-
-                    b.Navigation("DeletedManufacturers");
-
                     b.Navigation("DeletedProducts");
 
-                    b.Navigation("DeletedSubCategories");
+                    b.Navigation("SubCategories");
 
-                    b.Navigation("DeletedSuppliers");
+                    b.Navigation("Suppliers");
 
-                    b.Navigation("DeletedUnits");
-
-                    b.Navigation("UpdatedBins");
-
-                    b.Navigation("UpdatedBrands");
-
-                    b.Navigation("UpdatedCategories");
-
-                    b.Navigation("UpdatedCountries");
-
-                    b.Navigation("UpdatedManufacturers");
+                    b.Navigation("Units");
 
                     b.Navigation("UpdatedProducts");
-
-                    b.Navigation("UpdatedSubCategories");
-
-                    b.Navigation("UpdatedSuppliers");
-
-                    b.Navigation("UpdatedUnits");
                 });
 
             modelBuilder.Entity("HardwareStore.Models.Bin", b =>

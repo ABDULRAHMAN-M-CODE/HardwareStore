@@ -12,6 +12,8 @@ namespace HardwareStore.Models
 
 
         public Category Category { get; set; } = null!; // Navigation
-        public ApplicationUser User { get; set; } = null!;
+        public ApplicationUser Creator { get; set; } = null!;
+        public ApplicationUser Deleter { get; set; } = null!;
+        public ApplicationUser Updater { get; set; } = null!;
     }
 }

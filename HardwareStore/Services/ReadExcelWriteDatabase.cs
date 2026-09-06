@@ -1,14 +1,14 @@
-﻿using HardwareStore.Models;
-using HardwareStoreNameSpace;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
-using Microsoft.EntityFrameworkCore;
-using Spire.Xls;
-using Spire.Xls.Core;
-using System.Diagnostics;
-using System.Security.Cryptography.Pkcs;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿
+
 namespace HardwareStore.Services
+
 {
+    using HardwareStore.Models;
+    using HardwareStoreNameSpace;
+    using Microsoft.EntityFrameworkCore;
+    using Spire.Xls;
+    using System.Diagnostics;
+    using System.Security.Claims;
     public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -19,7 +19,7 @@ namespace HardwareStore.Services
         {
             _httpContextAccessor = httpContextAccessor;
             _context = context;
-            //_sheet = sheet;// did not work
+            
         }
 
         public void ReadAndWriteData()// LATER :refactor this  method to only read, not to also write data.
@@ -28,33 +28,95 @@ namespace HardwareStore.Services
 
             //PROBLEM : I should refactor the code later, so that the ReadData() only reads, not also writes.
 
+            
             var httpcontext = _httpContextAccessor.HttpContext;
+            
             var file = httpcontext.Request.Form.Files["file"];
             var workbook = new Workbook();
             using var stream = file.OpenReadStream();
             workbook.LoadFromStream(stream);
-            this._sheet = workbook.Worksheets[0];
+            this._sheet = workbook.Worksheets[1];
+
+            var adminId = httpcontext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+
+
+
+
 
             List<Category> categories = ReadSpecificColumns<Category>(new List<string> { "EnglishName" }, new List<string> { "Category" });
+            categories = categories.DistinctBy(c => c.EnglishName).ToList();
+            //List<T> AssignCreatorAndUpdaterToEntitis<T>(List<T> entities, string Id)
+            categories = AssignCreatorAndUpdaterToEntitis<Category>(categories, adminId);
+            
             WriteData(categories);// I know I'm mixing reading and writing in the same method, but I had no choice, I suffered alot.
+            
+
             List<SubCategory> subCategories = ReadSpecificColumns<SubCategory>(new List<string> { "EnglishName" }, new List<string> { "Subcategory" });
-            subCategories = subCategories // subCategories records is already unique
-            .OrderBy(c => c.EnglishName)
-            .ToList();
+            subCategories = subCategories.DistinctBy(sc => new { sc.EnglishName, sc.CategoryId }).ToList();
+            subCategories = subCategories.OrderBy(c => c.EnglishName).ToList();
             PopulateForeignKeyPropertyForEachChild<SubCategory, Category>("Subcategory", "Category", "CategoryId", subCategories);
-            WriteData(subCategories);// I know I'm mixing  reading and writing in the same method, but I had no choice, I suffered alot.
+            subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, adminId);     
+            WriteData(subCategories);
 
             
             List<Country> countries = ReadSpecificColumns<Country>(new List<string> { "EnglishName" }, new List<string> { "Country" });
+            countries = countries.DistinctBy(c => c.EnglishName).ToList();
+            countries = AssignCreatorAndUpdaterToEntitis<Country>(countries, adminId);
             WriteData(countries);
+
             List<Unit> units = ReadSpecificColumns<Unit>(new List<string> { "EnglishName" }, new List<string> { "Unit" });
+            units = units.DistinctBy(u => u.EnglishName).ToList();
+            units = AssignCreatorAndUpdaterToEntitis<Unit>(units, adminId);
             WriteData(units);
+            
             List<Brand> brands = ReadSpecificColumns<Brand>(new List<string> { "EnglishName" }, new List<string> { "Brand" });
+            brands = brands.DistinctBy(b => b.EnglishName).ToList();
+            brands = AssignCreatorAndUpdaterToEntitis<Brand>(brands, adminId);
             WriteData(brands);
+            
             List<Supplier> suppliers = ReadSpecificColumns<Supplier>(new List<string> { "EnglishName" }, new List<string> { "Supplier" });
+            suppliers = suppliers.DistinctBy(s => s.EnglishName).ToList();
+            suppliers = AssignCreatorAndUpdaterToEntitis<Supplier>(suppliers, adminId);
             WriteData(suppliers);
 
 
+            
+            
+
+            //Reading and Writing for Products table.
+            List<Product> products = ReadSpecificColumns<Product>(
+
+            new List<string> { "SKU", "Barcode",  "EnglishName", "ArabicName", "Description", "Status", "VAT","Price","MinStock","ReorderQTY" },
+
+            new List<string> { "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT","Price","Min Stock", "Reorder Qty" }
+            
+            );
+            products = products.DistinctBy(p => p.EnglishName).ToList();
+            products =AssignCreatorAndUpdaterToEntitis<Product>(products, adminId);
+            WriteData<Product>(products);
+
+           
+
+
+            // Reading and writing Bins table.
+            List<Bin> bins = ReadSpecificColumns<Bin>(new List<string> { "EnglishName" }, new List<string> { "Bin" });
+            bins = bins.DistinctBy(c => c.EnglishName).ToList();
+            bins = AssignCreatorAndUpdaterToEntitis<Bin>(bins, adminId);
+            WriteData(bins);// I know I'm mixing reading and writing in the same method, but I had no choice, I suffered alot.
+
+
+            List<Manufacturer> manufacturers = ReadSpecificColumns<Manufacturer>(new List<string> { "EnglishName" }, new List<string> { "Manufacturer" });
+            manufacturers = manufacturers.DistinctBy(m => m.EnglishName).ToList();
+            manufacturers = AssignCreatorAndUpdaterToEntitis<Manufacturer>(manufacturers, adminId);
+            WriteData(manufacturers);
+
+
+
+
+        /////#### Reading and Writing junction tables######
+
+            // Reading and Writing BrandsSuppliers.
             List<BrandSupplier> brandSuppliers = new List<BrandSupplier>();
             for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
             {
@@ -63,11 +125,10 @@ namespace HardwareStore.Services
             }
             PopulateForeignKeyPropertyForEachChild<BrandSupplier, Brand>("Supplier", "Brand", "BrandId", brandSuppliers);
             PopulateForeignKeyPropertyForEachChild<BrandSupplier, Supplier>("Brand", "Supplier", "SupplierId", brandSuppliers);
-            brandSuppliers=brandSuppliers
-                .Where(bs => bs.SupplierId != 0 && bs.BrandId!=0) 
+            brandSuppliers = brandSuppliers
+                .Where(bs => bs.SupplierId != 0 && bs.BrandId != 0)
                 .DistinctBy(bs => new { bs.SupplierId, bs.BrandId })
                 .ToList();
-            
             foreach (BrandSupplier bs in brandSuppliers)
             {
 
@@ -77,37 +138,61 @@ namespace HardwareStore.Services
                 if (foundEntity == null)
                 {
 
-
-
-
                     _context.Add(bs);
-
-
 
                 }
             }
 
-            
-            
 
-            //Reading and Writing for Products table.
-            List<Product> products = ReadSpecificColumns<Product>(
+            // #####Reading and Writing for ProductsManufacturers table.#####
+            List<ProductManufacturer> productManufacturers = new List<ProductManufacturer>();
+            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
+            {
 
-            new List<string> { "SKU", "Barcode", "Manufacturer", "EnglishName", "ArabicName", "Description", "Status", "VAT","Price" },
+                productManufacturers.Add(new ProductManufacturer());
+            }
+            PopulateForeignKeyPropertyForEachChild<ProductManufacturer, Product>("Manufacturer", "English Name", "ProductId", productManufacturers);
+            PopulateForeignKeyPropertyForEachChild<ProductManufacturer, Manufacturer>("English Name", "Manufacturer", "ManufacturerId", productManufacturers);
+            productManufacturers = productManufacturers
+                .Where(pm => pm.ManufacturerId != 0 && pm.ProductId != 0)
+                .DistinctBy(pm => new { pm.ProductId, pm.ManufacturerId })
+                .ToList();
+            foreach (ProductManufacturer pm in productManufacturers)
+            {
+                var foundEntity = _context.ProductsManufacturers.FirstOrDefault(e => (e.ProductId == pm.ProductId) && (e.ManufacturerId == pm.ManufacturerId));
 
-            new List<string> { "SKU", "Barcode", "Manufacturer", "English Name", "Arabic Name", "Description", "Status", "VAT","Price" }
+                if (foundEntity == null)
+                {
 
-            );
-            products = products 
-           .OrderBy(p => p.EnglishName)//Necessary to order the left column in the Child table before calling the below method. unless we are dealing with zeroed column.
-            .ToList();
-            PopulateForeignKeyPropertyForEachChild<Product, Unit>("English Name", "Unit", "UnitId", products);
-            products = products  // increased saftey against failure
-            .OrderBy(p => p.EnglishName)
-            .ToList();
-            PopulateForeignKeyPropertyForEachChild<Product, Category>("English Name", "Category", "CategoryId", products);
-            WriteData<Product>(products);
+                    _context.Add(pm);
 
+                }
+            }
+
+            // Reading and Writing for ProductsBins table.
+            List <ProductBin> productBins = new List<ProductBin>();
+            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
+            {
+
+                productBins.Add(new ProductBin());
+            }
+            PopulateForeignKeyPropertyForEachChild<ProductBin, Product>("Bin", "English Name", "ProductId", productBins);
+            PopulateForeignKeyPropertyForEachChild<ProductBin, Bin>("English Name", "Bin", "BinId", productBins);
+            productBins = productBins
+                .Where(pb => pb.BinId != 0 && pb.ProductId != 0)
+                .DistinctBy(pb => new { pb.ProductId, pb.BinId })
+                .ToList();
+            foreach (ProductBin pb in productBins)
+            {
+                var foundEntity = _context.ProductsBins.FirstOrDefault(e => (e.ProductId == pb.ProductId) && (e.BinId == pb.BinId));
+
+                if (foundEntity == null)
+                {
+
+                    _context.Add(pb);
+
+                }
+            }
 
 
             // #####Reading and Writing for ProductsCountries table.#####
@@ -118,34 +203,24 @@ namespace HardwareStore.Services
                 productCountries.Add(new ProductCountry());
             }
             PopulateForeignKeyPropertyForEachChild<ProductCountry, Product>("Country", "English Name", "ProductId", productCountries);
-
-            //problema was not solved
             PopulateForeignKeyPropertyForEachChild<ProductCountry, Country>("English Name", "Country", "CountryId", productCountries);
             productCountries = productCountries
                 .Where(bc => bc.CountryId != 0 && bc.ProductId != 0)
                 .DistinctBy(bs => new { bs.ProductId, bs.CountryId })
                 .ToList();
-
-
             foreach (ProductCountry pc in productCountries)
             {
-
-
                 var foundEntity = _context.ProductsCountries.FirstOrDefault(e => (e.ProductId == pc.ProductId) && (e.CountryId == pc.CountryId));
 
                 if (foundEntity == null)
                 {
 
-
-
-
-                    _context.Add(pc);
-
-
+                   _context.Add(pc);
 
                 }
             }
 
+           
             //#####Reading and Writing for ProductsSuppliers table.#####
             List<ProductSupplier> productSuppliers = new List<ProductSupplier>();
             for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
@@ -156,27 +231,17 @@ namespace HardwareStore.Services
             PopulateForeignKeyPropertyForEachChild<ProductSupplier, Product>("Supplier", "English Name", "ProductId", productSuppliers);
             PopulateForeignKeyPropertyForEachChild<ProductSupplier, Supplier>("English Name","Supplier", "SupplierId", productSuppliers);
             productSuppliers = productSuppliers
-                //.Where(ps => ps.SupplierId != 0) // Wrong, because some values of the ProductId might be zero.
                 .Where(ps => ps.SupplierId != 0 && ps.ProductId != 0) // analogy L: cut the unwanted, the empty or the unwanted  portion pucket.
                 .DistinctBy(ps => new { ps.ProductId, ps.SupplierId })
-                .ToList();
-
-            // note :at this point, productSuppliers length is 1998. 
+                .ToList(); 
             foreach (ProductSupplier ps in productSuppliers)
             {
 
-
                 var foundEntity = _context.ProductsSuppliers.FirstOrDefault(e => (e.ProductId == ps.ProductId) && (e.SupplierId == ps.SupplierId));
-
                 if (foundEntity == null)
                 {
 
-
-
-
                     _context.Add(ps);
-
-
 
                 }
             }
@@ -196,28 +261,77 @@ namespace HardwareStore.Services
                 .Where(pb => pb.BrandId != 0 && pb.ProductId != 0) // LINQ
                 .DistinctBy(pb => new { pb.ProductId, pb.BrandId })  
                 .ToList();
-
-
             foreach (ProductBrand pb in productBrands)
             {
-
 
                 var foundEntity = _context.ProductsBrands.FirstOrDefault(e => (e.ProductId == pb.ProductId) && (e.BrandId == pb.BrandId));
 
                 if (foundEntity == null)
                 {
 
-
-
-
                     _context.Add(pb);
-
-
 
                 }
             }
 
 
+
+            // Reading and Writing ProductsCategories.
+            // later when refactoring code : await two dependencies.
+            List<ProductCategory> productCategories = new List<ProductCategory>();
+            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
+            {
+
+                productCategories.Add(new ProductCategory());
+            }
+            PopulateForeignKeyPropertyForEachChild<ProductCategory, Product>("Category", "English Name", "ProductId", productCategories);
+            PopulateForeignKeyPropertyForEachChild<ProductCategory, Category>("English Name", "Category", "CategoryId", productCategories);
+            productCategories = productCategories
+
+                .Where(pc => pc.CategoryId != 0 && pc.ProductId != 0) // LINQ
+                .DistinctBy(pc => new { pc.ProductId, pc.CategoryId })
+                .ToList();
+            foreach (ProductCategory pc in productCategories)
+            {
+
+                var foundEntity = _context.ProductsCategories.FirstOrDefault(e => (e.ProductId == pc.ProductId) && (e.CategoryId == pc.CategoryId));
+
+                if (foundEntity == null)
+                {
+
+                    _context.Add(pc);
+
+                }
+            }
+
+
+
+            // Reading and Writing ProductsUnits.
+            // later when refactoring code : await two dependencies.
+            List<ProductUnit> productUnits = new List<ProductUnit>();
+            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
+            {
+
+                productUnits.Add(new ProductUnit());
+            }
+            PopulateForeignKeyPropertyForEachChild<ProductUnit, Product>("Unit", "English Name", "ProductId", productUnits);
+            PopulateForeignKeyPropertyForEachChild<ProductUnit, Unit>("English Name", "Unit", "UnitId", productUnits);
+            productUnits = productUnits
+                .Where(pu => pu.UnitId != 0 && pu.ProductId != 0) // LINQ
+                .DistinctBy(pu => new { pu.ProductId, pu.UnitId })
+                .ToList();
+            foreach (ProductUnit pu in productUnits)
+            {
+
+                var foundEntity = _context.ProductsUnits.FirstOrDefault(e => (e.ProductId == pu.ProductId) && (e.UnitId == pu.UnitId));
+
+                if (foundEntity == null)
+                {
+
+                    _context.Add(pu);
+
+                }
+            }
 
             _context.SaveChanges();
              Debug.WriteLine(" My break point.");
@@ -227,8 +341,19 @@ namespace HardwareStore.Services
 
         }
 
-       
-       
+
+
+
+        public  List<T> AssignCreatorAndUpdaterToEntitis<T>(List<T> entities, string Id) where T: HasCreatorAndUpdator
+        {
+            foreach (T entity in entities)
+            {
+                entity.CreatorId = Id;
+                entity.UpdaterId = Id;
+                
+            }
+            return entities;
+        }
         public void WriteData<T>(List<T> entities) where T :class, IHasEnglishAndArabicName    //This is called the constraint list
         {
             // Set Returns DbSet<T> that can be used to query the entity T
@@ -257,9 +382,7 @@ namespace HardwareStore.Services
        }
 
 
-        /// 
-        /// 
-        /// 
+
         /// <summary>
         /// 
         /// <para>
@@ -291,7 +414,7 @@ namespace HardwareStore.Services
             }
 
                 List<T> result = new List<T>();
-                //List<object> duplicatesEntitiesNames = new List<object>(); : old approach
+                
                 //scan all the rows 
                 for (int row = 2; row <= (_sheet.LastRow); row++)//assuming row 1 is header, want skip it.
                 {
@@ -305,19 +428,26 @@ namespace HardwareStore.Services
                     { 
                         var entityProperty = typeof(T).GetProperty(relevantEntityPropertiesNames[i]);
                         int relevantColumnNumber = _sheet.FindString(relevantExcelColumnsNames[i], false, false).Column; // Make string as parameter
+                    try
+                    {
                         var excelCellValue = Convert.ChangeType(_sheet.Range[row, relevantColumnNumber].Value, entityProperty!.PropertyType);
-                        entityProperty.SetValue(entity, excelCellValue); 
+                        entityProperty.SetValue(entity, excelCellValue);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine("\n\n" + "some cell in Price column may be empty or wrong"+ "\n\n");
+                        Debug.WriteLine("\n\n"+e+"\n\n");
+                        Debug.WriteLine("Row, do not forget that row start from 2. not 1 or 0 :" + row);
+                        Debug.WriteLine("property index,don't forget index start from 0, not 1 : " + i+"\n\n");
+                        throw new Exception("Error happend");
+                    }
+                        
+                        
 
 
 
                     } // end of inner for loop
 
-                    // Old approach.
-                    //if (!duplicatesEntitiesNames.Contains(entity.EnglishName!))//T : IHasEnglishAndArabicName solved that
-                    //{
-                    //    result.Add(entity);
-                    //    duplicatesEntitiesNames.Add(entity.EnglishName!); //T : IHasEnglishAndArabicName solved that
-                    //}
                         result.Add(entity);
 
 
@@ -412,6 +542,7 @@ namespace HardwareStore.Services
             // This mapping is called 'lookup table', it has more than one record, each record contains a mapping between  one SubCategory and one Category.
             ///For each record, we can query the  relevant row in the Category Table; the row with the same EnglishName as the record.
             // The row that we found contains the Id; it's value will be used  as the value for the foreign key.
+            
             List<RelationshipLookupRecord> records =CreateLookupTable( childTablNameInExcel,  parentTableNameInExcel);// Constructs a lookup table.
 
 
@@ -445,9 +576,9 @@ namespace HardwareStore.Services
             
         }
 
- 
+
         /// <summary>
-        /// describe it later
+        /// <para>// Should I redesign the  function so that it gets the data of the parent from the database instead of the excel file</para>
         /// </summary>
         /// <param name="childTablNameInExcel"></param>
         /// <param name="parentTableNameInExcel"></param>

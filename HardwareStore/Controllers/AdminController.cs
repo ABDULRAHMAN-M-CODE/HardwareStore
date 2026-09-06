@@ -3,6 +3,7 @@ using HardwareStore.Services;
 using HardwareStore.Services.AdminServices;
 using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 namespace HardwareStore.Controllers
@@ -10,7 +11,7 @@ namespace HardwareStore.Controllers
 {
 
 
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
 
