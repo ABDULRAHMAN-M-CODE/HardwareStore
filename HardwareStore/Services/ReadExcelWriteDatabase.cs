@@ -9,6 +9,8 @@ namespace HardwareStore.Services
     using Spire.Xls;
     using System.Diagnostics;
     using System.Security.Claims;
+    using static System.Runtime.InteropServices.JavaScript.JSType;
+
     public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -118,8 +120,8 @@ namespace HardwareStore.Services
 
             // Reading and Writing BrandsSuppliers.
             List<BrandSupplier> brandSuppliers = new List<BrandSupplier>();
-            List<RelationshipLookupRecord> brandSuppliersLookups= CreateLookupTable("Brand", "Supplier");
-            brandSuppliersLookups = brandSuppliersLookups
+            List<RelationshipLookupRecord> brandSuppliersLookups= 
+                CreateLookupTable("Brand", "Supplier")
                 .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                 .ToList();
 
@@ -136,75 +138,116 @@ namespace HardwareStore.Services
 
                 if (retrivedBrand!=null && retrivedSupplier != null)
                 {
-                    brandSuppliers.Add(new BrandSupplier { BrandId = retrivedBrand.Id, SupplierId = retrivedSupplier.Id });
+                        brandSuppliers.Add(
+                           new BrandSupplier { 
+                            BrandId = retrivedBrand.Id,
+                            SupplierId = retrivedSupplier.Id
+                        });
                 }
             }
             List<BrandSupplier> existingBrandsSuppliers = _context.BrandsSuppliers.Select(e => new BrandSupplier { BrandId = e.BrandId, SupplierId =e.SupplierId}).ToList();
-            
-            foreach (BrandSupplier obj in brandSuppliers)
+            foreach (BrandSupplier data in brandSuppliers)
             {
-                if (!existingBrandsSuppliers.Contains<BrandSupplier>(obj))
+
+                try
                 {
-                    _context.Add(obj);
+
+                        existingBrandsSuppliers.
+                        First<BrandSupplier>(e =>
+                        (e.BrandId == data.BrandId) &&
+                        (e.SupplierId == data.SupplierId));
+
+
                 }
+
+
+                catch (System.InvalidOperationException e)
+                {
+                    _context.Add(data);
+                }
+
+
+
+            }
+
+
+            //#########Reading and Writing for ProductsManufacturers table.#####
+
+
+            List<ProductManufacturer> productManufacturersData = GetJunctionTableData
+           <ProductManufacturer, Product, Manufacturer>
+           (
+           "ProductId",
+           "ManufacturerId",
+           "English Name",
+           "Manufacturer"
+           );
+            AddJunctionTableDataToContext()
+
+
+
+            _context.SaveChanges();
+
+
+            //###ProductsBins Table###
+            // What I want to populate
+            List<ProductBin> productBinsData =
+                new List<ProductBin>();
+            // Lookup
+            List<RelationshipLookupRecord> productBinsLookups =
+                CreateLookupTable("English Name", "Bin")
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+                .ToList();
+
+
+
+
+            // fetched data for parent(s)
+            List<Bin> existingBins= _context.Bins
+                .Select(m => new Bin { Id = m.Id, EnglishName = m.EnglishName })
+                .ToList();
+
+            foreach (RelationshipLookupRecord lookup in productBinsLookups)
+            {
+                Product retrivedProduct = existingProducts
+                    .First<Product>(e => lookup.LeftColumnCellValue == e.EnglishName);
+               Bin retrivedBin = existingBins
+                    .First<Bin>(e => lookup.RightColumnCellValue == e.EnglishName);
+
+                if (retrivedBin != null && retrivedProduct != null)
+                {
+                    productBinsData.Add(
+                         new ProductBin
+                         {
+                             ProductId = retrivedProduct.Id,
+                             BinId = retrivedBin.Id,
+                         }
+                      );
+                }
+            }
+            List<ProductBin> existingProductBins = _context.ProductsBins.
+                Select(e => new ProductBin { ProductId = e.ProductId, BinId = e.BinId }).ToList();
+            foreach (ProductBin data in productBinsData)
+            {
+                try
+                {
+
+                        existingProductBins.
+                        First<ProductBin>(e =>
+                        (e.ProductId == data.ProductId) &&
+                        (e.BinId == data.BinId));
+                }
+                // if no match found in the above try statement, excepton thrown
+                catch (System.InvalidOperationException e)
+                {
+                    _context.Add(data);
+                }
+
+
             }
 
             _context.SaveChanges();
-            //#########Reading and Writing for ProductsManufacturers table.#####
-            DbSet<Product> productDbSet = _context.Set<Product>();
-            List<Product> existingProducts = productDbSet.Select(p => new Product { Id = p.Id, EnglishName = p.EnglishName }).ToList();
-
-            List<ProductManufacturer> productManufacturers = new List<ProductManufacturer>();
-            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
-            {
-
-                productManufacturers.Add(new ProductManufacturer());
-            }
-            PopulateForeignKeyPropertyForEachChild<ProductManufacturer, Product>("Manufacturer", "English Name", "ProductId", productManufacturers);
-            PopulateForeignKeyPropertyForEachChild<ProductManufacturer, Manufacturer>("English Name", "Manufacturer", "ManufacturerId", productManufacturers);
-            productManufacturers = productManufacturers
-                .Where(pm => pm.ManufacturerId != 0 && pm.ProductId != 0)
-                .DistinctBy(pm => new { pm.ProductId, pm.ManufacturerId })
-                .ToList();
-            foreach (ProductManufacturer pm in productManufacturers)
-            {
-                var foundEntity = _context.ProductsManufacturers.FirstOrDefault(e => (e.ProductId == pm.ProductId) && (e.ManufacturerId == pm.ManufacturerId));
-
-                if (foundEntity == null)
-                {
-
-                    _context.Add(pm);
-
-                }
-            }
-
-            // Reading and Writing for ProductsBins table.
-            List<ProductBin> productBins = new List<ProductBin>();
-            for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
-            {
-
-                productBins.Add(new ProductBin());
-            }
-            PopulateForeignKeyPropertyForEachChild<ProductBin, Product>("Bin", "English Name", "ProductId", productBins);
-            PopulateForeignKeyPropertyForEachChild<ProductBin, Bin>("English Name", "Bin", "BinId", productBins);
-            productBins = productBins
-                .Where(pb => pb.BinId != 0 && pb.ProductId != 0)
-                .DistinctBy(pb => new { pb.ProductId, pb.BinId })
-                .ToList();
-            foreach (ProductBin pb in productBins)
-            {
-                var foundEntity = _context.ProductsBins.FirstOrDefault(e => (e.ProductId == pb.ProductId) && (e.BinId == pb.BinId));
-
-                if (foundEntity == null)
-                {
-
-                    _context.Add(pb);
-
-                }
-            }
-
-
-            // #####Reading and Writing for ProductsCountries table.#####
+            //#####ProductsCountries table.#####
             List<ProductCountry> productCountries = new List<ProductCountry>();
             List<RelationshipLookupRecord> productCountryLookups = CreateLookupTable("English Name", "Country");
             productCountryLookups = productCountryLookups
@@ -643,6 +686,95 @@ namespace HardwareStore.Services
                 });
             }
             return result;
+        }
+    
+        public List<J> GetJunctionTableData<J,Parent1,Parent2>(string firstPropertyName, string secondPropertyName, string firstExcelColumnName, string secondExcelColumnName) where J : new() where Parent1 : class, IHasIdentification, IHasEnglishAndArabicName, new() where Parent2 : class, IHasIdentification, IHasEnglishAndArabicName, new()
+
+        {
+            
+            // junction table
+            List<J> result = new List<J>();
+            
+            // Lookup table
+            List<RelationshipLookupRecord> lookups =
+                CreateLookupTable(firstExcelColumnName, secondExcelColumnName)
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+                .ToList();
+
+
+            // retrive all parents into memory
+            DbSet<Parent1> DbSet1 = _context.Set<Parent1>();
+            List<Parent1> existingEntities1 = DbSet1
+                .Select(p => new Parent1 { Id = p.Id, EnglishName = p.EnglishName })
+                .ToList();
+            DbSet<Parent2> DbSet2 = _context.Set<Parent2>();
+            List<Parent2> existingEntities2 = DbSet2
+                .Select(m => new Parent2 { Id = m.Id, EnglishName = m.EnglishName })
+                .ToList();
+            
+            foreach(RelationshipLookupRecord lookup in lookups)
+            {
+                Parent1 Entity1 = existingEntities1.First<Parent1>(e => lookup.LeftColumnCellValue == e.EnglishName);
+
+                Parent2 Entity2 = existingEntities2.First<Parent2>(e => lookup.LeftColumnCellValue == e.EnglishName);
+
+                if (Entity1!= null && Entity2 != null)
+                {
+                    J j = new J();
+                    typeof(J).GetProperty(firstPropertyName)!.SetValue(j, Entity1.Id);
+                    typeof(J).GetProperty(secondPropertyName)!.SetValue(j, Entity2.Id);
+                    result.Add(j);
+                         
+                }
+            }
+
+            return result;
+        }
+
+
+        public void AddJunctionTableDataToContext<J>(
+              string firstPropertyName,
+             string secondPropertyName,
+             List<J> junctionTable
+
+            ) where J:class, new()
+
+        {
+            DbSet<J> gDbSet = _context.Set<J>();
+            //List<J> existingEntitiesInDatabase = gDbSet.
+            //Select(e => new J { ProductId = e.ProductId, ManufacturerId = e.ManufacturerId }).ToList();
+
+            
+            List<J> existingEntitiesInDatabase = gDbSet
+                    .AsEnumerable()
+                    .Select(e =>
+                    {
+                        J j = new J();
+                        var p1 = typeof(J).GetProperty(firstPropertyName)!;
+                        p1.SetValue(j, p1.GetValue(e));
+                        var p2 = typeof(J).GetProperty(secondPropertyName)!;
+                        p2.SetValue(j, p2.GetValue(e));
+                        return j;
+                    })
+                    .ToList();
+
+            foreach (J data in junctionTable)
+            {
+                try
+                {
+
+                    existingEntitiesInDatabase.
+                    First<J>(e =>
+                    (e.ProductId == data.ProductId) &&
+                    (e.ManufacturerId == data.ManufacturerId));
+                }
+                catch (System.InvalidOperationException e)
+                {
+                    _context.Add(data);
+                }
+
+
+            }
         }
     }
 
