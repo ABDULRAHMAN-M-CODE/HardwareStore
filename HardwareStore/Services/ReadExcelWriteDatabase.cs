@@ -118,314 +118,266 @@ namespace HardwareStore.Services
 
             /////#### Reading and Writing junction tables######
 
-            // Reading and Writing BrandsSuppliers.
-            List<BrandSupplier> brandSuppliers = new List<BrandSupplier>();
-            List<RelationshipLookupRecord> brandSuppliersLookups= 
-                CreateLookupTable("Brand", "Supplier")
-                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-                .ToList();
-
-            DbSet<Brand> brandDbSet = _context.Set<Brand>();
-            DbSet<Supplier> supplierDbSet = _context.Set<Supplier>();
-            List<Brand> existingBrands=brandDbSet.Select(e => new Brand { Id = e.Id, EnglishName = e.EnglishName }).ToList();
-            List<Supplier> existingSuppliers = supplierDbSet.Select(e => new Supplier { Id = e.Id, EnglishName = e.EnglishName }).ToList();
-            
-            foreach ( RelationshipLookupRecord lookup in brandSuppliersLookups)
-            {
-                // check if the entity already in the database or not
-                Brand retrivedBrand = existingBrands.First(b => lookup.LeftColumnCellValue == b.EnglishName);
-                Supplier retrivedSupplier = existingSuppliers.First(s => lookup.RightColumnCellValue == s.EnglishName);
-
-                if (retrivedBrand!=null && retrivedSupplier != null)
-                {
-                        brandSuppliers.Add(
-                           new BrandSupplier { 
-                            BrandId = retrivedBrand.Id,
-                            SupplierId = retrivedSupplier.Id
-                        });
-                }
-            }
-            List<BrandSupplier> existingBrandsSuppliers = _context.BrandsSuppliers.Select(e => new BrandSupplier { BrandId = e.BrandId, SupplierId =e.SupplierId}).ToList();
-            foreach (BrandSupplier data in brandSuppliers)
-            {
-
-                try
-                {
-
-                        existingBrandsSuppliers.
-                        First<BrandSupplier>(e =>
-                        (e.BrandId == data.BrandId) &&
-                        (e.SupplierId == data.SupplierId));
-
-
-                }
-
-
-                catch (System.InvalidOperationException e)
-                {
-                    _context.Add(data);
-                }
-
-
-
-            }
+            List<BrandSupplier> brandSuppliers=GetJunctionTableData<BrandSupplier, Brand, Supplier>(
+                "BrandId", "SupplierId",
+                 "Brand", "Supplier");
+            AddJunctionTableDataToContext<BrandSupplier>(
+                "BrandId", "SupplierId",
+                brandSuppliers);
 
 
             //#########Reading and Writing for ProductsManufacturers table.#####
 
 
-            List<ProductManufacturer> productManufacturersData = GetJunctionTableData
-           <ProductManufacturer, Product, Manufacturer>
-           (
-           "ProductId",
-           "ManufacturerId",
-           "English Name",
-           "Manufacturer"
-           );
-            AddJunctionTableDataToContext()
+            List<ProductManufacturer> productManufacturers = GetJunctionTableData<ProductManufacturer, Product, Manufacturer>(
+                "ProductId", "ManufacturerId",
+                 "English Name", "Manufacturer");
+            AddJunctionTableDataToContext<ProductManufacturer>(
+                "ProductId", "ManufacturerId",
+                productManufacturers);
 
 
 
             _context.SaveChanges();
 
 
-            //###ProductsBins Table###
-            // What I want to populate
-            List<ProductBin> productBinsData =
-                new List<ProductBin>();
-            // Lookup
-            List<RelationshipLookupRecord> productBinsLookups =
-                CreateLookupTable("English Name", "Bin")
-                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-                .ToList();
+            ////###ProductsBins Table###
+            //// What I want to populate
+            //List<ProductBin> productBinsData =
+            //    new List<ProductBin>();
+            //// Lookup
+            //List<RelationshipLookupRecord> productBinsLookups =
+            //    CreateLookupTable("English Name", "Bin")
+            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+            //    .ToList();
 
 
 
 
-            // fetched data for parent(s)
-            List<Bin> existingBins= _context.Bins
-                .Select(m => new Bin { Id = m.Id, EnglishName = m.EnglishName })
-                .ToList();
+            //// fetched data for parent(s)
+            //List<Bin> existingBins= _context.Bins
+            //    .Select(m => new Bin { Id = m.Id, EnglishName = m.EnglishName })
+            //    .ToList();
 
-            foreach (RelationshipLookupRecord lookup in productBinsLookups)
-            {
-                Product retrivedProduct = existingProducts
-                    .First<Product>(e => lookup.LeftColumnCellValue == e.EnglishName);
-               Bin retrivedBin = existingBins
-                    .First<Bin>(e => lookup.RightColumnCellValue == e.EnglishName);
+            //foreach (RelationshipLookupRecord lookup in productBinsLookups)
+            //{
+            //    Product retrivedProduct = existingProducts
+            //        .First<Product>(e => lookup.LeftColumnCellValue == e.EnglishName);
+            //   Bin retrivedBin = existingBins
+            //        .First<Bin>(e => lookup.RightColumnCellValue == e.EnglishName);
 
-                if (retrivedBin != null && retrivedProduct != null)
-                {
-                    productBinsData.Add(
-                         new ProductBin
-                         {
-                             ProductId = retrivedProduct.Id,
-                             BinId = retrivedBin.Id,
-                         }
-                      );
-                }
-            }
-            List<ProductBin> existingProductBins = _context.ProductsBins.
-                Select(e => new ProductBin { ProductId = e.ProductId, BinId = e.BinId }).ToList();
-            foreach (ProductBin data in productBinsData)
-            {
-                try
-                {
+            //    if (retrivedBin != null && retrivedProduct != null)
+            //    {
+            //        productBinsData.Add(
+            //             new ProductBin
+            //             {
+            //                 ProductId = retrivedProduct.Id,
+            //                 BinId = retrivedBin.Id,
+            //             }
+            //          );
+            //    }
+            //}
+            //List<ProductBin> existingProductBins = _context.ProductsBins.
+            //    Select(e => new ProductBin { ProductId = e.ProductId, BinId = e.BinId }).ToList();
+            //foreach (ProductBin data in productBinsData)
+            //{
+            //    try
+            //    {
 
-                        existingProductBins.
-                        First<ProductBin>(e =>
-                        (e.ProductId == data.ProductId) &&
-                        (e.BinId == data.BinId));
-                }
-                // if no match found in the above try statement, excepton thrown
-                catch (System.InvalidOperationException e)
-                {
-                    _context.Add(data);
-                }
+            //            existingProductBins.
+            //            First<ProductBin>(e =>
+            //            (e.ProductId == data.ProductId) &&
+            //            (e.BinId == data.BinId));
+            //    }
+            //    // if no match found in the above try statement, excepton thrown
+            //    catch (System.InvalidOperationException e)
+            //    {
+            //        _context.Add(data);
+            //    }
 
 
-            }
+            //}
 
-            _context.SaveChanges();
-            //#####ProductsCountries table.#####
-            List<ProductCountry> productCountries = new List<ProductCountry>();
-            List<RelationshipLookupRecord> productCountryLookups = CreateLookupTable("English Name", "Country");
-            productCountryLookups = productCountryLookups
-                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-                .ToList();
+            //_context.SaveChanges();
+            ////#####ProductsCountries table.#####
+            //List<ProductCountry> productCountries = new List<ProductCountry>();
+            //List<RelationshipLookupRecord> productCountryLookups = CreateLookupTable("English Name", "Country");
+            //productCountryLookups = productCountryLookups
+            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+            //    .ToList();
 
             
-            DbSet<Country> countryDbSet = _context.Set<Country>();
+            //DbSet<Country> countryDbSet = _context.Set<Country>();
 
-            foreach (var lookup in productCountryLookups)
-            {
-                Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
-                Country foundCountry = countryDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
+            //foreach (var lookup in productCountryLookups)
+            //{
+            //    Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
+            //    Country foundCountry = countryDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
 
-                if (foundProduct != null && foundCountry != null)
-                {
-                    productCountries.Add(new ProductCountry { ProductId = foundProduct.Id, CountryId = foundCountry.Id });
-                }
-            }
-            foreach (ProductCountry pc in productCountries)
-            {
-                var foundEntity = _context.ProductsCountries.FirstOrDefault(e => (e.ProductId == pc.ProductId) && (e.CountryId == pc.CountryId));
+            //    if (foundProduct != null && foundCountry != null)
+            //    {
+            //        productCountries.Add(new ProductCountry { ProductId = foundProduct.Id, CountryId = foundCountry.Id });
+            //    }
+            //}
+            //foreach (ProductCountry pc in productCountries)
+            //{
+            //    var foundEntity = _context.ProductsCountries.FirstOrDefault(e => (e.ProductId == pc.ProductId) && (e.CountryId == pc.CountryId));
 
-                if (foundEntity == null)
-                {
-                    _context.Add(pc);
-                }
-            }
+            //    if (foundEntity == null)
+            //    {
+            //        _context.Add(pc);
+            //    }
+            //}
 
 
-            //#####Reading and Writing for ProductsSuppliers table.#####
-            List<ProductSupplier> productSuppliers = new List<ProductSupplier>();
-            List<RelationshipLookupRecord> productSupplierLookups = CreateLookupTable("English Name", "Supplier");
-            productSupplierLookups = productSupplierLookups
-                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-                .ToList();
+            ////#####Reading and Writing for ProductsSuppliers table.#####
+            //List<ProductSupplier> productSuppliers = new List<ProductSupplier>();
+            //List<RelationshipLookupRecord> productSupplierLookups = CreateLookupTable("English Name", "Supplier");
+            //productSupplierLookups = productSupplierLookups
+            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+            //    .ToList();
 
    
 
-            foreach (var lookup in productSupplierLookups)
-            {
-                Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
-                Supplier foundSupplier = supplierDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
+            //foreach (var lookup in productSupplierLookups)
+            //{
+            //    Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
+            //    Supplier foundSupplier = supplierDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
 
-                if (foundProduct != null && foundSupplier != null)
-                {
-                    productSuppliers.Add(new ProductSupplier { ProductId = foundProduct.Id, SupplierId = foundSupplier.Id });
-                }
-            }
+            //    if (foundProduct != null && foundSupplier != null)
+            //    {
+            //        productSuppliers.Add(new ProductSupplier { ProductId = foundProduct.Id, SupplierId = foundSupplier.Id });
+            //    }
+            //}
 
-            foreach (ProductSupplier ps in productSuppliers)
-            {
+            //foreach (ProductSupplier ps in productSuppliers)
+            //{
 
-                var foundEntity = _context.ProductsSuppliers.FirstOrDefault(e => (e.ProductId == ps.ProductId) && (e.SupplierId == ps.SupplierId));
-                if (foundEntity == null)
-                {
+            //    var foundEntity = _context.ProductsSuppliers.FirstOrDefault(e => (e.ProductId == ps.ProductId) && (e.SupplierId == ps.SupplierId));
+            //    if (foundEntity == null)
+            //    {
 
-                    _context.Add(ps);
+            //        _context.Add(ps);
 
-                }
-            }
+            //    }
+            //}
 
 
 
-            List<ProductBrand> productBrands = new List<ProductBrand>();
-            List<RelationshipLookupRecord> productBrandLookups = CreateLookupTable("English Name", "Brand");
-            productBrandLookups = productBrandLookups
-                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-                .ToList();
+            //List<ProductBrand> productBrands = new List<ProductBrand>();
+            //List<RelationshipLookupRecord> productBrandLookups = CreateLookupTable("English Name", "Brand");
+            //productBrandLookups = productBrandLookups
+            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+            //    .ToList();
 
        
 
-            foreach (var lookup in productBrandLookups)
-            {
-                Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
-                Brand foundBrand = brandDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
+            //foreach (var lookup in productBrandLookups)
+            //{
+            //    Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
+            //    Brand foundBrand = brandDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
 
-                if (foundProduct != null && foundBrand != null)
-                {
-                    productBrands.Add(new ProductBrand { ProductId = foundProduct.Id, BrandId = foundBrand.Id });
-                }
-            }
+            //    if (foundProduct != null && foundBrand != null)
+            //    {
+            //        productBrands.Add(new ProductBrand { ProductId = foundProduct.Id, BrandId = foundBrand.Id });
+            //    }
+            //}
 
-            foreach (ProductBrand pb in productBrands)
-            {
+            //foreach (ProductBrand pb in productBrands)
+            //{
 
-                var foundEntity = _context.ProductsBrands.FirstOrDefault(e => (e.ProductId == pb.ProductId) && (e.BrandId == pb.BrandId));
+            //    var foundEntity = _context.ProductsBrands.FirstOrDefault(e => (e.ProductId == pb.ProductId) && (e.BrandId == pb.BrandId));
 
-                if (foundEntity == null)
-                {
+            //    if (foundEntity == null)
+            //    {
 
-                    _context.Add(pb);
+            //        _context.Add(pb);
 
-                }
-            }
+            //    }
+            //}
 
 
 
-            // Reading and Writing ProductsCategories.
-            // later when refactoring code : await two dependencies.
-            List<ProductCategory> productCategories = new List<ProductCategory>();
-            List<RelationshipLookupRecord> productCategoryLookups = CreateLookupTable("English Name", "Category");
-            productCategoryLookups = productCategoryLookups
-                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-                .ToList();
+            //// Reading and Writing ProductsCategories.
+            //// later when refactoring code : await two dependencies.
+            //List<ProductCategory> productCategories = new List<ProductCategory>();
+            //List<RelationshipLookupRecord> productCategoryLookups = CreateLookupTable("English Name", "Category");
+            //productCategoryLookups = productCategoryLookups
+            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+            //    .ToList();
 
-            DbSet<Category> categoryDbSet = _context.Set<Category>();
+            //DbSet<Category> categoryDbSet = _context.Set<Category>();
             
-            foreach (var lookup in productCategoryLookups)
-            {
-                Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
-                Category foundCategory = categoryDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
+            //foreach (var lookup in productCategoryLookups)
+            //{
+            //    Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
+            //    Category foundCategory = categoryDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
 
-                if (foundProduct != null && foundCategory != null)
-                {
-                    productCategories.Add(new ProductCategory { ProductId = foundProduct.Id, CategoryId = foundCategory.Id });
-                }
-            }
+            //    if (foundProduct != null && foundCategory != null)
+            //    {
+            //        productCategories.Add(new ProductCategory { ProductId = foundProduct.Id, CategoryId = foundCategory.Id });
+            //    }
+            //}
 
-            foreach (ProductCategory pc in productCategories)
-            {
+            //foreach (ProductCategory pc in productCategories)
+            //{
 
-                var foundEntity = _context.ProductsCategories.FirstOrDefault(e => (e.ProductId == pc.ProductId) && (e.CategoryId == pc.CategoryId));
+            //    var foundEntity = _context.ProductsCategories.FirstOrDefault(e => (e.ProductId == pc.ProductId) && (e.CategoryId == pc.CategoryId));
 
-                if (foundEntity == null)
-                {
+            //    if (foundEntity == null)
+            //    {
 
-                    _context.Add(pc);
+            //        _context.Add(pc);
 
-                }
-            }
+            //    }
+            //}
 
 
 
-            // Reading and Writing ProductsUnits.
-            // later when refactoring code : await two dependencies.
-            List<ProductUnit> productUnits = new List<ProductUnit>();
-            List<RelationshipLookupRecord> productUnitLookups = CreateLookupTable("English Name", "Unit");
-            productUnitLookups = productUnitLookups
-                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-                .ToList();
+            //// Reading and Writing ProductsUnits.
+            //// later when refactoring code : await two dependencies.
+            //List<ProductUnit> productUnits = new List<ProductUnit>();
+            //List<RelationshipLookupRecord> productUnitLookups = CreateLookupTable("English Name", "Unit");
+            //productUnitLookups = productUnitLookups
+            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+            //    .ToList();
 
-            DbSet<Unit> unitDbSet = _context.Set<Unit>();
+            //DbSet<Unit> unitDbSet = _context.Set<Unit>();
 
            
-            List<Unit> existingUnits= unitDbSet.Select(u => new Unit { Id=u.Id, EnglishName=u.EnglishName }).ToList();
+            //List<Unit> existingUnits= unitDbSet.Select(u => new Unit { Id=u.Id, EnglishName=u.EnglishName }).ToList();
 
-            foreach (var lookup in productUnitLookups)
+            //foreach (var lookup in productUnitLookups)
                 
 
-            {
-                Product foundProduct= existingProducts.First(p => p.EnglishName == lookup.LeftColumnCellValue);
+            //{
+            //    Product foundProduct= existingProducts.First(p => p.EnglishName == lookup.LeftColumnCellValue);
                  
-                Unit foundUnit = existingUnits.First(u => u.EnglishName == lookup.RightColumnCellValue);
+            //    Unit foundUnit = existingUnits.First(u => u.EnglishName == lookup.RightColumnCellValue);
 
-                if (foundProduct != null && foundUnit != null)
-                {
-                    productUnits.Add(new ProductUnit { ProductId = foundProduct.Id, UnitId = foundUnit.Id });
-                }
-            }
+            //    if (foundProduct != null && foundUnit != null)
+            //    {
+            //        productUnits.Add(new ProductUnit { ProductId = foundProduct.Id, UnitId = foundUnit.Id });
+            //    }
+            //}
 
-            foreach (ProductUnit pu in productUnits)
-            {
+            //foreach (ProductUnit pu in productUnits)
+            //{
 
-                var foundEntity = _context.ProductsUnits.FirstOrDefault(e => (e.ProductId == pu.ProductId) && (e.UnitId == pu.UnitId));
+            //    var foundEntity = _context.ProductsUnits.FirstOrDefault(e => (e.ProductId == pu.ProductId) && (e.UnitId == pu.UnitId));
 
-                if (foundEntity == null)
-                {
+            //    if (foundEntity == null)
+            //    {
 
-                    _context.Add(pu);
+            //        _context.Add(pu);
 
-                }
-            }
+            //    }
+            //}
 
-            _context.SaveChanges();
-             Debug.WriteLine(" My break point.");
-            // I should make this method return something later. instead of mixing reading and writing
-            //return new List<object> { categories, subCategories,units,countries, brands, suppliers, brandSuppliers };
+            //_context.SaveChanges();
+            // Debug.WriteLine(" My break point.");
+            //// I should make this method return something later. instead of mixing reading and writing
+            ////return new List<object> { categories, subCategories,units,countries, brands, suppliers, brandSuppliers };
 
 
         }
@@ -711,74 +663,120 @@ namespace HardwareStore.Services
             List<Parent2> existingEntities2 = DbSet2
                 .Select(m => new Parent2 { Id = m.Id, EnglishName = m.EnglishName })
                 .ToList();
-            
-            foreach(RelationshipLookupRecord lookup in lookups)
+
+            var Property1 = typeof(J).GetProperty(firstPropertyName)!;
+            var Property2 = typeof(J).GetProperty(secondPropertyName)!;
+
+            foreach (RelationshipLookupRecord lookup in lookups)
             {
-                Parent1 Entity1 = existingEntities1.First<Parent1>(e => lookup.LeftColumnCellValue == e.EnglishName);
-
-                Parent2 Entity2 = existingEntities2.First<Parent2>(e => lookup.LeftColumnCellValue == e.EnglishName);
-
-                if (Entity1!= null && Entity2 != null)
+                try
                 {
+                    Parent1 Entity1 = existingEntities1.First<Parent1>(e => lookup.LeftColumnCellValue == e.EnglishName);
+
+                    Parent2 Entity2 = existingEntities2.First<Parent2>(e => lookup.LeftColumnCellValue == e.EnglishName);
                     J j = new J();
-                    typeof(J).GetProperty(firstPropertyName)!.SetValue(j, Entity1.Id);
-                    typeof(J).GetProperty(secondPropertyName)!.SetValue(j, Entity2.Id);
+                    Property1.SetValue(j, Entity1.Id);
+                    Property2.SetValue(j, Entity2.Id);
                     result.Add(j);
-                         
+
                 }
+                
+                catch (System.InvalidOperationException ioe)
+                {
+                    Debug.WriteLine("Executed catch block when Entity1 or Entity2 is null");
+                }
+
+
+
             }
 
             return result;
         }
 
 
-        public void AddJunctionTableDataToContext<J>(
-              string firstPropertyName,
-             string secondPropertyName,
-             List<J> junctionTable
+        public void AddJunctionTableDataToContext<J>(string firstPropertyName, string secondPropertyName, List<J> rowsToInsert) where J : class, new()
 
-            ) where J:class, new()
 
         {
             DbSet<J> gDbSet = _context.Set<J>();
-            //List<J> existingEntitiesInDatabase = gDbSet.
-            //Select(e => new J { ProductId = e.ProductId, ManufacturerId = e.ManufacturerId }).ToList();
 
-            
+
+
+            var p1 = typeof(J).GetProperty(firstPropertyName)!;
+            var p2 = typeof(J).GetProperty(secondPropertyName)!;
             List<J> existingEntitiesInDatabase = gDbSet
                     .AsEnumerable()
                     .Select(e =>
                     {
                         J j = new J();
-                        var p1 = typeof(J).GetProperty(firstPropertyName)!;
+                        
                         p1.SetValue(j, p1.GetValue(e));
-                        var p2 = typeof(J).GetProperty(secondPropertyName)!;
+                        
                         p2.SetValue(j, p2.GetValue(e));
                         return j;
                     })
                     .ToList();
 
-            foreach (J data in junctionTable)
+            var property1 = typeof(J).GetProperty(firstPropertyName)!;
+            var property2 = typeof(J).GetProperty(secondPropertyName)!;
+
+            foreach (J rowToInsert in rowsToInsert)
             {
                 try
                 {
 
                     existingEntitiesInDatabase.
                     First<J>(e =>
-                    (e.ProductId == data.ProductId) &&
-                    (e.ManufacturerId == data.ManufacturerId));
+                    {
+                        J j = new J();
+  
+                        var leftCellToInsert = property1.GetValue(rowToInsert);
+                        var rightCellToInsert = property2.GetValue(rowToInsert);
+                        var leftCellInDatabase = property1.GetValue(e);
+                        var rightCellInDatabase = property2.GetValue(e);
+
+                        Debug.WriteLine("\n\n####Types Inspection start ####:\n\n");
+                        Debug.WriteLine(leftCellToInsert.GetType());
+                        Debug.WriteLine(rightCellToInsert.GetType());
+                        Debug.WriteLine(leftCellInDatabase.GetType());
+                        Debug.WriteLine(rightCellInDatabase.GetType());
+                        Debug.WriteLine("\n\n####Types Inspection end ####:\n\n");
+                        if (
+                            (leftCellToInsert.Equals(leftCellInDatabase))
+                               &&
+                            ( rightCellToInsert.Equals(rightCellInDatabase) )
+                            )
+                        {
+
+                            return true;
+                        }
+
+                        return false;
+
+                    });
+
+
+
+
                 }
+                // if not match found, that means the row we are about to store
+                // does not exist in the database,  so it should be stored.
                 catch (System.InvalidOperationException e)
                 {
-                    _context.Add(data);
+                    gDbSet.Add(rowToInsert);
                 }
 
 
             }
+
+
+        }
+
+
         }
     }
 
 
 
-}
+
 
