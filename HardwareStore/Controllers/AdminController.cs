@@ -1,4 +1,5 @@
-﻿using HardwareStore.Models;
+﻿using HardwareStore.DTOs;
+using HardwareStore.Models;
 using HardwareStore.Services;
 using HardwareStore.Services.AdminServices;
 using HardwareStore.ViewModel.AccountViewModels;
@@ -129,8 +130,9 @@ namespace HardwareStore.Controllers
         public  async Task<IActionResult> Import([FromForm] IFormFile file) // PROBLEM : THIs method is no longer reached by the request
         {
 
-          
-            reader.ReadAndWriteData();
+
+            IDataDto data=reader.Read();
+            writer.Write(data);
             return RedirectToAction("ProductsPage", "Admin");
 
 

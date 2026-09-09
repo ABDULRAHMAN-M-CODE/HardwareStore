@@ -8,117 +8,137 @@ namespace HardwareStore.Services
     using Microsoft.EntityFrameworkCore;
     using Spire.Xls;
     using System.Diagnostics;
+    using System.Reflection;
     using System.Security.Claims;
-    using static System.Runtime.InteropServices.JavaScript.JSType;
+    using System.IO;
+    using HardwareStore.DTOs;
 
     public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ApplicationDbContext _context;
         public  Worksheet _sheet;// populated inside the  ReadAndWriteData() method.
+        private readonly string _adminId;
 
         public ReadExcelWriteDatabase(IHttpContextAccessor httpContextAccessor, ApplicationDbContext context)
         {
             _httpContextAccessor = httpContextAccessor;
             _context = context;
-            
+            _adminId= _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         }
 
-        public void ReadAndWriteData()// LATER :refactor this  method to only read, not to also write data.
+        // Interface method.
+        public IDataDto Read()
         {
 
 
-            //PROBLEM : I should refactor the code later, so that the ReadData() only reads, not also writes.
-
-
-            var httpcontext = _httpContextAccessor.HttpContext;
-
-            var file = httpcontext.Request.Form.Files["file"];
+     
+            var file = _httpContextAccessor.HttpContext.Request.Form.Files["file"];
             var workbook = new Workbook();
             using var stream = file.OpenReadStream();
             workbook.LoadFromStream(stream);
             this._sheet = workbook.Worksheets[1];
 
-            var adminId = httpcontext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-
-
-
 
 
             List<Category> categories = ReadSpecificColumns<Category>(new List<string> { "EnglishName" }, new List<string> { "Category" });
             categories = categories.DistinctBy(c => c.EnglishName).ToList();
-            //List<T> AssignCreatorAndUpdaterToEntitis<T>(List<T> entities, string Id)
-            categories = AssignCreatorAndUpdaterToEntitis<Category>(categories, adminId);
+            categories = AssignCreatorAndUpdaterToEntitis<Category>(categories, _adminId);
 
-            WriteData(categories);// I know I'm mixing reading and writing in the same method, but I had no choice, I suffered alot.
+           
+            List<Country> countries = ReadSpecificColumns<Country>(new List<string> { "EnglishName" }, new List<string> { "Country" });
+            countries = countries.DistinctBy(c => c.EnglishName).ToList();
+            countries = AssignCreatorAndUpdaterToEntitis<Country>(countries, _adminId);
+            
 
+            List<Unit> units = ReadSpecificColumns<Unit>(new List<string> { "EnglishName" }, new List<string> { "Unit" });
+            units = units.DistinctBy(u => u.EnglishName).ToList();
+            units = AssignCreatorAndUpdaterToEntitis<Unit>(units, _adminId);
+            
+
+            List<Brand> brands = ReadSpecificColumns<Brand>(new List<string> { "EnglishName" }, new List<string> { "Brand" });
+            brands = brands.DistinctBy(b => b.EnglishName).ToList();
+            brands = AssignCreatorAndUpdaterToEntitis<Brand>(brands, _adminId);
+            
+
+            List<Supplier> suppliers = ReadSpecificColumns<Supplier>(new List<string> { "EnglishName" }, new List<string> { "Supplier" });
+            suppliers = suppliers.DistinctBy(s => s.EnglishName).ToList();
+            suppliers = AssignCreatorAndUpdaterToEntitis<Supplier>(suppliers, _adminId);
+            
+
+            List<Product> products = ReadSpecificColumns<Product>(
+            new List<string> { "SKU", "Barcode", "EnglishName", "ArabicName", "Description", "Status", "VAT", "Price", "MinStock", "ReorderQTY" },
+            new List<string> { "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT", "Price", "Min Stock", "Reorder Qty" }
+            );
+            products = products.DistinctBy(p => p.EnglishName).ToList();
+            products = AssignCreatorAndUpdaterToEntitis<Product>(products, _adminId);
+           
+
+            List<Bin> bins = ReadSpecificColumns<Bin>(new List<string> { "EnglishName" }, new List<string> { "Bin" });
+            bins = bins.DistinctBy(c => c.EnglishName).ToList();
+            bins = AssignCreatorAndUpdaterToEntitis<Bin>(bins, _adminId);
+            
+
+            List<Manufacturer> manufacturers = ReadSpecificColumns<Manufacturer>(new List<string> { "EnglishName" }, new List<string> { "Manufacturer" });
+            manufacturers = manufacturers.DistinctBy(m => m.EnglishName).ToList();
+            manufacturers = AssignCreatorAndUpdaterToEntitis<Manufacturer>(manufacturers, _adminId);
+
+            return  new ExcelProductsDto
+            {
+                     Categories=categories,
+                     Countries=countries,
+                     Units=units,
+                    Brands=brands,
+                     Suppliers=suppliers,
+                    Products=products,
+                     Bins=bins,
+                    Manufacturers=manufacturers
+            };
+
+
+
+        }
+
+        // Interface method.
+        public void Write(IDataDto dataDto) 
+        {
+            
+            ExcelProductsDto epDto= (ExcelProductsDto)dataDto;
+            WriteParentTables(epDto);
+            WriteChildTables();
+
+        }
+
+        /// <summary>
+        /// Any parent table must be written before a child table.
+        /// </summary>
+        /// <param name="epDto"></param>
+        public void  WriteParentTables(ExcelProductsDto epDto)
+        {
+            AddNonJunctionTableDataToContext(epDto.Categories);   
+            AddNonJunctionTableDataToContext(epDto.Countries);
+            AddNonJunctionTableDataToContext(epDto.Units);
+            AddNonJunctionTableDataToContext(epDto.Brands);
+            AddNonJunctionTableDataToContext(epDto.Suppliers);
+            AddNonJunctionTableDataToContext(epDto.Products);
+            AddNonJunctionTableDataToContext(epDto.Bins);
+            AddNonJunctionTableDataToContext(epDto.Manufacturers);
+            _context.SaveChanges();
+
+        }
+
+        public void WriteChildTables()
+        {
 
             List<SubCategory> subCategories = ReadSpecificColumns<SubCategory>(new List<string> { "EnglishName" }, new List<string> { "Subcategory" });
             subCategories = subCategories.DistinctBy(sc => new { sc.EnglishName, sc.CategoryId }).ToList();
             subCategories = subCategories.OrderBy(c => c.EnglishName).ToList();
             PopulateForeignKeyPropertyForEachChild<SubCategory, Category>("Subcategory", "Category", "CategoryId", subCategories);
-            subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, adminId);
-            WriteData(subCategories);
+            subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, _adminId);
+            AddNonJunctionTableDataToContext(subCategories);
 
-
-            List<Country> countries = ReadSpecificColumns<Country>(new List<string> { "EnglishName" }, new List<string> { "Country" });
-            countries = countries.DistinctBy(c => c.EnglishName).ToList();
-            countries = AssignCreatorAndUpdaterToEntitis<Country>(countries, adminId);
-            WriteData(countries);
-
-            List<Unit> units = ReadSpecificColumns<Unit>(new List<string> { "EnglishName" }, new List<string> { "Unit" });
-            units = units.DistinctBy(u => u.EnglishName).ToList();
-            units = AssignCreatorAndUpdaterToEntitis<Unit>(units, adminId);
-            WriteData(units);
-
-            List<Brand> brands = ReadSpecificColumns<Brand>(new List<string> { "EnglishName" }, new List<string> { "Brand" });
-            brands = brands.DistinctBy(b => b.EnglishName).ToList();
-            brands = AssignCreatorAndUpdaterToEntitis<Brand>(brands, adminId);
-            WriteData(brands);
-
-            List<Supplier> suppliers = ReadSpecificColumns<Supplier>(new List<string> { "EnglishName" }, new List<string> { "Supplier" });
-            suppliers = suppliers.DistinctBy(s => s.EnglishName).ToList();
-            suppliers = AssignCreatorAndUpdaterToEntitis<Supplier>(suppliers, adminId);
-            WriteData(suppliers);
-
-
-
-
-
-            //Reading and Writing for Products table.
-            List<Product> products = ReadSpecificColumns<Product>(
-
-            new List<string> { "SKU", "Barcode", "EnglishName", "ArabicName", "Description", "Status", "VAT", "Price", "MinStock", "ReorderQTY" },
-
-            new List<string> { "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT", "Price", "Min Stock", "Reorder Qty" }
-
-            );
-            products = products.DistinctBy(p => p.EnglishName).ToList();
-            products = AssignCreatorAndUpdaterToEntitis<Product>(products, adminId);
-            WriteData<Product>(products);
-
-
-
-
-            // Reading and writing Bins table.
-            List<Bin> bins = ReadSpecificColumns<Bin>(new List<string> { "EnglishName" }, new List<string> { "Bin" });
-            bins = bins.DistinctBy(c => c.EnglishName).ToList();
-            bins = AssignCreatorAndUpdaterToEntitis<Bin>(bins, adminId);
-            WriteData(bins);// I know I'm mixing reading and writing in the same method, but I had no choice, I suffered alot.
-
-
-            List<Manufacturer> manufacturers = ReadSpecificColumns<Manufacturer>(new List<string> { "EnglishName" }, new List<string> { "Manufacturer" });
-            manufacturers = manufacturers.DistinctBy(m => m.EnglishName).ToList();
-            manufacturers = AssignCreatorAndUpdaterToEntitis<Manufacturer>(manufacturers, adminId);
-            WriteData(manufacturers);
-
-
-
-
-            /////#### Reading and Writing junction tables######
-
-            List<BrandSupplier> brandSuppliers=GetJunctionTableData<BrandSupplier, Brand, Supplier>(
+            List<BrandSupplier> brandSuppliers = ConstructJunctionTableData<BrandSupplier, Brand, Supplier>(
                 "BrandId", "SupplierId",
                  "Brand", "Supplier");
             AddJunctionTableDataToContext<BrandSupplier>(
@@ -126,10 +146,7 @@ namespace HardwareStore.Services
                 brandSuppliers);
 
 
-            //#########Reading and Writing for ProductsManufacturers table.#####
-
-
-            List<ProductManufacturer> productManufacturers = GetJunctionTableData<ProductManufacturer, Product, Manufacturer>(
+            List<ProductManufacturer> productManufacturers = ConstructJunctionTableData<ProductManufacturer, Product, Manufacturer>(
                 "ProductId", "ManufacturerId",
                  "English Name", "Manufacturer");
             AddJunctionTableDataToContext<ProductManufacturer>(
@@ -138,253 +155,55 @@ namespace HardwareStore.Services
 
 
 
-            _context.SaveChanges();
+            List<ProductBin> productBins = ConstructJunctionTableData<ProductBin, Product, Bin>(
+                "ProductId", "BinId",
+                 "English Name", "Bin");
+            AddJunctionTableDataToContext<ProductBin>(
+                "ProductId", "BinId",
+                productBins);
 
 
-            ////###ProductsBins Table###
-            //// What I want to populate
-            //List<ProductBin> productBinsData =
-            //    new List<ProductBin>();
-            //// Lookup
-            //List<RelationshipLookupRecord> productBinsLookups =
-            //    CreateLookupTable("English Name", "Bin")
-            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-            //    .ToList();
+            List<ProductSupplier> productSuppliers = ConstructJunctionTableData<ProductSupplier, Product, Supplier>(
+                "ProductId", "SupplierId",
+                 "English Name", "Supplier");
+            AddJunctionTableDataToContext<ProductSupplier>(
+                "ProductId", "SupplierId",
+                productSuppliers);
+
+            List<ProductBrand> productBrands = ConstructJunctionTableData<ProductBrand, Product, Brand>(
+                "ProductId", "BrandId",
+                 "English Name", "Brand");
+            AddJunctionTableDataToContext<ProductBrand>(
+                "ProductId", "BrandId",
+                productBrands);
+
+            List<ProductCategory> productCategories = ConstructJunctionTableData<ProductCategory, Product, Category>(
+            "ProductId", "CategoryId",
+            "English Name", "Category");
+            AddJunctionTableDataToContext<ProductCategory>(
+                "ProductId", "CategoryId",
+                productCategories);
 
 
+            List<ProductUnit> productUnits = ConstructJunctionTableData<ProductUnit, Product, Unit>(
+                "ProductId", "UnitId",
+                 "English Name", "Unit");
+            AddJunctionTableDataToContext<ProductUnit>(
+                "ProductId", "UnitId",
+                productUnits);
 
 
-            //// fetched data for parent(s)
-            //List<Bin> existingBins= _context.Bins
-            //    .Select(m => new Bin { Id = m.Id, EnglishName = m.EnglishName })
-            //    .ToList();
+            List<ProductCountry> productCountries = ConstructJunctionTableData<ProductCountry, Product, Country>(
+                "ProductId", "CountryId",
+                 "English Name", "Country");
+            AddJunctionTableDataToContext<ProductCountry>(
+                "ProductId", "CountryId",
+                productCountries);
 
-            //foreach (RelationshipLookupRecord lookup in productBinsLookups)
-            //{
-            //    Product retrivedProduct = existingProducts
-            //        .First<Product>(e => lookup.LeftColumnCellValue == e.EnglishName);
-            //   Bin retrivedBin = existingBins
-            //        .First<Bin>(e => lookup.RightColumnCellValue == e.EnglishName);
-
-            //    if (retrivedBin != null && retrivedProduct != null)
-            //    {
-            //        productBinsData.Add(
-            //             new ProductBin
-            //             {
-            //                 ProductId = retrivedProduct.Id,
-            //                 BinId = retrivedBin.Id,
-            //             }
-            //          );
-            //    }
-            //}
-            //List<ProductBin> existingProductBins = _context.ProductsBins.
-            //    Select(e => new ProductBin { ProductId = e.ProductId, BinId = e.BinId }).ToList();
-            //foreach (ProductBin data in productBinsData)
-            //{
-            //    try
-            //    {
-
-            //            existingProductBins.
-            //            First<ProductBin>(e =>
-            //            (e.ProductId == data.ProductId) &&
-            //            (e.BinId == data.BinId));
-            //    }
-            //    // if no match found in the above try statement, excepton thrown
-            //    catch (System.InvalidOperationException e)
-            //    {
-            //        _context.Add(data);
-            //    }
-
-
-            //}
-
-            //_context.SaveChanges();
-            ////#####ProductsCountries table.#####
-            //List<ProductCountry> productCountries = new List<ProductCountry>();
-            //List<RelationshipLookupRecord> productCountryLookups = CreateLookupTable("English Name", "Country");
-            //productCountryLookups = productCountryLookups
-            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-            //    .ToList();
-
-            
-            //DbSet<Country> countryDbSet = _context.Set<Country>();
-
-            //foreach (var lookup in productCountryLookups)
-            //{
-            //    Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
-            //    Country foundCountry = countryDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
-
-            //    if (foundProduct != null && foundCountry != null)
-            //    {
-            //        productCountries.Add(new ProductCountry { ProductId = foundProduct.Id, CountryId = foundCountry.Id });
-            //    }
-            //}
-            //foreach (ProductCountry pc in productCountries)
-            //{
-            //    var foundEntity = _context.ProductsCountries.FirstOrDefault(e => (e.ProductId == pc.ProductId) && (e.CountryId == pc.CountryId));
-
-            //    if (foundEntity == null)
-            //    {
-            //        _context.Add(pc);
-            //    }
-            //}
-
-
-            ////#####Reading and Writing for ProductsSuppliers table.#####
-            //List<ProductSupplier> productSuppliers = new List<ProductSupplier>();
-            //List<RelationshipLookupRecord> productSupplierLookups = CreateLookupTable("English Name", "Supplier");
-            //productSupplierLookups = productSupplierLookups
-            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-            //    .ToList();
-
-   
-
-            //foreach (var lookup in productSupplierLookups)
-            //{
-            //    Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
-            //    Supplier foundSupplier = supplierDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
-
-            //    if (foundProduct != null && foundSupplier != null)
-            //    {
-            //        productSuppliers.Add(new ProductSupplier { ProductId = foundProduct.Id, SupplierId = foundSupplier.Id });
-            //    }
-            //}
-
-            //foreach (ProductSupplier ps in productSuppliers)
-            //{
-
-            //    var foundEntity = _context.ProductsSuppliers.FirstOrDefault(e => (e.ProductId == ps.ProductId) && (e.SupplierId == ps.SupplierId));
-            //    if (foundEntity == null)
-            //    {
-
-            //        _context.Add(ps);
-
-            //    }
-            //}
-
-
-
-            //List<ProductBrand> productBrands = new List<ProductBrand>();
-            //List<RelationshipLookupRecord> productBrandLookups = CreateLookupTable("English Name", "Brand");
-            //productBrandLookups = productBrandLookups
-            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-            //    .ToList();
-
-       
-
-            //foreach (var lookup in productBrandLookups)
-            //{
-            //    Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
-            //    Brand foundBrand = brandDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
-
-            //    if (foundProduct != null && foundBrand != null)
-            //    {
-            //        productBrands.Add(new ProductBrand { ProductId = foundProduct.Id, BrandId = foundBrand.Id });
-            //    }
-            //}
-
-            //foreach (ProductBrand pb in productBrands)
-            //{
-
-            //    var foundEntity = _context.ProductsBrands.FirstOrDefault(e => (e.ProductId == pb.ProductId) && (e.BrandId == pb.BrandId));
-
-            //    if (foundEntity == null)
-            //    {
-
-            //        _context.Add(pb);
-
-            //    }
-            //}
-
-
-
-            //// Reading and Writing ProductsCategories.
-            //// later when refactoring code : await two dependencies.
-            //List<ProductCategory> productCategories = new List<ProductCategory>();
-            //List<RelationshipLookupRecord> productCategoryLookups = CreateLookupTable("English Name", "Category");
-            //productCategoryLookups = productCategoryLookups
-            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-            //    .ToList();
-
-            //DbSet<Category> categoryDbSet = _context.Set<Category>();
-            
-            //foreach (var lookup in productCategoryLookups)
-            //{
-            //    Product foundProduct = productDbSet.FirstOrDefault(e => e.EnglishName == lookup.LeftColumnCellValue);
-            //    Category foundCategory = categoryDbSet.FirstOrDefault(e => e.EnglishName == lookup.RightColumnCellValue);
-
-            //    if (foundProduct != null && foundCategory != null)
-            //    {
-            //        productCategories.Add(new ProductCategory { ProductId = foundProduct.Id, CategoryId = foundCategory.Id });
-            //    }
-            //}
-
-            //foreach (ProductCategory pc in productCategories)
-            //{
-
-            //    var foundEntity = _context.ProductsCategories.FirstOrDefault(e => (e.ProductId == pc.ProductId) && (e.CategoryId == pc.CategoryId));
-
-            //    if (foundEntity == null)
-            //    {
-
-            //        _context.Add(pc);
-
-            //    }
-            //}
-
-
-
-            //// Reading and Writing ProductsUnits.
-            //// later when refactoring code : await two dependencies.
-            //List<ProductUnit> productUnits = new List<ProductUnit>();
-            //List<RelationshipLookupRecord> productUnitLookups = CreateLookupTable("English Name", "Unit");
-            //productUnitLookups = productUnitLookups
-            //    .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-            //    .ToList();
-
-            //DbSet<Unit> unitDbSet = _context.Set<Unit>();
-
-           
-            //List<Unit> existingUnits= unitDbSet.Select(u => new Unit { Id=u.Id, EnglishName=u.EnglishName }).ToList();
-
-            //foreach (var lookup in productUnitLookups)
-                
-
-            //{
-            //    Product foundProduct= existingProducts.First(p => p.EnglishName == lookup.LeftColumnCellValue);
-                 
-            //    Unit foundUnit = existingUnits.First(u => u.EnglishName == lookup.RightColumnCellValue);
-
-            //    if (foundProduct != null && foundUnit != null)
-            //    {
-            //        productUnits.Add(new ProductUnit { ProductId = foundProduct.Id, UnitId = foundUnit.Id });
-            //    }
-            //}
-
-            //foreach (ProductUnit pu in productUnits)
-            //{
-
-            //    var foundEntity = _context.ProductsUnits.FirstOrDefault(e => (e.ProductId == pu.ProductId) && (e.UnitId == pu.UnitId));
-
-            //    if (foundEntity == null)
-            //    {
-
-            //        _context.Add(pu);
-
-            //    }
-            //}
-
-            //_context.SaveChanges();
-            // Debug.WriteLine(" My break point.");
-            //// I should make this method return something later. instead of mixing reading and writing
-            ////return new List<object> { categories, subCategories,units,countries, brands, suppliers, brandSuppliers };
-
-
+            _context.SaveChanges();// returned 0
         }
 
-
-
-
+        //Helper method
         public  List<T> AssignCreatorAndUpdaterToEntitis<T>(List<T> entities, string Id) where T: HasCreatorAndUpdator
         {
             foreach (T entity in entities)
@@ -395,35 +214,8 @@ namespace HardwareStore.Services
             }
             return entities;
         }
-        public void WriteData<T>(List<T> entities) where T :class, IHasEnglishAndArabicName    //This is called the constraint list
-        {
-            // Set Returns DbSet<T> that can be used to query the entity T
-            //T is not hardcoded, it's generic, it's reusable.
-            
-            DbSet<T> dbSet = _context.Set<T>();// CS0452 : T must be a reference type in order to use it as parameter: solution → T:class
-            foreach (T entity in entities)
-            {
 
-                // check if the entity already in the database or not
-                var foundEntity = dbSet.FirstOrDefault(e => e.EnglishName == entity.EnglishName);//PROBLEM: EnglishName is harcoded, what if the EnglishName property changes?
-
-                if (foundEntity == null)
-                {
-
-
-
-
-                    dbSet.Add(entity);// Debugging: This code was executed
-
-
-
-                }
-            }
-             _context.SaveChanges();
-       }
-
-
-
+        //Helper method
         /// <summary>
         /// 
         /// <para>
@@ -497,10 +289,7 @@ namespace HardwareStore.Services
 
         }
 
-
-
-
-
+        //Helper method
         /// <summary>
         /// 
         /// <para>
@@ -570,6 +359,7 @@ namespace HardwareStore.Services
         /// <exception cref="ArgumentException">
         /// </exception>        
 
+        //Helper method
         public void PopulateForeignKeyPropertyForEachChild<Child,Parent>(string childTablNameInExcel, string parentTableNameInExcel, string foreignKeyPropertyName,List<Child> childs) where Parent:class,IHasEnglishAndArabicName, IHasIdentification 
 
 
@@ -604,20 +394,22 @@ namespace HardwareStore.Services
 
             //Refer to the parent to be able to set the foreign key.
             DbSet<Parent> dbSet = _context.Set<Parent>();
+            PropertyInfo foreignKeyProperty=typeof(Child).GetProperty(foreignKeyPropertyName)!;
+            List <Parent> parentRows= dbSet.ToList<Parent>();
             for (int i=0; i < records.Count; i++) 
-            {      
-                Parent foundEntity = dbSet
-                    .First(e => e.EnglishName == records[i].RightColumnCellValue);
+            {
 
-                //reflection : because c# is not dynamic language
-                typeof(Child).GetProperty(foreignKeyPropertyName)!.SetValue(childs[i], foundEntity.Id); 
+                //PROBLEM : use try catch blocks
+                Parent foundEntity=parentRows.First<Parent>(r => r.EnglishName == records[i].RightColumnCellValue);
+
+                foreignKeyProperty.SetValue(childs[i], foundEntity.Id); 
             }            
                 
             
             
         }
 
-
+        //Helper method
         /// <summary>
         /// <para>// Should I redesign the  function so that it gets the data of the parent from the database instead of the excel file</para>
         /// </summary>
@@ -626,7 +418,14 @@ namespace HardwareStore.Services
         /// <returns></returns>
         public List<RelationshipLookupRecord> CreateLookupTable(string childTablNameInExcel,string parentTableNameInExcel)
         {
-            int leftColumnNumber = _sheet.FindString(childTablNameInExcel, false, false).Column;
+            /*
+             * Error 5000. System.NullReferenceException: 'Object reference not set to an instance of an object.'
+
+_sheet was null.
+
+               _sheet is not defined here. solution in very brief
+             */
+            int leftColumnNumber = this._sheet.FindString(childTablNameInExcel, false, false).Column;
             int rightColumnNumber = _sheet.FindString(parentTableNameInExcel, false, false).Column;
             List<RelationshipLookupRecord> result = new();
             for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
@@ -639,8 +438,9 @@ namespace HardwareStore.Services
             }
             return result;
         }
-    
-        public List<J> GetJunctionTableData<J,Parent1,Parent2>(string firstPropertyName, string secondPropertyName, string firstExcelColumnName, string secondExcelColumnName) where J : new() where Parent1 : class, IHasIdentification, IHasEnglishAndArabicName, new() where Parent2 : class, IHasIdentification, IHasEnglishAndArabicName, new()
+
+        //Helper method
+        public List<J> ConstructJunctionTableData<J,Parent1,Parent2>(string firstPropertyName, string secondPropertyName, string firstExcelColumnName, string secondExcelColumnName) where J : new() where Parent1 : class, IHasIdentification, IHasEnglishAndArabicName, new() where Parent2 : class, IHasIdentification, IHasEnglishAndArabicName, new()
 
         {
             
@@ -657,12 +457,11 @@ namespace HardwareStore.Services
             // retrive all parents into memory
             DbSet<Parent1> DbSet1 = _context.Set<Parent1>();
             List<Parent1> existingEntities1 = DbSet1
-                .Select(p => new Parent1 { Id = p.Id, EnglishName = p.EnglishName })
+                .Select(p => new Parent1 { Id = p.Id, EnglishName = p.EnglishName})
                 .ToList();
             DbSet<Parent2> DbSet2 = _context.Set<Parent2>();
-            List<Parent2> existingEntities2 = DbSet2
-                .Select(m => new Parent2 { Id = m.Id, EnglishName = m.EnglishName })
-                .ToList();
+            List<Parent2> existingEntities2 = DbSet2.ToList();
+
 
             var Property1 = typeof(J).GetProperty(firstPropertyName)!;
             var Property2 = typeof(J).GetProperty(secondPropertyName)!;
@@ -673,7 +472,7 @@ namespace HardwareStore.Services
                 {
                     Parent1 Entity1 = existingEntities1.First<Parent1>(e => lookup.LeftColumnCellValue == e.EnglishName);
 
-                    Parent2 Entity2 = existingEntities2.First<Parent2>(e => lookup.LeftColumnCellValue == e.EnglishName);
+                    Parent2 Entity2 = existingEntities2.First<Parent2>(e => lookup.RightColumnCellValue == e.EnglishName);
                     J j = new J();
                     Property1.SetValue(j, Entity1.Id);
                     Property2.SetValue(j, Entity2.Id);
@@ -683,7 +482,9 @@ namespace HardwareStore.Services
                 
                 catch (System.InvalidOperationException ioe)
                 {
+                    Debug.WriteLine("catch block executed");
                     Debug.WriteLine("Executed catch block when Entity1 or Entity2 is null");
+                    Debug.WriteLine("\n\ncurrent lookup is" + lookup + "\n\n");
                 }
 
 
@@ -693,32 +494,29 @@ namespace HardwareStore.Services
             return result;
         }
 
-
+        //Helper method
         public void AddJunctionTableDataToContext<J>(string firstPropertyName, string secondPropertyName, List<J> rowsToInsert) where J : class, new()
 
 
         {
             DbSet<J> gDbSet = _context.Set<J>();
 
-
-
-            var p1 = typeof(J).GetProperty(firstPropertyName)!;
-            var p2 = typeof(J).GetProperty(secondPropertyName)!;
+            var property1 = typeof(J).GetProperty(firstPropertyName)!;
+            var property2 = typeof(J).GetProperty(secondPropertyName)!;
             List<J> existingEntitiesInDatabase = gDbSet
                     .AsEnumerable()
                     .Select(e =>
                     {
                         J j = new J();
-                        
-                        p1.SetValue(j, p1.GetValue(e));
-                        
-                        p2.SetValue(j, p2.GetValue(e));
+
+                        property1.SetValue(j, property1.GetValue(e));
+
+                        property2.SetValue(j, property2.GetValue(e));
                         return j;
                     })
                     .ToList();
 
-            var property1 = typeof(J).GetProperty(firstPropertyName)!;
-            var property2 = typeof(J).GetProperty(secondPropertyName)!;
+
 
             foreach (J rowToInsert in rowsToInsert)
             {
@@ -728,19 +526,13 @@ namespace HardwareStore.Services
                     existingEntitiesInDatabase.
                     First<J>(e =>
                     {
-                        J j = new J();
+
   
                         var leftCellToInsert = property1.GetValue(rowToInsert);
                         var rightCellToInsert = property2.GetValue(rowToInsert);
                         var leftCellInDatabase = property1.GetValue(e);
                         var rightCellInDatabase = property2.GetValue(e);
 
-                        Debug.WriteLine("\n\n####Types Inspection start ####:\n\n");
-                        Debug.WriteLine(leftCellToInsert.GetType());
-                        Debug.WriteLine(rightCellToInsert.GetType());
-                        Debug.WriteLine(leftCellInDatabase.GetType());
-                        Debug.WriteLine(rightCellInDatabase.GetType());
-                        Debug.WriteLine("\n\n####Types Inspection end ####:\n\n");
                         if (
                             (leftCellToInsert.Equals(leftCellInDatabase))
                                &&
@@ -771,9 +563,35 @@ namespace HardwareStore.Services
 
 
         }
+        // helper method
+        public void AddNonJunctionTableDataToContext<T>(List<T>table) where T : class, IHasEnglishAndArabicName
+        {
+
+            DbSet<T> dbSet = _context.Set<T>();
+            List<T> existingEntities = dbSet.ToList();
+            foreach (T  row in table)
+            {
+
+                
+                try
+                {
+                    existingEntities.First(
+                        en => en.EnglishName == row.EnglishName
+                    );
+                }
+                catch(System.InvalidOperationException ioe)
+                {
+                    dbSet.Add(row);
+                }
+
+            }
+
+
 
 
         }
+
+    }
     }
 
 

@@ -49,9 +49,16 @@ builder.Services.AddScoped<IAccount, UserAccount>(); // fresh  instance of the U
 
 
 
+// wrong : _sheet will not be shared between the instances
+//builder.Services.AddScoped<IOmniReader, ReadExcelWriteDatabase>();
+//builder.Services.AddScoped<IOmniWriter, ReadExcelWriteDatabase>();
 
-builder.Services.AddScoped<IOmniReader, ReadExcelWriteDatabase>();
-builder.Services.AddScoped<IOmniWriter, ReadExcelWriteDatabase>();
+builder.Services.AddScoped<ReadExcelWriteDatabase>();
+builder.Services.AddScoped<IOmniReader>(sp =>
+    sp.GetRequiredService<ReadExcelWriteDatabase>());
+builder.Services.AddScoped<IOmniWriter>(sp =>
+    sp.GetRequiredService<ReadExcelWriteDatabase>());
+
 builder.Services.AddScoped<IAdmin, AdminPanel>();
 
 builder.Services.AddScoped<SignupViewModel>();
