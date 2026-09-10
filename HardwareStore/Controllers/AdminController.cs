@@ -129,10 +129,42 @@ namespace HardwareStore.Controllers
         [Route("Admin/Import")] // but the URL in the fetch should be /Admin/Import
         public  async Task<IActionResult> Import([FromForm] IFormFile file) // PROBLEM : THIs method is no longer reached by the request
         {
-
-
+            //string docPath = @"D:\Training";
+            /////####Reading####
+            //Stopwatch stopWatch1 = new Stopwatch();
+            //stopWatch1.Start();
             IDataDto data=reader.Read();
+            //stopWatch1.Stop();
+            //TimeSpan ts = stopWatch1.Elapsed;
+
+            //string readTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            //    ts.Hours, ts.Minutes, ts.Seconds,
+            //    ts.Milliseconds / 10);
+
+
+
+
+            //using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, "NoticePerformance.txt"), true))
+            //{
+            //    outputFile.WriteLine($"readTime: {readTime}\n");
+            //}
+
+            ////####Writing###
+            //Stopwatch writeStopWatch = new Stopwatch();
+            //writeStopWatch.Start();
+            
             writer.Write(data);
+            
+            //writeStopWatch.Stop();
+            //TimeSpan writeTime = writeStopWatch.Elapsed;
+
+
+            //using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, "NoticePerformance.txt"), true))
+            //{
+            //    outputFile.WriteLine($"writeTime: {writeTime}\n");
+            //}
+            
+            
             return RedirectToAction("ProductsPage", "Admin");
 
 

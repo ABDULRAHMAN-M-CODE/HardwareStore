@@ -3,15 +3,19 @@
 namespace HardwareStore.Services
 
 {
+    using HardwareStore.DTOs;
     using HardwareStore.Models;
     using HardwareStoreNameSpace;
+
     using Microsoft.EntityFrameworkCore;
     using Spire.Xls;
     using System.Diagnostics;
+    using System.IO;
     using System.Reflection;
     using System.Security.Claims;
-    using System.IO;
-    using HardwareStore.DTOs;
+
+    using System;
+
 
     public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter
     {
@@ -32,8 +36,8 @@ namespace HardwareStore.Services
         public IDataDto Read()
         {
 
+            
 
-     
             var file = _httpContextAccessor.HttpContext.Request.Form.Files["file"];
             var workbook = new Workbook();
             using var stream = file.OpenReadStream();
@@ -103,10 +107,31 @@ namespace HardwareStore.Services
         // Interface method.
         public void Write(IDataDto dataDto) 
         {
-            
+            Stopwatch writeParentWatch = new Stopwatch();
+            writeParentWatch.Start();
+
             ExcelProductsDto epDto= (ExcelProductsDto)dataDto;
             WriteParentTables(epDto);
+            
+            writeParentWatch.Stop();
+            TimeSpan writeParentsTime = writeParentWatch.Elapsed;
+            using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
+            {
+                outputFile.WriteLine($" WriteParentTables(epDto) Time: {writeParentsTime}\n");
+            }
+
+
+            Stopwatch writeChildsWatch = new Stopwatch();
+            writeChildsWatch.Start();
+            
             WriteChildTables();
+
+            writeChildsWatch.Stop();
+            TimeSpan writeChildsTime = writeChildsWatch.Elapsed;
+            using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
+            {
+                outputFile.WriteLine($" WriteChildTables() Time: {writeChildsTime}\n");
+            }
 
         }
 
@@ -116,16 +141,16 @@ namespace HardwareStore.Services
         /// <param name="epDto"></param>
         public void  WriteParentTables(ExcelProductsDto epDto)
         {
-            AddNonJunctionTableDataToContext(epDto.Categories);   
-            AddNonJunctionTableDataToContext(epDto.Countries);
-            AddNonJunctionTableDataToContext(epDto.Units);
-            AddNonJunctionTableDataToContext(epDto.Brands);
-            AddNonJunctionTableDataToContext(epDto.Suppliers);
-            AddNonJunctionTableDataToContext(epDto.Products);
-            AddNonJunctionTableDataToContext(epDto.Bins);
-            AddNonJunctionTableDataToContext(epDto.Manufacturers);
-            _context.SaveChanges();
 
+            AddRange(epDto.Suppliers);
+            AddRange(epDto.Brands);
+            AddRange(epDto.Units);
+            AddRange(epDto.Categories);
+            AddRange(epDto.Countries);
+            AddRange(epDto.Products);
+            AddRange(epDto.Bins);
+            AddRange(epDto.Manufacturers);
+            _context.SaveChanges();
         }
 
         public void WriteChildTables()
@@ -136,11 +161,12 @@ namespace HardwareStore.Services
             subCategories = subCategories.OrderBy(c => c.EnglishName).ToList();
             PopulateForeignKeyPropertyForEachChild<SubCategory, Category>("Subcategory", "Category", "CategoryId", subCategories);
             subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, _adminId);
-            AddNonJunctionTableDataToContext(subCategories);
+            AddRange(subCategories);// Works, because each subCategory has english name and arabic name
 
             List<BrandSupplier> brandSuppliers = ConstructJunctionTableData<BrandSupplier, Brand, Supplier>(
                 "BrandId", "SupplierId",
                  "Brand", "Supplier");
+           
             AddJunctionTableDataToContext<BrandSupplier>(
                 "BrandId", "SupplierId",
                 brandSuppliers);
@@ -268,10 +294,10 @@ namespace HardwareStore.Services
                     }
                     catch (Exception e)
                     {
-                        Debug.WriteLine("\n\n" + "some cell in Price column may be empty or wrong"+ "\n\n");
-                        Debug.WriteLine("\n\n"+e+"\n\n");
-                        Debug.WriteLine("Row, do not forget that row start from 2. not 1 or 0 :" + row);
-                        Debug.WriteLine("property index,don't forget index start from 0, not 1 : " + i+"\n\n");
+                        //Debug.WriteLine("\n\n" + "some cell in Price column may be empty or wrong"+ "\n\n");
+                        //Debug.WriteLine("\n\n"+e+"\n\n");
+                        //Debug.WriteLine("Row, do not forget that row start from 2. not 1 or 0 :" + row);
+                        //Debug.WriteLine("property index,don't forget index start from 0, not 1 : " + i+"\n\n");
                         throw new Exception("Error happend");
                     }
                         
@@ -494,8 +520,27 @@ _sheet was null.
             return result;
         }
 
+        
+        
+        public void AddRange<M>(List<M> models)
+            where M:class,IHasEnglishAndArabicName
+        {
+
+            DbSet<M> genericContext = _context.Set<M>();
+            List<string?>? existingEntitiesNames = genericContext // nullability  should match
+              .Select(e => e.EnglishName)
+              .ToList();
+            var newEntities = models.Where(model => !existingEntitiesNames.Contains(model.EnglishName))
+                .ToList();
+            if (newEntities.Count()!=0)
+            {
+                _context.AddRange(newEntities);
+            }
+            
+        }
+        
         //Helper method
-        public void AddJunctionTableDataToContext<J>(string firstPropertyName, string secondPropertyName, List<J> rowsToInsert) where J : class, new()
+        public void AddJunctionTableDataToContext<J>(string firstPropertyName, string secondPropertyName, List<J> models) where J : class, new()
 
 
         {
@@ -503,60 +548,31 @@ _sheet was null.
 
             var property1 = typeof(J).GetProperty(firstPropertyName)!;
             var property2 = typeof(J).GetProperty(secondPropertyName)!;
-            List<J> existingEntitiesInDatabase = gDbSet
-                    .AsEnumerable()
-                    .Select(e =>
-                    {
-                        J j = new J();
-
-                        property1.SetValue(j, property1.GetValue(e));
-
-                        property2.SetValue(j, property2.GetValue(e));
-                        return j;
-                    })
-                    .ToList();
+   
+            List<J> existingEntities = gDbSet.ToList();
 
 
+            //Where clause : Only intrested about the models that does not  exist in the dataabse
+            // Any: tells us if something exist in something else
+            // NOT(Any) clause: tells us if something does not exist in something else
+            // for each model that does not exist in the database, the NOT(Any) will return true.
+            var newEntities = models
+             .Where(model => !existingEntities
+                    .Any(e =>
+                     property1.GetValue(e).Equals(property1.GetValue(model)) &&
+                     property2.GetValue(e).Equals(property2.GetValue(model))))
+            .ToList();
 
-            foreach (J rowToInsert in rowsToInsert)
+
+            if (newEntities.Count() != 0)
             {
-                try
-                {
-
-                    existingEntitiesInDatabase.
-                    First<J>(e =>
-                    {
-
-  
-                        var leftCellToInsert = property1.GetValue(rowToInsert);
-                        var rightCellToInsert = property2.GetValue(rowToInsert);
-                        var leftCellInDatabase = property1.GetValue(e);
-                        var rightCellInDatabase = property2.GetValue(e);
-
-                        if (
-                            (leftCellToInsert.Equals(leftCellInDatabase))
-                               &&
-                            ( rightCellToInsert.Equals(rightCellInDatabase) )
-                            )
-                        {
-
-                            return true;
-                        }
-
-                        return false;
-
-                    });
+                _context.AddRange(newEntities);
+            }
+            
 
 
+        }
 
-
-                }
-                // if not match found, that means the row we are about to store
-                // does not exist in the database,  so it should be stored.
-                catch (System.InvalidOperationException e)
-                {
-                    gDbSet.Add(rowToInsert);
-                }
 
 
             }
@@ -564,35 +580,8 @@ _sheet was null.
 
         }
         // helper method
-        public void AddNonJunctionTableDataToContext<T>(List<T>table) where T : class, IHasEnglishAndArabicName
-        {
-
-            DbSet<T> dbSet = _context.Set<T>();
-            List<T> existingEntities = dbSet.ToList();
-            foreach (T  row in table)
-            {
-
-                
-                try
-                {
-                    existingEntities.First(
-                        en => en.EnglishName == row.EnglishName
-                    );
-                }
-                catch(System.InvalidOperationException ioe)
-                {
-                    dbSet.Add(row);
-                }
-
-            }
 
 
-
-
-        }
-
-    }
-    }
 
 
 
