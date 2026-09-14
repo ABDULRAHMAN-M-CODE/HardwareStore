@@ -528,20 +528,36 @@ _sheet was null.
             return result;
         }
 
-        
-        
+
+        /// <summary>
+        /// 
+        /// Add objects to the context, if those objects are not tracked.
+        /// 
+        /// <para>
+        /// Internally, the Except method is used to produce the set difference of two sequences by using a custom equality comparer to compare values
+        /// Instead of comparing references.
+        /// </para>
+        /// 
+        /// </summary>
+        /// <typeparam name="M"> generic type for a model class</typeparam>
+        /// <param name="objects">List of models, each model has the generic type M</param>
         public void AddRange<M>(List<M> objects)
             where M:NonJunctionEntity<M>,IHasEnglishAndArabicName // PROBLEM : remove this
         {
+             
+            // suppose  that  some table  in the database contains X or 0 rows.
+            // suppose that  objects.Count = X where X!=0 .
 
-            List<M> existingEntities = _context.Set<M>().ToList();
+            List<M> existingEntities = _context.Set<M>().ToList();// existingEntities.Count = X || 0 
 
-            List<M> newEntities = objects.Except(existingEntities).ToList();
+            List<M> newEntities = objects.Except(existingEntities).ToList(); // newEntities.Count = 0 || X
 
             if (newEntities.Count != 0)
             {
-                _context.AddRange(newEntities);
+                _context.AddRange(newEntities); // Executed 0 || X times
             }
+            // thus, AddRange<M>() method executes faster when database contains data; it is not required to add alot of entites to the context.
+            // but this AddRange<M>() has terrible performance when the database is empty; it is required to add alot of new entities to the context.
 
         }
 
