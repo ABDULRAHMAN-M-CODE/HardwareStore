@@ -7,7 +7,7 @@ using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Spire.Xls;
+
 
 //Mental Model about the DI container: 
 /*
@@ -27,6 +27,7 @@ string amlickey = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ikx1Y2t5UGVubnlTb2Z0d2FyZUxpY2Vuc
 
 builder.Services.AddAutoMapper(cfg => cfg.LicenseKey = amlickey, typeof(Program));
 builder.Services.AddControllersWithViews();
+builder.Services.AddMiniProfiler();
 
 // the options are callback; they are not executed now, when some code needs the service, the options will be executed.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -110,7 +111,7 @@ app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 app.UseRouting();
-
+app.UseMiniProfiler();
 app.UseAuthentication(); 
 app.UseAuthorization(); 
 

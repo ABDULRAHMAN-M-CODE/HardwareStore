@@ -10,9 +10,7 @@
    
 </head>
 <body>
-    <header>
-
-    </header>
+    <mini-profiler />
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody() @*What is Rendered here is a specific view content, not the shared content*@
@@ -51,5 +49,9 @@
     *@
     @await RenderSectionAsync("Styles", required: false)
     @await RenderSectionAsync("ImportFile", required: false)
+
+    
 </body>
+
 </html>
+

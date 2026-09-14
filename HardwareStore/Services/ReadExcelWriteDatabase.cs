@@ -5,17 +5,17 @@ namespace HardwareStore.Services
 {
     using HardwareStore.DTOs;
     using HardwareStore.Models;
+    using HardwareStore.SeedWork;
+    using HardwareStore.ViewModel.AccountViewModels;
     using HardwareStoreNameSpace;
-
     using Microsoft.EntityFrameworkCore;
     using Spire.Xls;
+    using StackExchange.Profiling;
+    using System;
     using System.Diagnostics;
     using System.IO;
     using System.Reflection;
     using System.Security.Claims;
-
-    using System;
-    using HardwareStore.SeedWork;
 
     public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter
     {
@@ -107,11 +107,15 @@ namespace HardwareStore.Services
         // Interface method.
         public void Write(IDataDto dataDto) 
         {
-            Stopwatch writeParentWatch = new Stopwatch();
-            writeParentWatch.Start();
+            //Stopwatch writeParentWatch = new Stopwatch();
+            //writeParentWatch.Start();
             ExcelProductsDto epDto= (ExcelProductsDto)dataDto;
-            WriteParentTables(epDto);
-            writeParentWatch.Stop();
+            using (MiniProfiler.Current.Step("WriteParentTables"))
+            {
+                WriteParentTables(epDto);
+            }
+           
+            //writeParentWatch.Stop();
 
 
 
@@ -123,13 +127,13 @@ namespace HardwareStore.Services
 
 
             // Obserivations
-            TimeSpan writeParentsTime = writeParentWatch.Elapsed;
+            //TimeSpan writeParentsTime = writeParentWatch.Elapsed;
             TimeSpan writeChildsTime = writeChildsWatch.Elapsed;
             using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
             {
                 outputFile.WriteLine($" WriteChildTables() Time: {writeChildsTime}\n");
 
-                outputFile.WriteLine($" WriteParentTables(epDto) Time: {writeParentsTime}\n");
+                //outputFile.WriteLine($" WriteParentTables(epDto) Time: {writeParentsTime}\n");
             }
 
         }
@@ -141,6 +145,8 @@ namespace HardwareStore.Services
         public void  WriteParentTables(ExcelProductsDto epDto)
         {
 
+
+
             AddRange(epDto.Suppliers);
             AddRange(epDto.Brands);
             AddRange(epDto.Units);
@@ -150,6 +156,7 @@ namespace HardwareStore.Services
             AddRange(epDto.Bins);
             AddRange(epDto.Manufacturers);
             _context.SaveChanges();
+            // WriteParentTables(epDto) Time: 00:00:00.0333679
         }
 
         public void WriteChildTables()
@@ -544,9 +551,10 @@ _sheet was null.
         public void AddRange<M>(List<M> objects)
             where M:NonJunctionEntity<M>,IHasEnglishAndArabicName // PROBLEM : remove this
         {
-             
+
             // suppose  that  some table  in the database contains X or 0 rows.
             // suppose that  objects.Count = X where X!=0 .
+
 
             List<M> existingEntities = _context.Set<M>().ToList();// existingEntities.Count = X || 0 
 
@@ -558,6 +566,7 @@ _sheet was null.
             }
             // thus, AddRange<M>() method executes faster when database contains data; it is not required to add alot of entites to the context.
             // but this AddRange<M>() has terrible performance when the database is empty; it is required to add alot of new entities to the context.
+
 
         }
 
