@@ -1,4 +1,4 @@
-﻿namespace HardwareStore.Models
+﻿namespace HardwareStore.SeedWork
 {
 
     //abstraact class is better than interface  in this case, code sharing. 

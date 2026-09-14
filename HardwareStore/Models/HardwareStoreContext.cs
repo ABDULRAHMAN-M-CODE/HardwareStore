@@ -2,6 +2,7 @@
 namespace HardwareStoreNameSpace
 {
     using HardwareStore.Models;
+    using HardwareStore.SeedWork;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
     using System.Data;

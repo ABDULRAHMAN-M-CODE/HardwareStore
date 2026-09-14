@@ -15,7 +15,7 @@ namespace HardwareStore.Services
     using System.Security.Claims;
 
     using System;
-
+    using HardwareStore.SeedWork;
 
     public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter
     {
@@ -109,28 +109,27 @@ namespace HardwareStore.Services
         {
             Stopwatch writeParentWatch = new Stopwatch();
             writeParentWatch.Start();
-
             ExcelProductsDto epDto= (ExcelProductsDto)dataDto;
             WriteParentTables(epDto);
-            
             writeParentWatch.Stop();
-            TimeSpan writeParentsTime = writeParentWatch.Elapsed;
-            using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
-            {
-                outputFile.WriteLine($" WriteParentTables(epDto) Time: {writeParentsTime}\n");
-            }
+
+
 
 
             Stopwatch writeChildsWatch = new Stopwatch();
             writeChildsWatch.Start();
-            
             WriteChildTables();
-
             writeChildsWatch.Stop();
+
+
+            // Obserivations
+            TimeSpan writeParentsTime = writeParentWatch.Elapsed;
             TimeSpan writeChildsTime = writeChildsWatch.Elapsed;
             using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
             {
                 outputFile.WriteLine($" WriteChildTables() Time: {writeChildsTime}\n");
+
+                outputFile.WriteLine($" WriteParentTables(epDto) Time: {writeParentsTime}\n");
             }
 
         }
@@ -161,72 +160,81 @@ namespace HardwareStore.Services
             subCategories = subCategories.OrderBy(c => c.EnglishName).ToList();
             PopulateForeignKeyPropertyForEachChild<SubCategory, Category>("Subcategory", "Category", "CategoryId", subCategories);
             subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, _adminId);
-            AddRange(subCategories);// Works, because each subCategory has english name and arabic name
+            AddRange(subCategories);
+
+
+            Stopwatch constructionStopWatch = new Stopwatch();
+            constructionStopWatch.Start();
 
             List<BrandSupplier> brandSuppliers = ConstructJunctionTableData<BrandSupplier, Brand, Supplier>(
                 "BrandId", "SupplierId",
                  "Brand", "Supplier");
-           
-            AddJunctionTableDataToContext<BrandSupplier>(
-                "BrandId", "SupplierId",
-                brandSuppliers);
-
-
             List<ProductManufacturer> productManufacturers = ConstructJunctionTableData<ProductManufacturer, Product, Manufacturer>(
-                "ProductId", "ManufacturerId",
-                 "English Name", "Manufacturer");
-            AddJunctionTableDataToContext<ProductManufacturer>(
-                "ProductId", "ManufacturerId",
-                productManufacturers);
-
-
-
+            "ProductId", "ManufacturerId",
+             "English Name", "Manufacturer");
             List<ProductBin> productBins = ConstructJunctionTableData<ProductBin, Product, Bin>(
                 "ProductId", "BinId",
                  "English Name", "Bin");
-            AddJunctionTableDataToContext<ProductBin>(
-                "ProductId", "BinId",
-                productBins);
-
-
             List<ProductSupplier> productSuppliers = ConstructJunctionTableData<ProductSupplier, Product, Supplier>(
                 "ProductId", "SupplierId",
                  "English Name", "Supplier");
-            AddJunctionTableDataToContext<ProductSupplier>(
-                "ProductId", "SupplierId",
-                productSuppliers);
 
             List<ProductBrand> productBrands = ConstructJunctionTableData<ProductBrand, Product, Brand>(
                 "ProductId", "BrandId",
                  "English Name", "Brand");
-            AddJunctionTableDataToContext<ProductBrand>(
-                "ProductId", "BrandId",
-                productBrands);
 
             List<ProductCategory> productCategories = ConstructJunctionTableData<ProductCategory, Product, Category>(
             "ProductId", "CategoryId",
             "English Name", "Category");
-            AddJunctionTableDataToContext<ProductCategory>(
-                "ProductId", "CategoryId",
-                productCategories);
-
-
             List<ProductUnit> productUnits = ConstructJunctionTableData<ProductUnit, Product, Unit>(
                 "ProductId", "UnitId",
                  "English Name", "Unit");
-            AddJunctionTableDataToContext<ProductUnit>(
-                "ProductId", "UnitId",
-                productUnits);
-
-
             List<ProductCountry> productCountries = ConstructJunctionTableData<ProductCountry, Product, Country>(
                 "ProductId", "CountryId",
                  "English Name", "Country");
+            constructionStopWatch.Stop();
+
+
+
+            TimeSpan cTS=constructionStopWatch.Elapsed;
+            string constructionTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    cTS.Hours, cTS.Minutes, cTS.Seconds,
+                    cTS.Milliseconds / 10);
+
+            Stopwatch AddingStopWatch = new Stopwatch();
+            AddingStopWatch.Start();
+
+            AddJunctionTableDataToContext<BrandSupplier>(
+                brandSuppliers);
+            AddJunctionTableDataToContext<ProductManufacturer>(
+                productManufacturers);
+            AddJunctionTableDataToContext<ProductBin>(
+                productBins);
+            AddJunctionTableDataToContext<ProductSupplier>(
+                productSuppliers);
+            AddJunctionTableDataToContext<ProductBrand>(
+                productBrands);
+            AddJunctionTableDataToContext<ProductCategory>(
+                productCategories);
+            AddJunctionTableDataToContext<ProductUnit>(
+                productUnits);
             AddJunctionTableDataToContext<ProductCountry>(
-                "ProductId", "CountryId",
                 productCountries);
 
-            _context.SaveChanges();// returned 0
+            AddingStopWatch.Stop();
+            TimeSpan aTS = AddingStopWatch.Elapsed;
+            string AddingTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    aTS.Hours, aTS.Minutes, aTS.Seconds,
+                    aTS.Milliseconds / 10);
+
+            //using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
+            //{
+            //    outputFile.WriteLine($"ConstructJunctionTableData: {constructionTime}\n");
+            //    outputFile.WriteLine($"addJunctionTableDataToContext: {AddingTime}\n");
+
+            //}
+
+            _context.SaveChanges();
         }
 
         //Helper method
@@ -522,60 +530,68 @@ _sheet was null.
 
         
         
-        public void AddRange<M>(List<M> models)
-            where M:class,IHasEnglishAndArabicName
+        public void AddRange<M>(List<M> objects)
+            where M:NonJunctionEntity<M>,IHasEnglishAndArabicName // PROBLEM : remove this
         {
 
-            DbSet<M> genericContext = _context.Set<M>();
-            List<string?>? existingEntitiesNames = genericContext // nullability  should match
-              .Select(e => e.EnglishName)
-              .ToList();
-            var newEntities = models.Where(model => !existingEntitiesNames.Contains(model.EnglishName))
-                .ToList();
-            if (newEntities.Count()!=0)
+            List<M> existingEntities = _context.Set<M>().ToList();
+
+            List<M> newEntities = objects.Except(existingEntities).ToList();
+
+            if (newEntities.Count != 0)
             {
                 _context.AddRange(newEntities);
             }
-            
+
         }
-        
+
         //Helper method
-        public void AddJunctionTableDataToContext<J>(string firstPropertyName, string secondPropertyName, List<J> models) where J : class, new()
+        public void AddJunctionTableDataToContext<J>(List<J> objects)where J:class
 
 
         {
-            DbSet<J> gDbSet = _context.Set<J>();
+    
 
-            var property1 = typeof(J).GetProperty(firstPropertyName)!;
-            var property2 = typeof(J).GetProperty(secondPropertyName)!;
-   
-            List<J> existingEntities = gDbSet.ToList();
+            List<J> existingEntities = _context.Set<J>().ToList();
 
-
-            //Where clause : Only intrested about the models that does not  exist in the dataabse
-            // Any: tells us if something exist in something else
-            // NOT(Any) clause: tells us if something does not exist in something else
-            // for each model that does not exist in the database, the NOT(Any) will return true.
-            var newEntities = models
-             .Where(model => !existingEntities
-                    .Any(e =>
-                     property1.GetValue(e).Equals(property1.GetValue(model)) &&
-                     property2.GetValue(e).Equals(property2.GetValue(model))))
-            .ToList();
-
-
-            if (newEntities.Count() != 0)
+            // For `value-based Except`, J must override the Equal and GetHasCode methods.
+            List<J> newEntities = objects.Except(existingEntities).ToList();
+            if (newEntities.Count != 0)
             {
-                _context.AddRange(newEntities);
+                _context.AddRange(newEntities); // Non-Custom implementation for AddRange.
             }
             
-
 
         }
 
 
+        // is it better or worse approach?
+        //public void AddJunctionTableDataToContext<J>(string name1, string name2, List<J> objects) where J : class, new()
 
-            }
+
+        //{
+
+        //    PropertyInfo property1 = typeof(J).GetProperty(name1);
+        //    PropertyInfo property2 = typeof(J).GetProperty(name2);
+        //    List<J> existingEntities = _context.Set<J>().ToList();
+        //    // anynymous types provide value equality
+        //    // Concrete types provides reference equality if Equal was not overridden.
+        //    List<J> newEntities = objects.ExceptBy(
+        //        existingEntities.Select(e => new { value1 = property1.GetValue(e), value2 = property2.GetValue(e) }),
+
+        //          o => new { value1 = property1.GetValue(o), value2 = property2.GetValue(o) }
+
+        //        ).ToList();
+        //    if (newEntities.Count != 0)
+        //    {
+        //        _context.AddRange(newEntities);
+        //    }
+
+
+        //}
+
+
+    }
 
 
         }

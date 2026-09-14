@@ -31,7 +31,8 @@ builder.Services.AddControllersWithViews();
 // the options are callback; they are not executed now, when some code needs the service, the options will be executed.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("HardwareDB") , 
-    providerOptions => providerOptions.EnableRetryOnFailure()));
+    providerOptions => providerOptions.EnableRetryOnFailure())
+    );
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

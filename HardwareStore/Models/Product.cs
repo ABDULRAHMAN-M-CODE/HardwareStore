@@ -1,14 +1,13 @@
-﻿using HardwareStore.Services;
-
+﻿
 namespace HardwareStore.Models
 {
-    public class Product:Timestampable,IHasIdentification,IHasEnglishAndArabicName
+    using HardwareStore.Services;
+    using HardwareStore.SeedWork;
+    public class Product:NonJunctionEntity<Product>,IHasIdentification,IHasEnglishAndArabicName
     {
         public int Id { get; set; } // Primary key, also Idenitity.
         public string? SKU { get; set; }
         public  string? Barcode{ get; set; }
-        
-        public string? EnglishName { get; set; } 
         public string? ArabicName { get; set; }
         public string? Description { get; set; } 
         public string? Status { get; set; }

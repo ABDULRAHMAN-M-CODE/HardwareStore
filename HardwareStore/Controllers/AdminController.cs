@@ -130,41 +130,48 @@ namespace HardwareStore.Controllers
         public  async Task<IActionResult> Import([FromForm] IFormFile file) // PROBLEM : THIs method is no longer reached by the request
         {
             //string docPath = @"D:\Training";
-            /////####Reading####
-            //Stopwatch stopWatch1 = new Stopwatch();
-            //stopWatch1.Start();
-            IDataDto data=reader.Read();
-            //stopWatch1.Stop();
-            //TimeSpan ts = stopWatch1.Elapsed;
+            ///####Reading####
+            Stopwatch stopWatch1 = new Stopwatch();
+            stopWatch1.Start();
 
-            //string readTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            //    ts.Hours, ts.Minutes, ts.Seconds,
-            //    ts.Milliseconds / 10);
-
-
-
-
-            //using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, "NoticePerformance.txt"), true))
-            //{
-            //    outputFile.WriteLine($"readTime: {readTime}\n");
-            //}
-
-            ////####Writing###
-            //Stopwatch writeStopWatch = new Stopwatch();
-            //writeStopWatch.Start();
+            IDataDto data=reader.Read();// operation1
             
-            writer.Write(data);
-            
-            //writeStopWatch.Stop();
-            //TimeSpan writeTime = writeStopWatch.Elapsed;
+            stopWatch1.Stop();
+            TimeSpan ts = stopWatch1.Elapsed;
+
+            string readTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
 
 
-            //using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, "NoticePerformance.txt"), true))
-            //{
-            //    outputFile.WriteLine($"writeTime: {writeTime}\n");
-            //}
-            
-            
+
+
+
+
+            //####Writing###
+            Stopwatch writeStopWatch = new Stopwatch();
+            writeStopWatch.Start();
+
+            writer.Write(data);// operation2
+
+            writeStopWatch.Stop();
+            TimeSpan ts2 = writeStopWatch.Elapsed;
+            string writeTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts2.Hours, ts2.Minutes, ts2.Seconds,
+                ts2.Milliseconds / 10);
+
+            TimeSpan totalTs = ts + ts2;
+            string importTime = string.Format("{0:00}.{1:00}", (int)totalTs.TotalSeconds, totalTs.Milliseconds / 10);
+
+            using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
+            {
+                //outputFile.WriteLine($"IDataDto data=reader.Read(): {readTime}\n");
+                outputFile.WriteLine($"writer.Write(data): {writeTime}\n");
+                //outputFile.WriteLine($"async Task<IActionResult> Import: {importTime}\n");
+                outputFile.WriteLine("//////////////////////////////////////////////////////\n");
+
+            }
+
             return RedirectToAction("ProductsPage", "Admin");
 
 

@@ -1,4 +1,4 @@
-﻿namespace HardwareStore.Models
+﻿namespace HardwareStore.SeedWork
 {
     public class RelationshipLookupRecord
     {

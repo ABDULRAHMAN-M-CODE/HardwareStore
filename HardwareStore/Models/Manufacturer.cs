@@ -1,11 +1,13 @@
-﻿using HardwareStore.Services;
-
+﻿
 namespace HardwareStore.Models
 {
-    public class Manufacturer: Timestampable, IHasEnglishAndArabicName, IHasIdentification
+    using HardwareStore.Services;
+
+    using HardwareStore.SeedWork;
+    public class Manufacturer:NonJunctionEntity<Manufacturer>, IHasEnglishAndArabicName, IHasIdentification
     {
         public int Id { get; set; }
-        public string? EnglishName { get; set; } 
+
         public string? ArabicName { get; set; }
 
         public IEnumerable<ProductManufacturer> ProductManufacturers { get; } = new List<ProductManufacturer>();
