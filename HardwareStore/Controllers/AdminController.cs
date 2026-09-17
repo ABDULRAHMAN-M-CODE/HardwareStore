@@ -124,7 +124,7 @@ namespace HardwareStore.Controllers
 
         [HttpPost]
         [Route("Admin/Import")] //URL in the fetch should be /Admin/Import
-        public  async Task<IActionResult> Import([FromForm] IFormFile file) 
+        public  async Task<IActionResult> Import() 
         {
 
 
