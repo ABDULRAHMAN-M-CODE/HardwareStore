@@ -9,7 +9,7 @@
 
 <body class="bg-primary-subtle">
     <div class="col-md-4 mx-auto mt-5 ">
-        <form id="registerForm" asp-controller="Account" asp-action="EditConfirmed" method="post" > 
+        <form id="registerForm" asp-controller="Admin" asp-action="EditConfirmed" method="post" > 
             <h1>@ViewData["Title"]</h1>
             <hr />
             @Html.HiddenFor(model => model.Id) @*I could  instead use the asp-route-Id="@model.Id", both works, but I think there is security difference.  *@

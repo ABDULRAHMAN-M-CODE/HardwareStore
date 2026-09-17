@@ -8,13 +8,21 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Users</h1>
-    <form method="post" asp-controller="Account" asp-action="Logout">
-        <button type="submit" class="btn btn-secondary">Logout</button>
-    </form>
+    <div class="d-flex justify-content-between" id="logout-productPage-buttons-div">
+        <form method="post" asp-controller="Account" asp-action="Logout">
+            <button type="submit" class="btn btn-secondary">Logout</button>
+        </form>
+        <form method="get" asp-controller="Admin" asp-action="ProductsPage">
+            <button type="submit" class="btn btn-success ">Products page</button>
+        </form>
+    </div>
+  
     
 </div>
 <h1>
-    <form method="get" class="mb-4" asp-controller="Account" asp-action="AdminPanel">
+
+    @*Searching for user*@
+    <form method="get" class="mb-4" asp-controller="Admin" asp-action="AdminPanel">
         
         <div class="input-group">
             <input asp-for="KeyWord" class="form-control"  aria-required="true" placeholder="search user" />
@@ -44,8 +52,9 @@
 
                 
                 <td>
+                    @*Editing USer*@
                     @*Model binding will map the query parameter to the  Action method parameter *@
-                    <form method="post" asp-controller="Account" asp-action="EditUser" asp-route-Id="@user.Id" >
+                    <form method="get" asp-controller="Admin" asp-action="EditUser" asp-route-Id="@user.Id" >
                         <button class="btn btn-primary">Edit</button>
                     </form>
                 </td>
@@ -75,7 +84,7 @@
                                 <i class="fas fa-times me-2"></i>Cancel
                             </button>
                             <form method="post"
-                                  asp-controller="Account"
+                                  asp-controller="Admin"
                                   asp-action="DeleteUserConfirmed"
                                   asp-route-Id="@user.Id">
                                 <button type="submit" class="btn btn-danger">
@@ -100,7 +109,7 @@
             @if (Model.PageNumber > 1)
             {
                 <li class="page-item">
-                    <a class="page-link" as asp-controller="Account" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber-1)">Previous</a>
+                    <a class="page-link" as asp-controller="Admin" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber-1)">Previous</a>
                 </li>
             }
 
@@ -109,7 +118,7 @@
             @for (int i = 1; i <= Model.TotalPages; i++)
             {
                 <li class="page-item @(i == Model.PageNumber ? "active" : "")">
-                    <a class="page-link" asp-controller="Account" asp-action="AdminPanel" asp-route-PageNumber="@i">@i</a>
+                    <a class="page-link" asp-controller="Admin" asp-action="AdminPanel" asp-route-PageNumber="@i">@i</a>
                 </li>
             }
             @if (Model.PageNumber <Model.TotalPages)
@@ -121,7 +130,7 @@
                        
                 *@
                 <li class="page-item">
-                    <a class="page-link" asp-controller="Account" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber+1)">Next</a>
+                    <a class="page-link" asp-controller="Admin" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber+1)">Next</a>
                 </li>
             }
         }

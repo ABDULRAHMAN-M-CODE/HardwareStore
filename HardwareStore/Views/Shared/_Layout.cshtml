@@ -10,9 +10,7 @@
    
 </head>
 <body>
-    <header>
-
-    </header>
+    <mini-profiler />
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody() @*What is Rendered here is a specific view content, not the shared content*@
@@ -50,5 +48,10 @@
             InvalidOperationException: The following sections have been defined but have not been rendered by the page at '/Views/Shared/_Layout.cshtml': 'Scripts'. To ignore an unrendered section call IgnoreSection("sectionName").
     *@
     @await RenderSectionAsync("Styles", required: false)
+    @await RenderSectionAsync("ImportFile", required: false)
+
+    
 </body>
+
 </html>
+

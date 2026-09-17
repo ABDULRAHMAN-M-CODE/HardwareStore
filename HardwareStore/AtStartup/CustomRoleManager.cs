@@ -28,7 +28,12 @@ namespace HardwareStore.AtStartup
             _roleManager = roleManager;
 
         }
-        
+
+
+        ///<summary>
+        /// Creates Admin, Store-Manager, and Normal-user Roles if they are not already created.
+        /// 
+        ///</summary> 
         public async Task<bool> CreateRoles()
         {
 
@@ -58,6 +63,8 @@ namespace HardwareStore.AtStartup
         /// checks if the user with the given email exist in the database, if it exist,  user will be given a role.
         /// if the user with the given email does not exist in the database, it will be created first. 
         /// Observation : if I changed the  method's signature to be 'async void' instead of 'async Task', the code at line 65  will throw the following error:Invalid operation. The connection is closed.
+        /// Constraint : the name should be unique; for example, if there is already user with name "abd" in the database, you can't call this method with that name.
+        /// 
         /// </summary>
         public async Task AddRoleToUser(string email , string role, string name,string password)
         {

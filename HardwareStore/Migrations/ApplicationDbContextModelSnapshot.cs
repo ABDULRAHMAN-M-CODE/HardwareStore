@@ -90,6 +90,572 @@ namespace HardwareStore.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("HardwareStore.Models.Bin", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeleterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EnglishName")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdaterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("DeleterId");
+
+                    b.HasIndex("EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
+                    b.HasIndex("UpdaterId");
+
+                    b.ToTable("Bins");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Brand", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeleterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EnglishName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdaterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("DeleterId");
+
+                    b.HasIndex("EnglishName")
+                        .IsUnique();
+
+                    b.HasIndex("UpdaterId");
+
+                    b.ToTable("Brands");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.BrandSupplier", b =>
+                {
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BrandId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SupplierId", "BrandId");
+
+                    b.HasIndex("BrandId");
+
+                    b.ToTable("BrandsSuppliers");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeleterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EnglishName")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdaterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("DeleterId");
+
+                    b.HasIndex("EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
+                    b.HasIndex("UpdaterId");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Country", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeleterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EnglishName")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdaterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("DeleterId");
+
+                    b.HasIndex("EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
+                    b.HasIndex("UpdaterId");
+
+                    b.ToTable("Countries");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Manufacturer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeleterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EnglishName")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdaterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("DeleterId");
+
+                    b.HasIndex("EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
+                    b.HasIndex("UpdaterId");
+
+                    b.ToTable("Manufacturers");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Product", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Barcode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeleterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EnglishName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MinStock")
+                        .HasColumnType("int");
+
+                    b.Property<float>("Price")
+                        .HasColumnType("real");
+
+                    b.Property<int>("ReorderQTY")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SKU")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdaterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("VAT")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("DeleterId");
+
+                    b.HasIndex("UpdaterId");
+
+                    b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductBin", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BinId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "BinId");
+
+                    b.HasIndex("BinId");
+
+                    b.ToTable("ProductsBins");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductBrand", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BrandId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "BrandId");
+
+                    b.HasIndex("BrandId");
+
+                    b.ToTable("ProductsBrands");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductCategory", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("ProductsCategories");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductCountry", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "CountryId");
+
+                    b.HasIndex("CountryId");
+
+                    b.ToTable("ProductsCountries");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductManufacturer", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ManufacturerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "ManufacturerId");
+
+                    b.HasIndex("ManufacturerId");
+
+                    b.ToTable("ProductsManufacturers");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductSupplier", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "SupplierId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("ProductsSuppliers");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductUnit", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "UnitId");
+
+                    b.HasIndex("UnitId");
+
+                    b.ToTable("ProductsUnits");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeleterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EnglishName")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdaterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("DeleterId");
+
+                    b.HasIndex("UpdaterId");
+
+                    b.HasIndex("CategoryId", "EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
+                    b.ToTable("SubCategories");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Supplier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeleterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EnglishName")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdaterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("DeleterId");
+
+                    b.HasIndex("EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
+                    b.HasIndex("UpdaterId");
+
+                    b.ToTable("Suppliers");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Unit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ArabicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeleterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EnglishName")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdaterId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("DeleterId");
+
+                    b.HasIndex("EnglishName")
+                        .IsUnique()
+                        .HasFilter("[EnglishName] IS NOT NULL");
+
+                    b.HasIndex("UpdaterId");
+
+                    b.ToTable("Units");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -140,28 +706,6 @@ namespace HardwareStore.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetRoleClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("IdentityUserClaims");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -249,6 +793,370 @@ namespace HardwareStore.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("HardwareStore.Models.Bin", b =>
+                {
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
+                        .WithMany("CreatedBins")
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
+                        .WithMany("DeletedBins")
+                        .HasForeignKey("DeleterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
+                        .WithMany("UpdatedBins")
+                        .HasForeignKey("UpdaterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Updater");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Brand", b =>
+                {
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
+                        .WithMany("CreatedBrands")
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
+                        .WithMany("DeletedBrands")
+                        .HasForeignKey("DeleterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
+                        .WithMany("UpdatedBrands")
+                        .HasForeignKey("UpdaterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Updater");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.BrandSupplier", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Brand", "Brand")
+                        .WithMany("BrandSuppliers")
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Supplier", "Supplier")
+                        .WithMany("BrandSuppliers")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Brand");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Category", b =>
+                {
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
+                        .WithMany("CreatedCategories")
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
+                        .WithMany("DeletedCategories")
+                        .HasForeignKey("DeleterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
+                        .WithMany("UpdatedCategories")
+                        .HasForeignKey("UpdaterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Updater");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Country", b =>
+                {
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
+                        .WithMany("CreatedCountries")
+                        .HasForeignKey("CreatorId");
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
+                        .WithMany("DeletedCountries")
+                        .HasForeignKey("DeleterId");
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
+                        .WithMany("UpdatedCountries")
+                        .HasForeignKey("UpdaterId");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Updater");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Manufacturer", b =>
+                {
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
+                        .WithMany("CreatedManufacturers")
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
+                        .WithMany("DeletedManufacturers")
+                        .HasForeignKey("DeleterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
+                        .WithMany("UpdatedManufacturers")
+                        .HasForeignKey("UpdaterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Updater");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Product", b =>
+                {
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
+                        .WithMany("CreatedProducts")
+                        .HasForeignKey("CreatorId");
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
+                        .WithMany("DeletedProducts")
+                        .HasForeignKey("DeleterId");
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
+                        .WithMany("UpdatedProducts")
+                        .HasForeignKey("UpdaterId");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Updater");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductBin", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Bin", "Bin")
+                        .WithMany("ProductBins")
+                        .HasForeignKey("BinId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Product", "Product")
+                        .WithMany("ProductBins")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Bin");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductBrand", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Brand", "Brand")
+                        .WithMany("ProductBrands")
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Product", "Product")
+                        .WithMany("ProductBrands")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Brand");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductCategory", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Category", "Category")
+                        .WithMany("ProductCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Product", "Product")
+                        .WithMany("ProductCategories")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductCountry", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Country", "Country")
+                        .WithMany("ProductCountries")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Product", "Product")
+                        .WithMany("ProductCountries")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Country");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductManufacturer", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Manufacturer", "Manufacturer")
+                        .WithMany("ProductManufacturers")
+                        .HasForeignKey("ManufacturerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Product", "Product")
+                        .WithMany("ProductManufacturers")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Manufacturer");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductSupplier", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Product", "Product")
+                        .WithMany("ProductSuppliers")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Supplier", "Supplier")
+                        .WithMany("ProductSuppliers")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ProductUnit", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Product", "Product")
+                        .WithMany("ProductUnits")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.Unit", "Unit")
+                        .WithMany("ProductUnits")
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
+                {
+                    b.HasOne("HardwareStore.Models.Category", "Category")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
+                        .WithMany("CreatedSubCategories")
+                        .HasForeignKey("CreatorId");
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
+                        .WithMany("DeletedSubCategories")
+                        .HasForeignKey("DeleterId");
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
+                        .WithMany("UpdatedSubCategories")
+                        .HasForeignKey("UpdaterId");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Updater");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Supplier", b =>
+                {
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
+                        .WithMany("CreatedSuppliers")
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
+                        .WithMany("DeletedSuppliers")
+                        .HasForeignKey("DeleterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
+                        .WithMany("UpdatedSuppliers")
+                        .HasForeignKey("UpdaterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Updater");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Unit", b =>
+                {
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Creator")
+                        .WithMany("CreatedUnits")
+                        .HasForeignKey("CreatorId");
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Deleter")
+                        .WithMany("DeletedUnits")
+                        .HasForeignKey("DeleterId");
+
+                    b.HasOne("HardwareStore.Models.ApplicationUser", "Updater")
+                        .WithMany("UpdatedUnits")
+                        .HasForeignKey("UpdaterId");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Updater");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -298,6 +1206,121 @@ namespace HardwareStore.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("CreatedBins");
+
+                    b.Navigation("CreatedBrands");
+
+                    b.Navigation("CreatedCategories");
+
+                    b.Navigation("CreatedCountries");
+
+                    b.Navigation("CreatedManufacturers");
+
+                    b.Navigation("CreatedProducts");
+
+                    b.Navigation("CreatedSubCategories");
+
+                    b.Navigation("CreatedSuppliers");
+
+                    b.Navigation("CreatedUnits");
+
+                    b.Navigation("DeletedBins");
+
+                    b.Navigation("DeletedBrands");
+
+                    b.Navigation("DeletedCategories");
+
+                    b.Navigation("DeletedCountries");
+
+                    b.Navigation("DeletedManufacturers");
+
+                    b.Navigation("DeletedProducts");
+
+                    b.Navigation("DeletedSubCategories");
+
+                    b.Navigation("DeletedSuppliers");
+
+                    b.Navigation("DeletedUnits");
+
+                    b.Navigation("UpdatedBins");
+
+                    b.Navigation("UpdatedBrands");
+
+                    b.Navigation("UpdatedCategories");
+
+                    b.Navigation("UpdatedCountries");
+
+                    b.Navigation("UpdatedManufacturers");
+
+                    b.Navigation("UpdatedProducts");
+
+                    b.Navigation("UpdatedSubCategories");
+
+                    b.Navigation("UpdatedSuppliers");
+
+                    b.Navigation("UpdatedUnits");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Bin", b =>
+                {
+                    b.Navigation("ProductBins");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Brand", b =>
+                {
+                    b.Navigation("BrandSuppliers");
+
+                    b.Navigation("ProductBrands");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Category", b =>
+                {
+                    b.Navigation("ProductCategories");
+
+                    b.Navigation("SubCategories");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Country", b =>
+                {
+                    b.Navigation("ProductCountries");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Manufacturer", b =>
+                {
+                    b.Navigation("ProductManufacturers");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Product", b =>
+                {
+                    b.Navigation("ProductBins");
+
+                    b.Navigation("ProductBrands");
+
+                    b.Navigation("ProductCategories");
+
+                    b.Navigation("ProductCountries");
+
+                    b.Navigation("ProductManufacturers");
+
+                    b.Navigation("ProductSuppliers");
+
+                    b.Navigation("ProductUnits");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Supplier", b =>
+                {
+                    b.Navigation("BrandSuppliers");
+
+                    b.Navigation("ProductSuppliers");
+                });
+
+            modelBuilder.Entity("HardwareStore.Models.Unit", b =>
+                {
+                    b.Navigation("ProductUnits");
                 });
 #pragma warning restore 612, 618
         }
