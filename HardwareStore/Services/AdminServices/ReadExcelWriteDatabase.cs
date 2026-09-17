@@ -220,21 +220,21 @@
                  "English Name", "Country");
 
 
-            AddJunctionTableDataToContext<BrandSupplier>(
+            AddRange<BrandSupplier>(
                 brandSuppliers);
-            AddJunctionTableDataToContext<ProductManufacturer>(
+            AddRange<ProductManufacturer>(
                 productManufacturers);
-            AddJunctionTableDataToContext<ProductBin>(
+            AddRange<ProductBin>(
                 productBins);
-            AddJunctionTableDataToContext<ProductSupplier>(
+            AddRange<ProductSupplier>(
                 productSuppliers);
-            AddJunctionTableDataToContext<ProductBrand>(
+            AddRange<ProductBrand>(
                 productBrands);
-            AddJunctionTableDataToContext<ProductCategory>(
+            AddRange<ProductCategory>(
                 productCategories);
-            AddJunctionTableDataToContext<ProductUnit>(
+            AddRange<ProductUnit>(
                 productUnits);
-            AddJunctionTableDataToContext<ProductCountry>(
+            AddRange<ProductCountry>(
                 productCountries);
 
             _context.SaveChanges();
@@ -535,14 +535,14 @@
         /// <typeparam name="M"> generic type for a model class</typeparam>
         /// <param name="objects">List of models, each model has the generic type M</param>
         public void AddRange<M>(List<M> objects)
-            where M:NonJunctionEntity<M>,IHasEnglishAndArabicName 
+            where M:class
         {
 
 
 
 
             List<M> existingEntities = _context.Set<M>().ToList();
-
+            // `value-based Except`, `M` overrides the Equal and GetHasCode methods.
             List<M> newEntities = objects.Except(existingEntities).ToList(); 
 
             if (newEntities.Count != 0)
@@ -551,24 +551,6 @@
             }
 
 
-
-        }
-
-        public void AddJunctionTableDataToContext<J>(List<J> objects)where J:class
-
-
-        {
-    
-
-            List<J> existingEntities = _context.Set<J>().ToList();
-
-            // For `value-based Except`, J must override the Equal and GetHasCode methods.
-            List<J> newEntities = objects.Except(existingEntities).ToList();
-            if (newEntities.Count != 0)
-            {
-                _context.AddRange(newEntities); 
-            }
-            
 
         }
 
