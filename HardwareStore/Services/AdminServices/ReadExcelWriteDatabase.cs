@@ -72,10 +72,6 @@
 
         }
 
-
-
-
-        // Interface method.
         public IDataDto Read()
         {
 
@@ -147,7 +143,6 @@
 
         }
 
-        // Interface method.
         public void Write(IDataDto dataDto)
         {
 
@@ -182,7 +177,7 @@
             AddRange(epDto.Bins);
             AddRange(epDto.Manufacturers);
             _context.SaveChanges();
-            // WriteParentTables(epDto) Time: 00:00:00.0333679
+
         }
 
         public void WriteChildTables()
@@ -196,8 +191,6 @@
             AddRange(subCategories);
 
 
-            //Stopwatch constructionStopWatch = new Stopwatch();
-            //constructionStopWatch.Start();
 
             List<BrandSupplier> brandSuppliers = ConstructJunctionTableData<BrandSupplier, Brand, Supplier>(
                 "BrandId", "SupplierId",
@@ -225,17 +218,7 @@
             List<ProductCountry> productCountries = ConstructJunctionTableData<ProductCountry, Product, Country>(
                 "ProductId", "CountryId",
                  "English Name", "Country");
-            //constructionStopWatch.Stop();
 
-
-
-            //TimeSpan cTS=constructionStopWatch.Elapsed;
-            //string constructionTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            //        cTS.Hours, cTS.Minutes, cTS.Seconds,
-            //        cTS.Milliseconds / 10);
-
-            //Stopwatch AddingStopWatch = new Stopwatch();
-            //AddingStopWatch.Start();
 
             AddJunctionTableDataToContext<BrandSupplier>(
                 brandSuppliers);
@@ -254,23 +237,9 @@
             AddJunctionTableDataToContext<ProductCountry>(
                 productCountries);
 
-            //AddingStopWatch.Stop();
-            //TimeSpan aTS = AddingStopWatch.Elapsed;
-            //string AddingTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            //        aTS.Hours, aTS.Minutes, aTS.Seconds,
-            //        aTS.Milliseconds / 10);
-
-            //using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
-            //{
-            //    outputFile.WriteLine($"ConstructJunctionTableData: {constructionTime}\n");
-            //    outputFile.WriteLine($"addJunctionTableDataToContext: {AddingTime}\n");
-
-            //}
-
             _context.SaveChanges();
         }
 
-        //Helper method
         public  List<T> AssignCreatorAndUpdaterToEntitis<T>(List<T> entities, string Id) where T: HasCreatorAndUpdator
         {
             foreach (T entity in entities)
@@ -282,7 +251,7 @@
             return entities;
         }
 
-        //Helper method
+
         /// <summary>
         /// 
         /// <para>
@@ -356,7 +325,7 @@
 
         }
 
-        //Helper method
+
         /// <summary>
         /// 
         /// <para>
@@ -425,8 +394,6 @@
         /// <param name="childs"></param>
         /// <exception cref="ArgumentException">
         /// </exception>        
-
-        //Helper method
         public void PopulateForeignKeyPropertyForEachChild<Child,Parent>(string childTablNameInExcel, string parentTableNameInExcel, string foreignKeyPropertyName,List<Child> childs) where Parent:class,IHasEnglishAndArabicName, IHasIdentification 
 
 
@@ -476,7 +443,6 @@
             
         }
 
-        //Helper method
         /// <summary>
         /// <para>// Should I redesign the  function so that it gets the data of the parent from the database instead of the excel file</para>
         /// </summary>
@@ -485,13 +451,7 @@
         /// <returns></returns>
         public List<RelationshipLookupRecord> CreateLookupTable(string childTablNameInExcel,string parentTableNameInExcel)
         {
-            /*
-             * Error 5000. System.NullReferenceException: 'Object reference not set to an instance of an object.'
 
-_sheet was null.
-
-               _sheet is not defined here. solution in very brief
-             */
             int leftColumnNumber = this._sheet.FindString(childTablNameInExcel, false, false).Column;
             int rightColumnNumber = _sheet.FindString(parentTableNameInExcel, false, false).Column;
             List<RelationshipLookupRecord> result = new();
@@ -506,7 +466,7 @@ _sheet was null.
             return result;
         }
 
-        //Helper method
+
         public List<J> ConstructJunctionTableData<J,Parent1,Parent2>(string firstPropertyName, string secondPropertyName, string firstExcelColumnName, string secondExcelColumnName) where J : new() where Parent1 : class, IHasIdentification, IHasEnglishAndArabicName, new() where Parent2 : class, IHasIdentification, IHasEnglishAndArabicName, new()
 
         {
@@ -575,7 +535,7 @@ _sheet was null.
         /// <typeparam name="M"> generic type for a model class</typeparam>
         /// <param name="objects">List of models, each model has the generic type M</param>
         public void AddRange<M>(List<M> objects)
-            where M:NonJunctionEntity<M>,IHasEnglishAndArabicName // PROBLEM : remove this
+            where M:NonJunctionEntity<M>,IHasEnglishAndArabicName 
         {
 
 
@@ -587,15 +547,13 @@ _sheet was null.
 
             if (newEntities.Count != 0)
             {
-                _context.AddRange(newEntities); // Executed 0 || X times
+                _context.AddRange(newEntities);
             }
-            // thus, AddRange<M>() method executes faster when database contains data; it is not required to add alot of entites to the context.
-            // but this AddRange<M>() has terrible performance when the database is empty; it is required to add alot of new entities to the context.
+
 
 
         }
 
-        //Helper method
         public void AddJunctionTableDataToContext<J>(List<J> objects)where J:class
 
 
@@ -608,37 +566,12 @@ _sheet was null.
             List<J> newEntities = objects.Except(existingEntities).ToList();
             if (newEntities.Count != 0)
             {
-                _context.AddRange(newEntities); // Non-Custom implementation for AddRange.
+                _context.AddRange(newEntities); 
             }
             
 
         }
 
-
-        // is it better or worse approach?
-        //public void AddJunctionTableDataToContext<J>(string name1, string name2, List<J> objects) where J : class, new()
-
-
-        //{
-
-        //    PropertyInfo property1 = typeof(J).GetProperty(name1);
-        //    PropertyInfo property2 = typeof(J).GetProperty(name2);
-        //    List<J> existingEntities = _context.Set<J>().ToList();
-        //    // anynymous types provide value equality
-        //    // Concrete types provides reference equality if Equal was not overridden.
-        //    List<J> newEntities = objects.ExceptBy(
-        //        existingEntities.Select(e => new { value1 = property1.GetValue(e), value2 = property2.GetValue(e) }),
-
-        //          o => new { value1 = property1.GetValue(o), value2 = property2.GetValue(o) }
-
-        //        ).ToList();
-        //    if (newEntities.Count != 0)
-        //    {
-        //        _context.AddRange(newEntities);
-        //    }
-
-
-        //}
 
 
     }
