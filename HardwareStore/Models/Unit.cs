@@ -3,7 +3,7 @@ using HardwareStore.Services;
 
 namespace HardwareStore.Models
 {
-    public class Unit:NonJunctionEntity<Unit>,IHasEnglishAndArabicName,IHasIdentification
+    public class Unit:NonJunctionEntity<Unit>,IHasEnglishAndArabicName,IHasIdentification, IParentEntity
     {
 
         public int Id { get; set; }// if I do not use  property , this column will not be created in the database unless I explicitly specifiy it using Fluent API configuration.      

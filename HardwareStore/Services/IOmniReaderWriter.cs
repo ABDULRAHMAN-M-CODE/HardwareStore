@@ -12,12 +12,18 @@ namespace HardwareStore.Services
     public interface IOmniReader
     {
 
-        public IDataDto Read();
+        public  IDataDto Read();
 
     }
     public interface IOmniWriter
     {
         public void  Write(IDataDto dataDto) { }  
+    }
+    public interface IOmniReaderWriter
+    {
+
+        public  Task<bool> ReadWrite();
+
     }
 
 

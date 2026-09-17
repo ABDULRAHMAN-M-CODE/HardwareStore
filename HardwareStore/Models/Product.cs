@@ -3,7 +3,7 @@ namespace HardwareStore.Models
 {
     using HardwareStore.Services;
     using HardwareStore.SeedWork;
-    public class Product:NonJunctionEntity<Product>,IHasIdentification,IHasEnglishAndArabicName
+    public class Product:NonJunctionEntity<Product>,IHasIdentification,IHasEnglishAndArabicName, IParentEntity
     {
         public int Id { get; set; } // Primary key, also Idenitity.
         public string? SKU { get; set; }

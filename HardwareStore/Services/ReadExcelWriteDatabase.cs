@@ -6,22 +6,21 @@ namespace HardwareStore.Services
     using HardwareStore.DTOs;
     using HardwareStore.Models;
     using HardwareStore.SeedWork;
-    using HardwareStore.ViewModel.AccountViewModels;
     using HardwareStoreNameSpace;
     using Microsoft.EntityFrameworkCore;
     using Spire.Xls;
     using StackExchange.Profiling;
     using System;
     using System.Diagnostics;
-    using System.IO;
     using System.Reflection;
     using System.Security.Claims;
 
-    public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter
+    public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter,IOmniReaderWriter
     {
+
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ApplicationDbContext _context;
-        public  Worksheet _sheet;// populated inside the  ReadAndWriteData() method.
+        public  Worksheet _sheet;
         private readonly string _adminId;
 
         public ReadExcelWriteDatabase(IHttpContextAccessor httpContextAccessor, ApplicationDbContext context)
@@ -31,6 +30,52 @@ namespace HardwareStore.Services
             _adminId= _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         }
+
+        public  async Task<bool> ReadWrite()
+        {
+            try
+            {
+                bool isEmpty;
+                using (MiniProfiler.Current.Step("isEmpty") )
+                {
+                    isEmpty =
+                    !await _context.Set<Bin>().AnyAsync() &&
+                    !await _context.Set<Brand>().AnyAsync() &&
+                     !await _context.Set<Category>().AnyAsync() &&
+                     !await _context.Set<Country>().AnyAsync() &&
+                      !await _context.Set<Manufacturer>().AnyAsync() &&
+                    !await _context.Set<Product>().AnyAsync() &&
+                     !await _context.Set<Supplier>().AnyAsync() &&
+                     !await _context.Set<Unit>().AnyAsync();
+                }
+
+
+                if (isEmpty)
+                {
+                    IDataDto data;
+                    using (MiniProfiler.Current.Step("Read()"))
+                    {
+                       data= Read();
+                    }
+
+                    using (MiniProfiler.Current.Step("Write()"))
+                    {
+                        Write(data);
+                    }
+                        
+                }
+                return true;
+            }catch(Exception e)
+            {
+                return false;
+
+            }
+
+
+        }
+
+
+
 
         // Interface method.
         public IDataDto Read()
@@ -105,36 +150,19 @@ namespace HardwareStore.Services
         }
 
         // Interface method.
-        public void Write(IDataDto dataDto) 
+        public void Write(IDataDto dataDto)
         {
-            //Stopwatch writeParentWatch = new Stopwatch();
-            //writeParentWatch.Start();
-            ExcelProductsDto epDto= (ExcelProductsDto)dataDto;
-            using (MiniProfiler.Current.Step("WriteParentTables"))
-            {
-                WriteParentTables(epDto);
-            }
-           
-            //writeParentWatch.Stop();
 
+            ExcelProductsDto epDto = (ExcelProductsDto)dataDto;
+            //using (MiniProfiler.Current.Step("WriteParentTables"))
+            //{
+                 WriteParentTables(epDto);
+            //}
+            //using (MiniProfiler.Current.Step("WriteParentTables"))
+            //{
+                 WriteChildTables();
+             //}
 
-
-
-            Stopwatch writeChildsWatch = new Stopwatch();
-            writeChildsWatch.Start();
-            WriteChildTables();
-            writeChildsWatch.Stop();
-
-
-            // Obserivations
-            //TimeSpan writeParentsTime = writeParentWatch.Elapsed;
-            TimeSpan writeChildsTime = writeChildsWatch.Elapsed;
-            using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
-            {
-                outputFile.WriteLine($" WriteChildTables() Time: {writeChildsTime}\n");
-
-                //outputFile.WriteLine($" WriteParentTables(epDto) Time: {writeParentsTime}\n");
-            }
 
         }
 
@@ -170,8 +198,8 @@ namespace HardwareStore.Services
             AddRange(subCategories);
 
 
-            Stopwatch constructionStopWatch = new Stopwatch();
-            constructionStopWatch.Start();
+            //Stopwatch constructionStopWatch = new Stopwatch();
+            //constructionStopWatch.Start();
 
             List<BrandSupplier> brandSuppliers = ConstructJunctionTableData<BrandSupplier, Brand, Supplier>(
                 "BrandId", "SupplierId",
@@ -199,17 +227,17 @@ namespace HardwareStore.Services
             List<ProductCountry> productCountries = ConstructJunctionTableData<ProductCountry, Product, Country>(
                 "ProductId", "CountryId",
                  "English Name", "Country");
-            constructionStopWatch.Stop();
+            //constructionStopWatch.Stop();
 
 
 
-            TimeSpan cTS=constructionStopWatch.Elapsed;
-            string constructionTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-                    cTS.Hours, cTS.Minutes, cTS.Seconds,
-                    cTS.Milliseconds / 10);
+            //TimeSpan cTS=constructionStopWatch.Elapsed;
+            //string constructionTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            //        cTS.Hours, cTS.Minutes, cTS.Seconds,
+            //        cTS.Milliseconds / 10);
 
-            Stopwatch AddingStopWatch = new Stopwatch();
-            AddingStopWatch.Start();
+            //Stopwatch AddingStopWatch = new Stopwatch();
+            //AddingStopWatch.Start();
 
             AddJunctionTableDataToContext<BrandSupplier>(
                 brandSuppliers);
@@ -228,11 +256,11 @@ namespace HardwareStore.Services
             AddJunctionTableDataToContext<ProductCountry>(
                 productCountries);
 
-            AddingStopWatch.Stop();
-            TimeSpan aTS = AddingStopWatch.Elapsed;
-            string AddingTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-                    aTS.Hours, aTS.Minutes, aTS.Seconds,
-                    aTS.Milliseconds / 10);
+            //AddingStopWatch.Stop();
+            //TimeSpan aTS = AddingStopWatch.Elapsed;
+            //string AddingTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            //        aTS.Hours, aTS.Minutes, aTS.Seconds,
+            //        aTS.Milliseconds / 10);
 
             //using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"D:\Training", "NoticePerformance.txt"), true))
             //{
@@ -288,7 +316,7 @@ namespace HardwareStore.Services
             }
 
                 List<T> result = new List<T>();
-                
+                 
                 //scan all the rows 
                 for (int row = 2; row <= (_sheet.LastRow); row++)//assuming row 1 is header, want skip it.
                 {
@@ -298,7 +326,7 @@ namespace HardwareStore.Services
                     // Populate all the relevant properties of a single Entity 
                     T entity = new T();
                     
-                    for (int i = 0; i < relevantEntityPropertiesNames.Count; i++)
+                    for (int i = 0; i < relevantEntityPropertiesNames.Count; i++)// most of the time, the inner for loop will have only one iteration, good.
                     { 
                         var entityProperty = typeof(T).GetProperty(relevantEntityPropertiesNames[i]);
                         int relevantColumnNumber = _sheet.FindString(relevantExcelColumnsNames[i], false, false).Column; // Make string as parameter
@@ -552,13 +580,12 @@ _sheet was null.
             where M:NonJunctionEntity<M>,IHasEnglishAndArabicName // PROBLEM : remove this
         {
 
-            // suppose  that  some table  in the database contains X or 0 rows.
-            // suppose that  objects.Count = X where X!=0 .
 
 
-            List<M> existingEntities = _context.Set<M>().ToList();// existingEntities.Count = X || 0 
 
-            List<M> newEntities = objects.Except(existingEntities).ToList(); // newEntities.Count = 0 || X
+            List<M> existingEntities = _context.Set<M>().ToList();
+
+            List<M> newEntities = objects.Except(existingEntities).ToList(); 
 
             if (newEntities.Count != 0)
             {

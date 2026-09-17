@@ -56,10 +56,9 @@ builder.Services.AddScoped<IAccount, UserAccount>(); // fresh  instance of the U
 //builder.Services.AddScoped<IOmniWriter, ReadExcelWriteDatabase>();
 
 builder.Services.AddScoped<ReadExcelWriteDatabase>();
-builder.Services.AddScoped<IOmniReader>(sp =>
-    sp.GetRequiredService<ReadExcelWriteDatabase>());
-builder.Services.AddScoped<IOmniWriter>(sp =>
-    sp.GetRequiredService<ReadExcelWriteDatabase>());
+builder.Services.AddScoped<IOmniReaderWriter>(sp =>sp.GetRequiredService<ReadExcelWriteDatabase>());
+//builder.Services.AddScoped<IOmniReader>(sp =>sp.GetRequiredService<ReadExcelWriteDatabase>());
+//builder.Services.AddScoped<IOmniWriter>(sp =>sp.GetRequiredService<ReadExcelWriteDatabase>());
 
 builder.Services.AddScoped<IAdmin, AdminPanel>();
 
@@ -111,12 +110,13 @@ app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseMiniProfiler();
-app.UseAuthentication(); 
-app.UseAuthorization(); 
+
 
 app.MapStaticAssets();
 
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiniProfiler();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Welcome}/{action=index}/{id?}")

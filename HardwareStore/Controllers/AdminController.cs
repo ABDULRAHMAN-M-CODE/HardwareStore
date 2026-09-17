@@ -1,34 +1,30 @@
-﻿using HardwareStore.DTOs;
-using HardwareStore.Models;
-using HardwareStore.Services;
-using HardwareStore.Services.AdminServices;
-using HardwareStore.ViewModel.AccountViewModels;
-using HardwareStoreNameSpace;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using StackExchange.Profiling;
-using System.Diagnostics;
+﻿
 namespace HardwareStore.Controllers
     
 {
-
+    using HardwareStore.Models;
+    using HardwareStore.Services;
+    using HardwareStore.Services.AdminServices;
+    using HardwareStore.ViewModel.AccountViewModels;
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Mvc;
+    using StackExchange.Profiling;
 
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
 
-        public IOmniReader reader;
-        public   IOmniWriter writer;
+        public IOmniReaderWriter _readerWriter;
         private readonly IAccount _account;
-        private readonly ApplicationDbContext _context;
         private readonly IAdmin _admin;
-        public AdminController(IOmniReader reader, IOmniWriter writer, IAccount account, ApplicationDbContext context, IAdmin admin)
+        public AdminController(
+            IAccount account, 
+            IAdmin admin, 
+            IOmniReaderWriter readerWriter
+            )
         {
-
-            this. reader = reader;
-            this.writer = writer;
+            _readerWriter = readerWriter;
             _account = account;
-            _context = context;
              _admin=admin;
         }
 
@@ -127,26 +123,36 @@ namespace HardwareStore.Controllers
 
 
         [HttpPost]
-        [Route("Admin/Import")] // but the URL in the fetch should be /Admin/Import
-        public  async Task<IActionResult> Import([FromForm] IFormFile file) // PROBLEM : THIs method is no longer reached by the request
+        [Route("Admin/Import")] //URL in the fetch should be /Admin/Import
+        public  async Task<IActionResult> Import([FromForm] IFormFile file) 
         {
-            using (MiniProfiler.Current.Step("Import"))
-            {
-                IDataDto data = reader.Read();// operation1
 
-                using (MiniProfiler.Current.Step("writer.Write"))
+
+
+            using (MiniProfiler.Current.Step("ReadWrite"))
+            {
+                Task<bool> success = _readerWriter.ReadWrite();
+                if (await success)
                 {
-                    writer.Write(data);// operation2
+                    return Ok();
                 }
-                   
+                return BadRequest();
             }
 
 
+            
 
 
-            //return RedirectToAction("ProductsPage", "Admin"); PROBELM : Un comment this later
-            return Ok();
+        }
+        public IActionResult ImportResult()
+        {
 
+            return View();
+        }
+
+        public IActionResult ImportError()
+        {
+            return View();
         }
 
 

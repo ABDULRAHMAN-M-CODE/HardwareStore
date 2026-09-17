@@ -2,7 +2,7 @@
 using HardwareStore.Services;
 namespace HardwareStore.Models
 {
-    public class Bin: NonJunctionEntity<Bin> , IHasEnglishAndArabicName, IHasIdentification
+    public class Bin: NonJunctionEntity<Bin> ,IParentEntity  ,IHasEnglishAndArabicName, IHasIdentification
     {
 
         public int Id { get; set; }// surrogote key

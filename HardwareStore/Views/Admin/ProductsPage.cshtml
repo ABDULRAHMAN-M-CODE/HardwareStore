@@ -18,7 +18,7 @@
 
         try {
             console.log("Try block executed.")
-            response = await fetch('/Admin/Import', { // NoteXXX: this fetch still sends data to the action method, how to tell it to send it to the DI container instead
+            response = await fetch('/Admin/Import', { 
                 method: 'POST',
                 body: formData,
                
@@ -26,17 +26,19 @@
             if (!response.ok) {
                 console.log("response is not ok")
                 throw new Error(`Response status: ${response.status}`);
+                window.location.href = "/Admin/ImportError";
                 return;
             }
 
-            console.log("response is ok");
+            alert("success");
+            // staty in ProductsPage to inspect performance metrics.
 
             // logic : after admin upload the excel file, he will not be redirected to new view, he should stay in this same view, the only difference is that the admin will be able to see the data he uploaded in the UI.
             
            
            
-            window.location.href = "/Admin/ProductsPage"; // return RedirectToAction in the action method won't fucking work. because it must return control to the caller, which is the fetch-api
-            
+           //window.location.href = "/Admin/ImportResult"; // return RedirectToAction in the action method won't fucking work. because it must return control to the caller, which is the fetch-api
+
         }
         catch (error) {
 
