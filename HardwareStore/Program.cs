@@ -1,6 +1,7 @@
 using AutoMapper;
 using HardwareStore.AtStartup;
 using HardwareStore.Models;
+using HardwareStore.SeedWork;
 using HardwareStore.Services;
 using HardwareStore.Services.AdminServices;
 using HardwareStore.ViewModel.AccountViewModels;

@@ -1,7 +1,6 @@
 ﻿
 namespace HardwareStore.Models
 {
-    using HardwareStore.Services;
     using HardwareStore.SeedWork;
     public class Product:NonJunctionEntity<Product>,IHasIdentification,IHasEnglishAndArabicName, IParentEntity
     {

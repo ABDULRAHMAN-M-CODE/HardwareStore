@@ -1,7 +1,6 @@
 ﻿
 namespace HardwareStore.Models
 {
-    using HardwareStore.Services;
     using HardwareStore.SeedWork;
     public class Country: NonJunctionEntity<Country>,IHasEnglishAndArabicName,IHasIdentification, IParentEntity
     {

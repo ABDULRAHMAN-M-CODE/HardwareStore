@@ -1,6 +1,4 @@
-﻿
-
-namespace HardwareStore.Services
+﻿namespace HardwareStore.Services.AdminServices
 
 {
     using HardwareStore.DTOs;
@@ -646,12 +644,4 @@ _sheet was null.
     }
 
 
-        }
-        // helper method
-
-
-
-
-
-
-
+}

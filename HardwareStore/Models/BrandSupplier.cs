@@ -1,5 +1,4 @@
-﻿using HardwareStore.Services;
-using System.ComponentModel;
+﻿
 
 namespace HardwareStore.Models
 {

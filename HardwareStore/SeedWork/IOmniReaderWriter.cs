@@ -1,5 +1,4 @@
-﻿
-namespace HardwareStore.Services
+﻿namespace HardwareStore.SeedWork
 {
 
 

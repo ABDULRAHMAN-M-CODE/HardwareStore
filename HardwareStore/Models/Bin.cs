@@ -1,5 +1,4 @@
 ﻿using HardwareStore.SeedWork;
-using HardwareStore.Services;
 namespace HardwareStore.Models
 {
     public class Bin: NonJunctionEntity<Bin> ,IParentEntity  ,IHasEnglishAndArabicName, IHasIdentification

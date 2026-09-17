@@ -1,6 +1,5 @@
 ﻿
 using HardwareStore.SeedWork;
-using HardwareStore.Services;
 
 
 namespace HardwareStore.Models

@@ -1,7 +1,6 @@
 ﻿
 namespace HardwareStore.Models
 {
-    using HardwareStore.Services;
     using HardwareStore.SeedWork;
 
     public class Category: NonJunctionEntity<Category>, IHasEnglishAndArabicName,IHasIdentification, IParentEntity
