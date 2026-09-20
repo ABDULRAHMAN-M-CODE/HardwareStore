@@ -132,12 +132,13 @@ namespace HardwareStore.Controllers
 
             using (MiniProfiler.Current.Step("ReadWrite"))
             {
-                Task<bool> success = _readerWriter.ReadWrite();
-                if (await success)
-                {
-                    return Ok();
-                }
-                return BadRequest();
+                  await _readerWriter.ReadWrite();
+                //if (await success)
+                //{
+                //    return Ok();
+                //}
+                //return BadRequest();
+                return Ok();
             }
 
 

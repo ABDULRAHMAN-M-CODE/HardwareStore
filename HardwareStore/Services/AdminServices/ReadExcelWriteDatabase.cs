@@ -29,27 +29,10 @@
 
         }
 
-        public  async Task<bool> ReadWrite()
+        public  async Task ReadWrite()
         {
-            try
-            {
-                bool isEmpty;
-                using (MiniProfiler.Current.Step("isEmpty") )
-                {
-                    isEmpty =
-                    !await _context.Set<Bin>().AnyAsync() &&
-                    !await _context.Set<Brand>().AnyAsync() &&
-                     !await _context.Set<Category>().AnyAsync() &&
-                     !await _context.Set<Country>().AnyAsync() &&
-                      !await _context.Set<Manufacturer>().AnyAsync() &&
-                    !await _context.Set<Product>().AnyAsync() &&
-                     !await _context.Set<Supplier>().AnyAsync() &&
-                     !await _context.Set<Unit>().AnyAsync();
-                }
+            
 
-
-                if (isEmpty)
-                {
                     IDataDto data;
                     using (MiniProfiler.Current.Step("Read()"))
                     {
@@ -58,16 +41,12 @@
 
                     using (MiniProfiler.Current.Step("Write()"))
                     {
-                        Write(data);
+                        await Write(data);
                     }
                         
-                }
-                return true;
-            }catch(Exception e)
-            {
-                return false;
-
-            }
+                
+               
+            
 
 
         }
@@ -143,101 +122,92 @@
 
         }
 
-        public void Write(IDataDto dataDto)
+        public async Task Write(IDataDto dataDto)
         {
-
-            ExcelProductsDto epDto = (ExcelProductsDto)dataDto;
-            //using (MiniProfiler.Current.Step("WriteParentTables"))
-            //{
-                 WriteParentTables(epDto);
-            //}
-            //using (MiniProfiler.Current.Step("WriteParentTables"))
-            //{
-                 WriteChildTables();
-             //}
-
-
+            
+                await WriteParentTables((ExcelProductsDto)dataDto);
+                await WriteChildTables();
         }
 
         /// <summary>
         /// Any parent table must be written before a child table.
         /// </summary>
         /// <param name="epDto"></param>
-        public void  WriteParentTables(ExcelProductsDto epDto)
+        public async Task  WriteParentTables(ExcelProductsDto epDto)
         {
-
-
-
-            AddRange(epDto.Suppliers);
-            AddRange(epDto.Brands);
-            AddRange(epDto.Units);
-            AddRange(epDto.Categories);
-            AddRange(epDto.Countries);
-            AddRange(epDto.Products);
-            AddRange(epDto.Bins);
-            AddRange(epDto.Manufacturers);
-            _context.SaveChanges();
-
+                // separate making new entities from adding it to context
+                await SyncronizeNonJunctionTableWithExcel(epDto.Suppliers);
+                await SyncronizeNonJunctionTableWithExcel(epDto.Brands);
+                await SyncronizeNonJunctionTableWithExcel(epDto.Units);
+                await SyncronizeNonJunctionTableWithExcel(epDto.Categories);
+                await SyncronizeNonJunctionTableWithExcel(epDto.Countries);
+                await SyncronizeNonJunctionTableWithExcel(epDto.Products);
+                await SyncronizeNonJunctionTableWithExcel(epDto.Bins);
+                await SyncronizeNonJunctionTableWithExcel(epDto.Manufacturers);
+                _context.SaveChanges();
+               
         }
 
-        public void WriteChildTables()
+        public async Task WriteChildTables()
         {
 
-            List<SubCategory> subCategories = ReadSpecificColumns<SubCategory>(new List<string> { "EnglishName" }, new List<string> { "Subcategory" });
-            subCategories = subCategories.DistinctBy(sc => new { sc.EnglishName, sc.CategoryId }).ToList();
-            subCategories = subCategories.OrderBy(c => c.EnglishName).ToList();
-            PopulateForeignKeyPropertyForEachChild<SubCategory, Category>("Subcategory", "Category", "CategoryId", subCategories);
-            subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, _adminId);
-            AddRange(subCategories);
+            
+            
 
+
+                List<SubCategory> subCategories = ReadSpecificColumns<SubCategory>(new List<string> { "EnglishName" }, new List<string> { "Subcategory" });
+                subCategories = subCategories.DistinctBy(sc => new { sc.EnglishName, sc.CategoryId }).ToList();
+                subCategories = subCategories.OrderBy(c => c.EnglishName).ToList();
+                PopulateForeignKeyPropertyForEachChild<SubCategory, Category>("Subcategory", "Category", "CategoryId", subCategories);
+                subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, _adminId);
+
+                await SyncronizeNonJunctionTableWithExcel(subCategories);
 
 
             List<BrandSupplier> brandSuppliers = ConstructJunctionTableData<BrandSupplier, Brand, Supplier>(
-                "BrandId", "SupplierId",
-                 "Brand", "Supplier");
-            List<ProductManufacturer> productManufacturers = ConstructJunctionTableData<ProductManufacturer, Product, Manufacturer>(
-            "ProductId", "ManufacturerId",
-             "English Name", "Manufacturer");
-            List<ProductBin> productBins = ConstructJunctionTableData<ProductBin, Product, Bin>(
-                "ProductId", "BinId",
-                 "English Name", "Bin");
-            List<ProductSupplier> productSuppliers = ConstructJunctionTableData<ProductSupplier, Product, Supplier>(
-                "ProductId", "SupplierId",
-                 "English Name", "Supplier");
+                    "BrandId", "SupplierId",
+                     "Brand", "Supplier");
+                List<ProductManufacturer> productManufacturers = ConstructJunctionTableData<ProductManufacturer, Product, Manufacturer>(
+                "ProductId", "ManufacturerId",
+                 "English Name", "Manufacturer");
+                List<ProductBin> productBins = ConstructJunctionTableData<ProductBin, Product, Bin>(
+                    "ProductId", "BinId",
+                     "English Name", "Bin");
+                List<ProductSupplier> productSuppliers = ConstructJunctionTableData<ProductSupplier, Product, Supplier>(
+                    "ProductId", "SupplierId",
+                     "English Name", "Supplier");
 
-            List<ProductBrand> productBrands = ConstructJunctionTableData<ProductBrand, Product, Brand>(
-                "ProductId", "BrandId",
-                 "English Name", "Brand");
+                List<ProductBrand> productBrands = ConstructJunctionTableData<ProductBrand, Product, Brand>(
+                    "ProductId", "BrandId",
+                     "English Name", "Brand");
 
-            List<ProductCategory> productCategories = ConstructJunctionTableData<ProductCategory, Product, Category>(
-            "ProductId", "CategoryId",
-            "English Name", "Category");
-            List<ProductUnit> productUnits = ConstructJunctionTableData<ProductUnit, Product, Unit>(
-                "ProductId", "UnitId",
-                 "English Name", "Unit");
-            List<ProductCountry> productCountries = ConstructJunctionTableData<ProductCountry, Product, Country>(
-                "ProductId", "CountryId",
-                 "English Name", "Country");
-
-
-            AddRange<BrandSupplier>(
-                brandSuppliers);
-            AddRange<ProductManufacturer>(
-                productManufacturers);
-            AddRange<ProductBin>(
-                productBins);
-            AddRange<ProductSupplier>(
-                productSuppliers);
-            AddRange<ProductBrand>(
-                productBrands);
-            AddRange<ProductCategory>(
-                productCategories);
-            AddRange<ProductUnit>(
-                productUnits);
-            AddRange<ProductCountry>(
-                productCountries);
-
-            _context.SaveChanges();
+                List<ProductCategory> productCategories = ConstructJunctionTableData<ProductCategory, Product, Category>(
+                "ProductId", "CategoryId",
+                "English Name", "Category");
+                List<ProductUnit> productUnits = ConstructJunctionTableData<ProductUnit, Product, Unit>(
+                    "ProductId", "UnitId",
+                     "English Name", "Unit");
+                List<ProductCountry> productCountries = ConstructJunctionTableData<ProductCountry, Product, Country>(
+                    "ProductId", "CountryId",
+                     "English Name", "Country");
+                
+            AddRangeOfJunctionEntities<BrandSupplier>(
+                    brandSuppliers);
+                AddRangeOfJunctionEntities<ProductManufacturer>(
+                    productManufacturers);
+                AddRangeOfJunctionEntities<ProductBin>(
+                    productBins);
+                AddRangeOfJunctionEntities<ProductSupplier>(
+                    productSuppliers);
+                AddRangeOfJunctionEntities<ProductBrand>(
+                    productBrands);
+                AddRangeOfJunctionEntities<ProductCategory>(
+                    productCategories);
+                AddRangeOfJunctionEntities<ProductUnit>(
+                    productUnits);
+                AddRangeOfJunctionEntities<ProductCountry>(
+                    productCountries);
+                _context.SaveChanges();
         }
 
         public  List<T> AssignCreatorAndUpdaterToEntitis<T>(List<T> entities, string Id) where T: HasCreatorAndUpdator
@@ -273,6 +243,7 @@
         /// <exception cref="ArgumentException"></exception>
         private List<T> ReadSpecificColumns<T>(List<string> relevantEntityPropertiesNames, List<string> relevantExcelColumnsNames) where T : IHasEnglishAndArabicName, new()
         {
+            
             /*
              * Why used where T : new() ?
              * CS0304: Cannot create an instance of the variable type because it does not have the new() constraint.
@@ -467,6 +438,7 @@
         }
 
 
+        //Problem : first HTTP request causes a race condition.
         public List<J> ConstructJunctionTableData<J,Parent1,Parent2>(string firstPropertyName, string secondPropertyName, string firstExcelColumnName, string secondExcelColumnName) where J : new() where Parent1 : class, IHasIdentification, IHasEnglishAndArabicName, new() where Parent2 : class, IHasIdentification, IHasEnglishAndArabicName, new()
 
         {
@@ -497,9 +469,9 @@
             {
                 try
                 {
-                    Parent1 Entity1 = existingEntities1.First<Parent1>(e => lookup.LeftColumnCellValue == e.EnglishName);
+                    Parent1 Entity1 = existingEntities1.First<Parent1>(e => lookup.LeftColumnCellValue == e.EnglishName);//optimize
 
-                    Parent2 Entity2 = existingEntities2.First<Parent2>(e => lookup.RightColumnCellValue == e.EnglishName);
+                    Parent2 Entity2 = existingEntities2.First<Parent2>(e => lookup.RightColumnCellValue == e.EnglishName);//optimize
                     J j = new J();
                     Property1.SetValue(j, Entity1.Id);
                     Property2.SetValue(j, Entity2.Id);
@@ -534,26 +506,57 @@
         /// </summary>
         /// <typeparam name="M"> generic type for a model class</typeparam>
         /// <param name="objects">List of models, each model has the generic type M</param>
-        public void AddRange<M>(List<M> objects)
-            where M:class
+        public async Task SyncronizeNonJunctionTableWithExcel<NJT>(List<NJT> objects)
+            where NJT:class,IHasEnglishAndArabicName
         {
 
+                var unMaterializedEntities = _context.Set<NJT>();
+                
+                List<string> existingEntitiesNames = await unMaterializedEntities.Select(e=>e.EnglishName).ToListAsync();
+                
+                 List<NJT> existingEntities = await unMaterializedEntities.ToListAsync();
+
+                var objectsNames =  objects.Select(obj => obj.EnglishName).ToList();     
+                
+                //var existingEntitiesNames = await task1;
+                
+                List<string> obsoleteEntitiesNames = existingEntitiesNames.Except(  objectsNames).ToList();
+                List<string> newEntitiesNames = objectsNames.Except(existingEntitiesNames).ToList(); // This will compare by value or by reference?
+                List<NJT> newEntities = objects.Where(obj => newEntitiesNames.Contains<string>(obj.EnglishName)).ToList();
+
+                // The above can be Asyncronized
 
 
+                //PROBLEM:The following should be syncronized; non-async extract it from this method
+                if (newEntities.Count != 0)
+                {
+                    _context.AddRange(newEntities);
+                }
+                //var existingEntities = await task2;
+                
+                //PROBLEM : The following line can still be inside this method
+                List<NJT> obsoleteEntites = existingEntities.Where(e => obsoleteEntitiesNames.Contains<string>(e.EnglishName)).ToList();
 
-            List<M> existingEntities = _context.Set<M>().ToList();
-            // `value-based Except`, `M` overrides the Equal and GetHasCode methods.
-            List<M> newEntities = objects.Except(existingEntities).ToList(); 
-
-            if (newEntities.Count != 0)
-            {
-                _context.AddRange(newEntities);
-            }
-
-
-
+            ////PROBLEM:The following should be syncronized; non-async extract it from this method
+                if (obsoleteEntites.Count != 0)
+                {
+                    _context.RemoveRange(obsoleteEntites);
+                }
         }
 
+        public void AddRangeOfJunctionEntities<M>(List<M> objects)
+            where M : class
+        {
+
+            List<M> existingEntities = _context.Set<M>().ToList();
+            List<M> newObjects = objects.Except(existingEntities).ToList();
+          
+            if (newObjects.Count != 0)
+            {
+                _context.AddRange(newObjects);
+            }
+
+        }
 
 
     }
