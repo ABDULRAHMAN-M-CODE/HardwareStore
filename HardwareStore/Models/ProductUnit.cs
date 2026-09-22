@@ -1,6 +1,8 @@
-﻿namespace HardwareStore.Models
+﻿using HardwareStore.SeedWork;
+
+namespace HardwareStore.Models
 {
-    public class ProductUnit
+    public class ProductUnit:IJunctionEntity
     {
         public int ProductId { get; set; }
         public int UnitId { get; set; }

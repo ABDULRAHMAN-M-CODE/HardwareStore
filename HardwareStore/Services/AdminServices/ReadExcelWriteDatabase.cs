@@ -7,7 +7,6 @@
     using HardwareStoreNameSpace;
     using Microsoft.EntityFrameworkCore;
     using Spire.Xls;
-    using StackExchange.Profiling;
     using System;
     using System.Diagnostics;
     using System.Reflection;
@@ -18,7 +17,9 @@
 
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ApplicationDbContext _context;
-        public  Worksheet _sheet;
+        //private readonly ApplicationDbContext _context2
+        //private readonly ApplicationDbContext _context3
+        public Worksheet _sheet;
         private readonly string _adminId;
 
         public ReadExcelWriteDatabase(IHttpContextAccessor httpContextAccessor, ApplicationDbContext context)
@@ -31,24 +32,8 @@
 
         public  async Task ReadWrite()
         {
-            
-
-                    IDataDto data;
-                    using (MiniProfiler.Current.Step("Read()"))
-                    {
-                       data= Read();
-                    }
-
-                    using (MiniProfiler.Current.Step("Write()"))
-                    {
-                        await Write(data);
-                    }
-                        
-                
-               
-            
-
-
+                    IDataDto data = Read();
+                    await Write(data);
         }
 
         public IDataDto Read()
@@ -122,93 +107,365 @@
 
         }
 
-        public async Task Write(IDataDto dataDto)
-        {
-            
-                await WriteParentTables((ExcelProductsDto)dataDto);
-                await WriteChildTables();
-        }
+
 
         /// <summary>
         /// Any parent table must be written before a child table.
         /// </summary>
         /// <param name="epDto"></param>
-        public async Task  WriteParentTables(ExcelProductsDto epDto)
-        {
-                // separate making new entities from adding it to context
-                await SyncronizeNonJunctionTableWithExcel(epDto.Suppliers);
-                await SyncronizeNonJunctionTableWithExcel(epDto.Brands);
-                await SyncronizeNonJunctionTableWithExcel(epDto.Units);
-                await SyncronizeNonJunctionTableWithExcel(epDto.Categories);
-                await SyncronizeNonJunctionTableWithExcel(epDto.Countries);
-                await SyncronizeNonJunctionTableWithExcel(epDto.Products);
-                await SyncronizeNonJunctionTableWithExcel(epDto.Bins);
-                await SyncronizeNonJunctionTableWithExcel(epDto.Manufacturers);
-                _context.SaveChanges();
-               
-        }
-
-        public async Task WriteChildTables()
+        public async Task  Write(IDataDto dataDto)
         {
 
+            var incomingData = (ExcelProductsDto)dataDto;
             
+            // maybe can use ToListAsync without  casuing race condition???
+            List<Supplier> preExistingSuppliers = _context.Suppliers.ToList();
+            List<Brand> preExistingBrands= _context.Brands.ToList();
+            List<Unit> preExistingUnits= _context.Units.ToList();
+            List<Category> preExistingCategories= _context.Categories.ToList();
+            List<Country> preExistingCountries= _context.Countries.ToList();
+            List<Product> preExistingProducts= _context.Products.ToList();
+            List<Bin> preExistingBins= _context.Bins.ToList();
+            List<Manufacturer> preExistingManufacturers= _context.Manufacturers.ToList();
+
+            // Populating parents tables; tables that does not have any foreign key.
+            var newAndObsoleteSuppliers = GetNewAndObsoleteEntities(incomingData.Suppliers,preExistingSuppliers);
+            var newAndObsoleteBrands = GetNewAndObsoleteEntities(incomingData.Brands, preExistingBrands);
+            var newAndObsoleteUnits = GetNewAndObsoleteEntities(incomingData.Units, preExistingUnits);
+            var newAndObsoleteCategories = GetNewAndObsoleteEntities(incomingData.Categories, preExistingCategories);
+            var newAndObsoleteCountries = GetNewAndObsoleteEntities(incomingData.Countries, preExistingCountries);
+            var newAndObsoleteProducts = GetNewAndObsoleteEntities(incomingData.Products, preExistingProducts);
+            var newAndObsoleteBins = GetNewAndObsoleteEntities(incomingData.Bins, preExistingBins);
+            var newAndObsoleteManufacturers = GetNewAndObsoleteEntities(incomingData.Manufacturers, preExistingManufacturers);
             
+            List<Supplier> newSuppliers = newAndObsoleteSuppliers[0];
+            if ( newSuppliers.Count != 0)
+                {
 
+                    preExistingSuppliers.AddRange(newSuppliers);
+                    _context.AddRange(newSuppliers);
+                }
+            List<Supplier> obsoleteSuppliers = newAndObsoleteSuppliers[1];
+            if (obsoleteSuppliers.Count != 0)
+                {
+                    foreach (var oS in obsoleteSuppliers)
+                    {
+                        preExistingSuppliers.Remove(oS);
+                    }
+                    _context.RemoveRange(obsoleteSuppliers);
+                }
+            ////
+            List<Brand> newBrands = newAndObsoleteBrands[0];
+            if (newBrands.Count != 0)
+            {
+                preExistingBrands.AddRange(newBrands);
+                _context.AddRange(newBrands);
+            }
+            List<Brand> obsoleteBrands = newAndObsoleteBrands[1];
+            if (obsoleteBrands.Count != 0)
+            {
+                foreach(Brand b in obsoleteBrands)
+                {
+                    preExistingBrands.Remove(b);
+                }
+                _context.RemoveRange(obsoleteBrands);
+            }
+            ///
+            List<Unit> newUnits = newAndObsoleteUnits[0];
+            if (newUnits.Count != 0)
+            {
+                preExistingUnits.AddRange(newUnits);
+                _context.AddRange(newUnits);
+            }
+            List<Unit> obsoleteUnits =  newAndObsoleteUnits[1];
+            if (obsoleteUnits.Count != 0)
+            {
+                foreach(Unit oU in obsoleteUnits)
+                {
+                    preExistingUnits.Remove(oU);
+                }
+                _context.RemoveRange(obsoleteUnits);
+            }
+            ///
+            List<Category> newCategories =newAndObsoleteCategories[0];
+            if (newCategories.Count != 0)
+            {
+                preExistingCategories.AddRange(newCategories);
+                _context.AddRange(newCategories);
+            }
+            List<Category> obsoleteCategories = newAndObsoleteCategories[1];
+            if (obsoleteCategories.Count != 0)
+            {
+                foreach(Category  oC  in obsoleteCategories)
+                {
+                    preExistingCategories.Remove(oC);
+                }
+                _context.RemoveRange(obsoleteCategories);
+            }
+            ///
+            List<Country> newCountries = newAndObsoleteCountries[0];
+            if (newCountries.Count != 0)
+            {
+                preExistingCountries.AddRange(newCountries);
+                _context.AddRange(newCountries);
+            }
+            List<Country> obsoleteCountries = newAndObsoleteCountries[1];
+            if (obsoleteCountries.Count != 0)
+            {
+                foreach (Country oC in obsoleteCountries)
+                {
+                    preExistingCountries.Remove(oC);
+                }
+                _context.RemoveRange(obsoleteCountries);
+            }
+            ///
+            List<Product> newProducts = newAndObsoleteProducts[0];
+            if (newProducts.Count != 0)
+            {
+                preExistingProducts.AddRange(newProducts);
+                _context.AddRange(newProducts);
+            }
+            List<Product> obsoleteProducts = newAndObsoleteProducts[1];
+            if (obsoleteProducts.Count != 0)
+            {
+                foreach(Product oP in obsoleteProducts)
+                {
+                    preExistingProducts.Remove(oP);    
+                }
+                _context.RemoveRange(obsoleteProducts);
+            }
+            ///
+            List<Bin> newBins = newAndObsoleteBins[0];
+            if (newBins.Count != 0)
+            {
+                preExistingBins.AddRange(newBins);
+                _context.AddRange(newBins);
+            }
+            List<Bin> obsoleteBins = newAndObsoleteBins[1];
+            if (obsoleteBins.Count != 0)
+            {
+                foreach(Bin oB in obsoleteBins)
+                {
+                    preExistingBins.Remove(oB);
+                }
+                _context.RemoveRange(obsoleteBins);
+            }
+            ///
+            List<Manufacturer> newManufacturers = newAndObsoleteManufacturers[0];
+            if (newManufacturers.Count != 0)
+            {
+                preExistingManufacturers.AddRange(newManufacturers);
+                _context.AddRange(newManufacturers);
+            }
+            List<Manufacturer> obsoleteManufacturers = newAndObsoleteManufacturers[1];
+            if (obsoleteManufacturers.Count != 0)
+            {
+                foreach(Manufacturer oM in obsoleteManufacturers)
+                {
+                    preExistingManufacturers.Remove(oM);
+                }
+                _context.RemoveRange(obsoleteManufacturers);
+            }
 
-                List<SubCategory> subCategories = ReadSpecificColumns<SubCategory>(new List<string> { "EnglishName" }, new List<string> { "Subcategory" });
-                subCategories = subCategories.DistinctBy(sc => new { sc.EnglishName, sc.CategoryId }).ToList();
-                subCategories = subCategories.OrderBy(c => c.EnglishName).ToList();
-                PopulateForeignKeyPropertyForEachChild<SubCategory, Category>("Subcategory", "Category", "CategoryId", subCategories);
-                subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, _adminId);
+            await _context.SaveChangesAsync();
+ 
+            
+            //Populating Childs; NonJunction and Junction childs.
 
-                await SyncronizeNonJunctionTableWithExcel(subCategories);
+            var subCategories = ReadSpecificColumns<SubCategory>
+                (new List<string> { "EnglishName" }, new List<string> { "Subcategory" })
+                .DistinctBy(sc => new { sc.EnglishName, sc.CategoryId })
+                .OrderBy(c => c.EnglishName)
+                .ToList();
+            var subCategoryCategoriesLookups = 
+                CreateLookupTable("Subcategory", "Category")
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+                .OrderBy(r => r.LeftColumnCellValue)
+                .ToList();
+            PopulateForeignKeyPropertyForNonJunctionChild<SubCategory, Category>(
+                "CategoryId", subCategories, // NonJunction childs are already constructed.
+                subCategoryCategoriesLookups,
+                preExistingCategories // syncronized with DB
+            );
+            subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, _adminId);
+            var newAndObsoleteSubCategories = GetNewAndObsoleteEntities(subCategories, _context.SubCategories.ToList());
+            List<SubCategory> newSubCategories = newAndObsoleteSubCategories[0];
+            if (newSubCategories.Count != 0)
+            {
+                _context.AddRange(newSubCategories);
+            }
+            List<SubCategory> obsoleteSubCategories = newAndObsoleteSubCategories[1];
+            if (obsoleteSubCategories.Count != 0)
+            {
+                _context.RemoveRange(obsoleteSubCategories);
+            }
 
+            var brandSupplierslookups =
+                CreateLookupTable("Brand", "Supplier")
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+                .ToList();
+            var brandSuppliers = ConstructJunctionTableData<BrandSupplier, Brand, Supplier>(
+                "BrandId", "SupplierId", brandSupplierslookups, 
+                 preExistingBrands, preExistingSuppliers
+            );
+            
+            var newAndObsoleteBrandSuppliers =GetNewAndObsoleteJunctionEntities<BrandSupplier>(
+                 brandSuppliers, _context.BrandsSuppliers.ToList()
+            );
 
-            List<BrandSupplier> brandSuppliers = ConstructJunctionTableData<BrandSupplier, Brand, Supplier>(
-                    "BrandId", "SupplierId",
-                     "Brand", "Supplier");
-                List<ProductManufacturer> productManufacturers = ConstructJunctionTableData<ProductManufacturer, Product, Manufacturer>(
-                "ProductId", "ManufacturerId",
-                 "English Name", "Manufacturer");
-                List<ProductBin> productBins = ConstructJunctionTableData<ProductBin, Product, Bin>(
+            var productCountriesLookups = CreateLookupTable("English Name", "Country")
+               .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+               .ToList();
+            var productCountries = ConstructJunctionTableData<ProductCountry, Product, Country>(
+                "ProductId", "CountryId",
+                 productCountriesLookups,
+                 preExistingProducts, preExistingCountries
+            );
+            var newAndObsoleteProductsCountries = GetNewAndObsoleteJunctionEntities<ProductCountry>(
+                productCountries, _context.ProductsCountries.ToList()
+
+                );
+
+            var productManufacturersLookups =
+                CreateLookupTable("Product", "Manufacturer")
+                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+                .ToList();
+            var productManufacturers = ConstructJunctionTableData<ProductManufacturer, Product, Manufacturer>(
+                "ProductId", "ManufacturerId",productManufacturersLookups,
+                 preExistingProducts,preExistingManufacturers
+          
+            );
+            var newAndObsoleteProductManufacturers = GetNewAndObsoleteJunctionEntities<ProductManufacturer>(
+                productManufacturers, _context.ProductsManufacturers.ToList()
+            );
+
+            var productBinslookups= CreateLookupTable("English Name", "Bin")
+               .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+               .ToList();
+            var productBins = ConstructJunctionTableData<ProductBin, Product, Bin>(
                     "ProductId", "BinId",
-                     "English Name", "Bin");
-                List<ProductSupplier> productSuppliers = ConstructJunctionTableData<ProductSupplier, Product, Supplier>(
-                    "ProductId", "SupplierId",
-                     "English Name", "Supplier");
+                     productBinslookups,
+                     preExistingProducts, preExistingBins       
+            );
 
-                List<ProductBrand> productBrands = ConstructJunctionTableData<ProductBrand, Product, Brand>(
-                    "ProductId", "BrandId",
-                     "English Name", "Brand");
 
-                List<ProductCategory> productCategories = ConstructJunctionTableData<ProductCategory, Product, Category>(
-                "ProductId", "CategoryId",
-                "English Name", "Category");
-                List<ProductUnit> productUnits = ConstructJunctionTableData<ProductUnit, Product, Unit>(
-                    "ProductId", "UnitId",
-                     "English Name", "Unit");
-                List<ProductCountry> productCountries = ConstructJunctionTableData<ProductCountry, Product, Country>(
-                    "ProductId", "CountryId",
-                     "English Name", "Country");
-                
+            var productSuppliersLookups = CreateLookupTable("English Name","Supplier")
+               .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+               .ToList();
+            var productSuppliers = ConstructJunctionTableData<ProductSupplier, Product, Supplier>(
+                "ProductId", "SupplierId",
+                 productSuppliersLookups, 
+                 preExistingProducts, preExistingSuppliers
+                 );
+
+            var productBrandsLookups = CreateLookupTable("English Name","Brand")
+               .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+               .ToList();
+            List<ProductBrand> productBrands = ConstructJunctionTableData<ProductBrand, Product, Brand>(
+                "ProductId", "BrandId",
+                 productBrandsLookups, 
+                 preExistingProducts, preExistingBrands
+                 );
+
+            var productCategoriesLookups = CreateLookupTable("English Name", "Category")
+               .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+               .ToList();
+            var productCategories = ConstructJunctionTableData<ProductCategory, Product, Category>(
+            "ProductId", "CategoryId",
+            productCategoriesLookups, 
+            preExistingProducts, preExistingCategories
+            );
+
+            var productUnitsLookups = CreateLookupTable("English Name", "Unit")
+               .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
+               .ToList();
+            var productUnits = ConstructJunctionTableData<ProductUnit, Product, Unit>(
+                "ProductId", "UnitId",
+                 productUnitsLookups, 
+                 preExistingProducts, preExistingUnits
+            );
+
+
             AddRangeOfJunctionEntities<BrandSupplier>(
-                    brandSuppliers);
-                AddRangeOfJunctionEntities<ProductManufacturer>(
-                    productManufacturers);
-                AddRangeOfJunctionEntities<ProductBin>(
-                    productBins);
-                AddRangeOfJunctionEntities<ProductSupplier>(
-                    productSuppliers);
-                AddRangeOfJunctionEntities<ProductBrand>(
-                    productBrands);
-                AddRangeOfJunctionEntities<ProductCategory>(
-                    productCategories);
-                AddRangeOfJunctionEntities<ProductUnit>(
-                    productUnits);
-                AddRangeOfJunctionEntities<ProductCountry>(
-                    productCountries);
-                _context.SaveChanges();
+                brandSuppliers);
+            AddRangeOfJunctionEntities<ProductManufacturer>(
+                productManufacturers);
+            AddRangeOfJunctionEntities<ProductBin>(
+                productBins);
+            AddRangeOfJunctionEntities<ProductSupplier>(
+                productSuppliers);
+            AddRangeOfJunctionEntities<ProductBrand>(
+                productBrands);
+            AddRangeOfJunctionEntities<ProductCategory>(
+                productCategories);
+            AddRangeOfJunctionEntities<ProductUnit>(
+                productUnits);
+            AddRangeOfJunctionEntities<ProductCountry>(
+                productCountries);
+
+            await _context.SaveChangesAsync();
+
+
+
+        //Local functions inside Write()
+         List<J> ConstructJunctionTableData<J, Parent1, Parent2>
+         (string firstPropertyName, string secondPropertyName, List<RelationshipLookupRecord> lookups, List<Parent1> existingEntities1, List<Parent2> existingEntities2)
+            where J : new()
+            where Parent1 : class, IHasIdentification, IHasEnglishAndArabicName, new()
+            where Parent2 : class, IHasIdentification, IHasEnglishAndArabicName, new()
+            {
+
+
+                var Property1 = typeof(J).GetProperty(firstPropertyName)!;
+            var Property2 = typeof(J).GetProperty(secondPropertyName)!;
+            List<J> result = new List<J>();
+            foreach (RelationshipLookupRecord lookup in lookups)
+            {
+
+                Parent1 Entity1 = existingEntities1.First<Parent1>(e => lookup.LeftColumnCellValue == e.EnglishName);//optimize
+
+                Parent2 Entity2 = existingEntities2.First<Parent2>(e => lookup.RightColumnCellValue == e.EnglishName);//optimize
+                J j = new J();
+                Property1.SetValue(j, Entity1.Id);
+                Property2.SetValue(j, Entity2.Id);
+                result.Add(j);
+            }
+
+            return result;
         }
+
+        void PopulateForeignKeyPropertyForNonJunctionChild<Child, Parent>(string foreignKeyPropertyName, List<Child> childs,  List<RelationshipLookupRecord> lookups, List<Parent> parentRows) where Parent : class, IHasEnglishAndArabicName, IHasIdentification
+
+
+
+        {
+
+            // Suppose we have two tables; Category and SubCategory, the relation is one-to-many.
+            // The SubCategory Table  has two columns; EnglishName and CategoryId.
+            // The job of this method is  to populate the CategoryId with the correct values.
+            // EnglishName  alone is not sufficient to complete the job; a mapping  between  SubCategory and Category tables is required. 
+            // This mapping is called 'lookup table', it has more than one record, each record contains a mapping between  one SubCategory and one Category.
+            ///For each record, we can query the  relevant row in the Category Table; the row with the same EnglishName as the record.
+            // The row that we found contains the Id; it's value will be used  as the value for the foreign key.
+
+            if (lookups.Count > childs.Count)
+            {
+
+                throw new ArgumentException("childs length can't be less than the number of the records in the lookup table.\n");
+            }
+
+            //Refer to the parent to be able to set the foreign key.
+            PropertyInfo foreignKeyProperty = typeof(Child).GetProperty(foreignKeyPropertyName)!;
+
+            for (int i = 0; i < lookups.Count; i++)
+            {
+                Parent foundEntity = parentRows.First<Parent>(r => r.EnglishName == lookups[i].RightColumnCellValue);
+                foreignKeyProperty.SetValue(childs[i], foundEntity.Id);
+            }
+        }
+    }
+
+        
 
         public  List<T> AssignCreatorAndUpdaterToEntitis<T>(List<T> entities, string Id) where T: HasCreatorAndUpdator
         {
@@ -244,10 +501,6 @@
         private List<T> ReadSpecificColumns<T>(List<string> relevantEntityPropertiesNames, List<string> relevantExcelColumnsNames) where T : IHasEnglishAndArabicName, new()
         {
             
-            /*
-             * Why used where T : new() ?
-             * CS0304: Cannot create an instance of the variable type because it does not have the new() constraint.
-             */
             if (relevantEntityPropertiesNames.Count != relevantExcelColumnsNames.Count)
             {
                 throw new ArgumentException("The number of the excel columns must equal the number of properties names");
@@ -258,8 +511,6 @@
                 //scan all the rows 
                 for (int row = 2; row <= (_sheet.LastRow); row++)//assuming row 1 is header, want skip it.
                 {
-
-                
                     //scan specific columns
                     // Populate all the relevant properties of a single Entity 
                     T entity = new T();
@@ -267,31 +518,14 @@
                     for (int i = 0; i < relevantEntityPropertiesNames.Count; i++)// most of the time, the inner for loop will have only one iteration, good.
                     { 
                         var entityProperty = typeof(T).GetProperty(relevantEntityPropertiesNames[i]);
-                        int relevantColumnNumber = _sheet.FindString(relevantExcelColumnsNames[i], false, false).Column; // Make string as parameter
-                    try
-                    {
+                        int relevantColumnNumber = _sheet.FindString(relevantExcelColumnsNames[i], false, false).Column; 
+
                         var excelCellValue = Convert.ChangeType(_sheet.Range[row, relevantColumnNumber].Value, entityProperty!.PropertyType);
                         entityProperty.SetValue(entity, excelCellValue);
                     }
-                    catch (Exception e)
-                    {
-                        //Debug.WriteLine("\n\n" + "some cell in Price column may be empty or wrong"+ "\n\n");
-                        //Debug.WriteLine("\n\n"+e+"\n\n");
-                        //Debug.WriteLine("Row, do not forget that row start from 2. not 1 or 0 :" + row);
-                        //Debug.WriteLine("property index,don't forget index start from 0, not 1 : " + i+"\n\n");
-                        throw new Exception("Error happend");
-                    }
-                        
-                        
-
-
-
-                    } // end of inner for loop
 
                         result.Add(entity);
-
-
-            }// end of outermost for
+            }
                 return result;
 
         }
@@ -365,54 +599,8 @@
         /// <param name="childs"></param>
         /// <exception cref="ArgumentException">
         /// </exception>        
-        public void PopulateForeignKeyPropertyForEachChild<Child,Parent>(string childTablNameInExcel, string parentTableNameInExcel, string foreignKeyPropertyName,List<Child> childs) where Parent:class,IHasEnglishAndArabicName, IHasIdentification 
 
 
-
-        {
-
-            // Suppose we have two tables; Category and SubCategory, the relation is one-to-many.
-            // The SubCategory Table  has two columns; EnglishName and CategoryId.
-            // The job of this method is  to populate the CategoryId with the correct values.
-            // EnglishName  alone is not sufficient to complete the job; a mapping  between  SubCategory and Category tables is required. 
-            // This mapping is called 'lookup table', it has more than one record, each record contains a mapping between  one SubCategory and one Category.
-            ///For each record, we can query the  relevant row in the Category Table; the row with the same EnglishName as the record.
-            // The row that we found contains the Id; it's value will be used  as the value for the foreign key.
-            
-            List<RelationshipLookupRecord> records =CreateLookupTable( childTablNameInExcel,  parentTableNameInExcel);// Constructs a lookup table.
-
-
-
-            // 2.SELECT UNIQUE RECORDS 
-            records = records
-                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-                .OrderBy(r => r.LeftColumnCellValue)
-                .ToList();
-
-
-            if (records.Count > childs.Count)
-            {
-
-                throw new ArgumentException("childs length can't be less than the number of the records in the lookup table.\n");
-            }
-
-
-            //Refer to the parent to be able to set the foreign key.
-            DbSet<Parent> dbSet = _context.Set<Parent>();
-            PropertyInfo foreignKeyProperty=typeof(Child).GetProperty(foreignKeyPropertyName)!;
-            List <Parent> parentRows= dbSet.ToList<Parent>();
-            for (int i=0; i < records.Count; i++) 
-            {
-
-                //PROBLEM : use try catch blocks
-                Parent foundEntity=parentRows.First<Parent>(r => r.EnglishName == records[i].RightColumnCellValue);
-
-                foreignKeyProperty.SetValue(childs[i], foundEntity.Id); 
-            }            
-                
-            
-            
-        }
 
         /// <summary>
         /// <para>// Should I redesign the  function so that it gets the data of the parent from the database instead of the excel file</para>
@@ -420,11 +608,11 @@
         /// <param name="childTablNameInExcel"></param>
         /// <param name="parentTableNameInExcel"></param>
         /// <returns></returns>
-        public List<RelationshipLookupRecord> CreateLookupTable(string childTablNameInExcel,string parentTableNameInExcel)
+        public List<RelationshipLookupRecord> CreateLookupTable(string firstTablNameInExcel,string secondTableNameInExcel)
         {
 
-            int leftColumnNumber = this._sheet.FindString(childTablNameInExcel, false, false).Column;
-            int rightColumnNumber = _sheet.FindString(parentTableNameInExcel, false, false).Column;
+            int leftColumnNumber = this._sheet.FindString(firstTablNameInExcel, false, false).Column;
+            int rightColumnNumber = _sheet.FindString(secondTableNameInExcel, false, false).Column;
             List<RelationshipLookupRecord> result = new();
             for (int rowNumber = 2; rowNumber <= _sheet.LastRow; rowNumber++)
             {
@@ -436,63 +624,6 @@
             }
             return result;
         }
-
-
-        //Problem : first HTTP request causes a race condition.
-        public List<J> ConstructJunctionTableData<J,Parent1,Parent2>(string firstPropertyName, string secondPropertyName, string firstExcelColumnName, string secondExcelColumnName) where J : new() where Parent1 : class, IHasIdentification, IHasEnglishAndArabicName, new() where Parent2 : class, IHasIdentification, IHasEnglishAndArabicName, new()
-
-        {
-            
-            // junction table
-            List<J> result = new List<J>();
-            
-            // Lookup table
-            List<RelationshipLookupRecord> lookups =
-                CreateLookupTable(firstExcelColumnName, secondExcelColumnName)
-                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
-                .ToList();
-
-
-            // retrive all parents into memory
-            DbSet<Parent1> DbSet1 = _context.Set<Parent1>();
-            List<Parent1> existingEntities1 = DbSet1
-                .Select(p => new Parent1 { Id = p.Id, EnglishName = p.EnglishName})
-                .ToList();
-            DbSet<Parent2> DbSet2 = _context.Set<Parent2>();
-            List<Parent2> existingEntities2 = DbSet2.ToList();
-
-
-            var Property1 = typeof(J).GetProperty(firstPropertyName)!;
-            var Property2 = typeof(J).GetProperty(secondPropertyName)!;
-
-            foreach (RelationshipLookupRecord lookup in lookups)
-            {
-                try
-                {
-                    Parent1 Entity1 = existingEntities1.First<Parent1>(e => lookup.LeftColumnCellValue == e.EnglishName);//optimize
-
-                    Parent2 Entity2 = existingEntities2.First<Parent2>(e => lookup.RightColumnCellValue == e.EnglishName);//optimize
-                    J j = new J();
-                    Property1.SetValue(j, Entity1.Id);
-                    Property2.SetValue(j, Entity2.Id);
-                    result.Add(j);
-
-                }
-                
-                catch (System.InvalidOperationException ioe)
-                {
-                    Debug.WriteLine("catch block executed");
-                    Debug.WriteLine("Executed catch block when Entity1 or Entity2 is null");
-                    Debug.WriteLine("\n\ncurrent lookup is" + lookup + "\n\n");
-                }
-
-
-
-            }
-
-            return result;
-        }
-
 
         /// <summary>
         /// 
@@ -506,59 +637,17 @@
         /// </summary>
         /// <typeparam name="M"> generic type for a model class</typeparam>
         /// <param name="objects">List of models, each model has the generic type M</param>
-        public async Task SyncronizeNonJunctionTableWithExcel<NJT>(List<NJT> objects)
-            where NJT:class,IHasEnglishAndArabicName
+        public  List<NJM>[] GetNewAndObsoleteEntities<NJM>(List<NJM> objects,List<NJM> existingEntities)
+            where NJM:IHasEnglishAndArabicName
         {
 
-                var unMaterializedEntities = _context.Set<NJT>();
-                
-                List<string> existingEntitiesNames = await unMaterializedEntities.Select(e=>e.EnglishName).ToListAsync();
-                
-                 List<NJT> existingEntities = await unMaterializedEntities.ToListAsync();
-
-                var objectsNames =  objects.Select(obj => obj.EnglishName).ToList();     
-                
-                //var existingEntitiesNames = await task1;
-                
-                List<string> obsoleteEntitiesNames = existingEntitiesNames.Except(  objectsNames).ToList();
-                List<string> newEntitiesNames = objectsNames.Except(existingEntitiesNames).ToList(); // This will compare by value or by reference?
-                List<NJT> newEntities = objects.Where(obj => newEntitiesNames.Contains<string>(obj.EnglishName)).ToList();
-
-                // The above can be Asyncronized
-
-
-                //PROBLEM:The following should be syncronized; non-async extract it from this method
-                if (newEntities.Count != 0)
-                {
-                    _context.AddRange(newEntities);
-                }
-                //var existingEntities = await task2;
-                
-                //PROBLEM : The following line can still be inside this method
-                List<NJT> obsoleteEntites = existingEntities.Where(e => obsoleteEntitiesNames.Contains<string>(e.EnglishName)).ToList();
-
-            ////PROBLEM:The following should be syncronized; non-async extract it from this method
-                if (obsoleteEntites.Count != 0)
-                {
-                    _context.RemoveRange(obsoleteEntites);
-                }
+                return [objects.Except(existingEntities).ToList(), existingEntities.Except(objects).ToList()];
         }
-
-        public void AddRangeOfJunctionEntities<M>(List<M> objects)
-            where M : class
+        public List<JM>[] GetNewAndObsoleteJunctionEntities<JM>(List<JM> objects, List<JM> existingEntities)
+            where JM:IJunctionEntity
         {
-
-            List<M> existingEntities = _context.Set<M>().ToList();
-            List<M> newObjects = objects.Except(existingEntities).ToList();
-          
-            if (newObjects.Count != 0)
-            {
-                _context.AddRange(newObjects);
-            }
-
+            return [objects.Except(existingEntities).ToList(), existingEntities.Except(objects).ToList()];
         }
-
-
     }
 
 

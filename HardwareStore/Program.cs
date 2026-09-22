@@ -85,6 +85,7 @@ builder.Services.Configure<IdentityOptions>(options =>
 });
 
 
+
 var app = builder.Build(); // but this returns a configured webApplication, not IserviceProvider
 
 

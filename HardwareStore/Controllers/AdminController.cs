@@ -50,7 +50,7 @@ namespace HardwareStore.Controllers
         
         
         /// <summary>
-        /// This function Initiates the user editing process. it does not edit anything yet.
+        /// Identifies the user that his information will be edited, then returns the user. 
         /// </summary>
         /// <param name="id">The unique identifier of the user, mapped automatically from the URL route or query string via Model Binding.</param>
         /// <returns>An asynchronous task that renders the user edit view.</returns>
@@ -133,11 +133,7 @@ namespace HardwareStore.Controllers
             using (MiniProfiler.Current.Step("ReadWrite"))
             {
                   await _readerWriter.ReadWrite();
-                //if (await success)
-                //{
-                //    return Ok();
-                //}
-                //return BadRequest();
+  
                 return Ok();
             }
 
