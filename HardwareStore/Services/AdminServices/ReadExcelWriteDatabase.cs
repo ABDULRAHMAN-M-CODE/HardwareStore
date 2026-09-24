@@ -1,17 +1,14 @@
-﻿namespace HardwareStore.Services.AdminServices
+﻿using HardwareStore.DTOs;
+using HardwareStore.Models;
+using HardwareStore.SeedWork;
+using HardwareStoreNameSpace;
+using Microsoft.EntityFrameworkCore;
+using Spire.Xls;
+using System.Reflection;
+using System.Security.Claims;
+namespace HardwareStore.Services.AdminServices
 
 {
-    using HardwareStore.DTOs;
-    using HardwareStore.Models;
-    using HardwareStore.SeedWork;
-    using HardwareStoreNameSpace;
-    using Microsoft.EntityFrameworkCore;
-    using Spire.Xls;
-    using System;
-    using System.Diagnostics;
-    using System.Reflection;
-    using System.Security.Claims;
-
     public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter,IOmniReaderWriter
     {
 
@@ -107,8 +104,6 @@
 
         }
 
-
-
         /// <summary>
         /// Any parent table must be written before a child table.
         /// </summary>
@@ -116,160 +111,28 @@
         public async Task  Write(IDataDto dataDto)
         {
 
+            await _context.Database.ExecuteSqlInterpolatedAsync(
+                $"EXECUTE uspDeleteAllDataFromDatabase"
+            );
             var incomingData = (ExcelProductsDto)dataDto;
-            
-            // maybe can use ToListAsync without  casuing race condition???
-            List<Supplier> preExistingSuppliers = _context.Suppliers.ToList();
-            List<Brand> preExistingBrands= _context.Brands.ToList();
-            List<Unit> preExistingUnits= _context.Units.ToList();
-            List<Category> preExistingCategories= _context.Categories.ToList();
-            List<Country> preExistingCountries= _context.Countries.ToList();
-            List<Product> preExistingProducts= _context.Products.ToList();
-            List<Bin> preExistingBins= _context.Bins.ToList();
-            List<Manufacturer> preExistingManufacturers= _context.Manufacturers.ToList();
 
-            // Populating parents tables; tables that does not have any foreign key.
-            var newAndObsoleteSuppliers = GetNewAndObsoleteEntities(incomingData.Suppliers,preExistingSuppliers);
-            var newAndObsoleteBrands = GetNewAndObsoleteEntities(incomingData.Brands, preExistingBrands);
-            var newAndObsoleteUnits = GetNewAndObsoleteEntities(incomingData.Units, preExistingUnits);
-            var newAndObsoleteCategories = GetNewAndObsoleteEntities(incomingData.Categories, preExistingCategories);
-            var newAndObsoleteCountries = GetNewAndObsoleteEntities(incomingData.Countries, preExistingCountries);
-            var newAndObsoleteProducts = GetNewAndObsoleteEntities(incomingData.Products, preExistingProducts);
-            var newAndObsoleteBins = GetNewAndObsoleteEntities(incomingData.Bins, preExistingBins);
-            var newAndObsoleteManufacturers = GetNewAndObsoleteEntities(incomingData.Manufacturers, preExistingManufacturers);
-            
-            List<Supplier> newSuppliers = newAndObsoleteSuppliers[0];
-            if ( newSuppliers.Count != 0)
-                {
 
-                    preExistingSuppliers.AddRange(newSuppliers);
-                    _context.AddRange(newSuppliers);
-                }
-            List<Supplier> obsoleteSuppliers = newAndObsoleteSuppliers[1];
-            if (obsoleteSuppliers.Count != 0)
-                {
-                    foreach (var oS in obsoleteSuppliers)
-                    {
-                        preExistingSuppliers.Remove(oS);
-                    }
-                    _context.RemoveRange(obsoleteSuppliers);
-                }
-            ////
-            List<Brand> newBrands = newAndObsoleteBrands[0];
-            if (newBrands.Count != 0)
-            {
-                preExistingBrands.AddRange(newBrands);
-                _context.AddRange(newBrands);
-            }
-            List<Brand> obsoleteBrands = newAndObsoleteBrands[1];
-            if (obsoleteBrands.Count != 0)
-            {
-                foreach(Brand b in obsoleteBrands)
-                {
-                    preExistingBrands.Remove(b);
-                }
-                _context.RemoveRange(obsoleteBrands);
-            }
-            ///
-            List<Unit> newUnits = newAndObsoleteUnits[0];
-            if (newUnits.Count != 0)
-            {
-                preExistingUnits.AddRange(newUnits);
-                _context.AddRange(newUnits);
-            }
-            List<Unit> obsoleteUnits =  newAndObsoleteUnits[1];
-            if (obsoleteUnits.Count != 0)
-            {
-                foreach(Unit oU in obsoleteUnits)
-                {
-                    preExistingUnits.Remove(oU);
-                }
-                _context.RemoveRange(obsoleteUnits);
-            }
-            ///
-            List<Category> newCategories =newAndObsoleteCategories[0];
-            if (newCategories.Count != 0)
-            {
-                preExistingCategories.AddRange(newCategories);
-                _context.AddRange(newCategories);
-            }
-            List<Category> obsoleteCategories = newAndObsoleteCategories[1];
-            if (obsoleteCategories.Count != 0)
-            {
-                foreach(Category  oC  in obsoleteCategories)
-                {
-                    preExistingCategories.Remove(oC);
-                }
-                _context.RemoveRange(obsoleteCategories);
-            }
-            ///
-            List<Country> newCountries = newAndObsoleteCountries[0];
-            if (newCountries.Count != 0)
-            {
-                preExistingCountries.AddRange(newCountries);
-                _context.AddRange(newCountries);
-            }
-            List<Country> obsoleteCountries = newAndObsoleteCountries[1];
-            if (obsoleteCountries.Count != 0)
-            {
-                foreach (Country oC in obsoleteCountries)
-                {
-                    preExistingCountries.Remove(oC);
-                }
-                _context.RemoveRange(obsoleteCountries);
-            }
-            ///
-            List<Product> newProducts = newAndObsoleteProducts[0];
-            if (newProducts.Count != 0)
-            {
-                preExistingProducts.AddRange(newProducts);
-                _context.AddRange(newProducts);
-            }
-            List<Product> obsoleteProducts = newAndObsoleteProducts[1];
-            if (obsoleteProducts.Count != 0)
-            {
-                foreach(Product oP in obsoleteProducts)
-                {
-                    preExistingProducts.Remove(oP);    
-                }
-                _context.RemoveRange(obsoleteProducts);
-            }
-            ///
-            List<Bin> newBins = newAndObsoleteBins[0];
-            if (newBins.Count != 0)
-            {
-                preExistingBins.AddRange(newBins);
-                _context.AddRange(newBins);
-            }
-            List<Bin> obsoleteBins = newAndObsoleteBins[1];
-            if (obsoleteBins.Count != 0)
-            {
-                foreach(Bin oB in obsoleteBins)
-                {
-                    preExistingBins.Remove(oB);
-                }
-                _context.RemoveRange(obsoleteBins);
-            }
-            ///
-            List<Manufacturer> newManufacturers = newAndObsoleteManufacturers[0];
-            if (newManufacturers.Count != 0)
-            {
-                preExistingManufacturers.AddRange(newManufacturers);
-                _context.AddRange(newManufacturers);
-            }
-            List<Manufacturer> obsoleteManufacturers = newAndObsoleteManufacturers[1];
-            if (obsoleteManufacturers.Count != 0)
-            {
-                foreach(Manufacturer oM in obsoleteManufacturers)
-                {
-                    preExistingManufacturers.Remove(oM);
-                }
-                _context.RemoveRange(obsoleteManufacturers);
-            }
-
-            await _context.SaveChangesAsync();
- 
+            await _context.AddRangeAsync(incomingData.Suppliers); // Adding to the contexts can be concurrent, but Adding must be happen before saving for each add operation
+            await _context.AddRangeAsync(incomingData.Brands);
+            await _context.AddRangeAsync(incomingData.Units);
+            await _context.AddRangeAsync(incomingData.Categories);
+            await _context.AddRangeAsync(incomingData.Countries);
+            await _context.AddRangeAsync(incomingData.Products);
+            await _context.AddRangeAsync(incomingData.Bins);
+            await _context.AddRangeAsync(incomingData.Manufacturers);
             
+            
+            
+            await _context.SaveChangesAsync(); // constructing/saving parents it self can be concurrent,but all parents must be saved before constructing childs
+
+
+
+            // wait saving all parents (wait for all concurrent tasks to finish)
             //Populating Childs; NonJunction and Junction childs.
 
             var subCategories = ReadSpecificColumns<SubCategory>
@@ -283,129 +146,99 @@
                 .OrderBy(r => r.LeftColumnCellValue)
                 .ToList();
             PopulateForeignKeyPropertyForNonJunctionChild<SubCategory, Category>(
-                "CategoryId", subCategories, // NonJunction childs are already constructed.
+                "CategoryId", subCategories, 
                 subCategoryCategoriesLookups,
-                preExistingCategories // syncronized with DB
+                incomingData.Categories
             );
             subCategories = AssignCreatorAndUpdaterToEntitis<SubCategory>(subCategories, _adminId);
-            var newAndObsoleteSubCategories = GetNewAndObsoleteEntities(subCategories, _context.SubCategories.ToList());
-            List<SubCategory> newSubCategories = newAndObsoleteSubCategories[0];
-            if (newSubCategories.Count != 0)
-            {
-                _context.AddRange(newSubCategories);
-            }
-            List<SubCategory> obsoleteSubCategories = newAndObsoleteSubCategories[1];
-            if (obsoleteSubCategories.Count != 0)
-            {
-                _context.RemoveRange(obsoleteSubCategories);
-            }
+            await _context.AddRangeAsync(subCategories);
 
+            /////
             var brandSupplierslookups =
                 CreateLookupTable("Brand", "Supplier")
                 .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                 .ToList();
             var brandSuppliers = ConstructJunctionTableData<BrandSupplier, Brand, Supplier>(
                 "BrandId", "SupplierId", brandSupplierslookups, 
-                 preExistingBrands, preExistingSuppliers
+                 incomingData.Brands, incomingData.Suppliers
             );
-            
-            var newAndObsoleteBrandSuppliers =GetNewAndObsoleteJunctionEntities<BrandSupplier>(
-                 brandSuppliers, _context.BrandsSuppliers.ToList()
-            );
-
+            await _context.AddRangeAsync(brandSuppliers);
+            /////////
             var productCountriesLookups = CreateLookupTable("English Name", "Country")
                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                .ToList();
             var productCountries = ConstructJunctionTableData<ProductCountry, Product, Country>(
                 "ProductId", "CountryId",
                  productCountriesLookups,
-                 preExistingProducts, preExistingCountries
+                 incomingData.Products, incomingData.Countries
             );
-            var newAndObsoleteProductsCountries = GetNewAndObsoleteJunctionEntities<ProductCountry>(
-                productCountries, _context.ProductsCountries.ToList()
-
-                );
-
+            await _context.AddRangeAsync(productCountries);
+            ////////
             var productManufacturersLookups =
-                CreateLookupTable("Product", "Manufacturer")
+                CreateLookupTable("English Name", "Manufacturer")
                 .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                 .ToList();
             var productManufacturers = ConstructJunctionTableData<ProductManufacturer, Product, Manufacturer>(
                 "ProductId", "ManufacturerId",productManufacturersLookups,
-                 preExistingProducts,preExistingManufacturers
+                 incomingData.Products,incomingData.Manufacturers
           
             );
-            var newAndObsoleteProductManufacturers = GetNewAndObsoleteJunctionEntities<ProductManufacturer>(
-                productManufacturers, _context.ProductsManufacturers.ToList()
-            );
-
+            await _context.AddRangeAsync(productManufacturers);
+            ////
             var productBinslookups= CreateLookupTable("English Name", "Bin")
                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                .ToList();
             var productBins = ConstructJunctionTableData<ProductBin, Product, Bin>(
                     "ProductId", "BinId",
                      productBinslookups,
-                     preExistingProducts, preExistingBins       
+                     incomingData.Products, incomingData.Bins       
             );
-
-
+            await _context.AddRangeAsync(productBins);
+            //////
             var productSuppliersLookups = CreateLookupTable("English Name","Supplier")
                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                .ToList();
             var productSuppliers = ConstructJunctionTableData<ProductSupplier, Product, Supplier>(
                 "ProductId", "SupplierId",
                  productSuppliersLookups, 
-                 preExistingProducts, preExistingSuppliers
+                 incomingData.Products, incomingData.Suppliers
                  );
+            await _context.AddRangeAsync(productSuppliers);
 
+            /////////
             var productBrandsLookups = CreateLookupTable("English Name","Brand")
                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                .ToList();
             List<ProductBrand> productBrands = ConstructJunctionTableData<ProductBrand, Product, Brand>(
                 "ProductId", "BrandId",
                  productBrandsLookups, 
-                 preExistingProducts, preExistingBrands
+                 incomingData.Products, incomingData.Brands
                  );
-
+            await _context.AddRangeAsync(productBrands);
+            ////
             var productCategoriesLookups = CreateLookupTable("English Name", "Category")
                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                .ToList();
             var productCategories = ConstructJunctionTableData<ProductCategory, Product, Category>(
             "ProductId", "CategoryId",
             productCategoriesLookups, 
-            preExistingProducts, preExistingCategories
+            incomingData.Products, incomingData.Categories
             );
-
+            await _context.AddRangeAsync(productCategories);
+            //////
             var productUnitsLookups = CreateLookupTable("English Name", "Unit")
                .DistinctBy(r => new { r.LeftColumnCellValue, r.RightColumnCellValue })
                .ToList();
             var productUnits = ConstructJunctionTableData<ProductUnit, Product, Unit>(
                 "ProductId", "UnitId",
                  productUnitsLookups, 
-                 preExistingProducts, preExistingUnits
+                 incomingData.Products, incomingData.Units
             );
+            await _context.AddRangeAsync(productUnits);
+            //////
 
-
-            AddRangeOfJunctionEntities<BrandSupplier>(
-                brandSuppliers);
-            AddRangeOfJunctionEntities<ProductManufacturer>(
-                productManufacturers);
-            AddRangeOfJunctionEntities<ProductBin>(
-                productBins);
-            AddRangeOfJunctionEntities<ProductSupplier>(
-                productSuppliers);
-            AddRangeOfJunctionEntities<ProductBrand>(
-                productBrands);
-            AddRangeOfJunctionEntities<ProductCategory>(
-                productCategories);
-            AddRangeOfJunctionEntities<ProductUnit>(
-                productUnits);
-            AddRangeOfJunctionEntities<ProductCountry>(
-                productCountries);
 
             await _context.SaveChangesAsync();
-
-
 
         //Local functions inside Write()
          List<J> ConstructJunctionTableData<J, Parent1, Parent2>
@@ -464,8 +297,6 @@
             }
         }
     }
-
-        
 
         public  List<T> AssignCreatorAndUpdaterToEntitis<T>(List<T> entities, string Id) where T: HasCreatorAndUpdator
         {
@@ -529,7 +360,6 @@
                 return result;
 
         }
-
 
         /// <summary>
         /// 
@@ -600,8 +430,6 @@
         /// <exception cref="ArgumentException">
         /// </exception>        
 
-
-
         /// <summary>
         /// <para>// Should I redesign the  function so that it gets the data of the parent from the database instead of the excel file</para>
         /// </summary>
@@ -624,7 +452,6 @@
             }
             return result;
         }
-
         /// <summary>
         /// 
         /// Add objects to the context, if those objects are not tracked.
@@ -649,6 +476,4 @@
             return [objects.Except(existingEntities).ToList(), existingEntities.Except(objects).ToList()];
         }
     }
-
-
 }
