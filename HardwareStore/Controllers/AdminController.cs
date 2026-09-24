@@ -9,8 +9,7 @@ namespace HardwareStore.Controllers
     using HardwareStore.ViewModel.AccountViewModels;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
-    using StackExchange.Profiling;
-
+    
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
@@ -46,9 +45,7 @@ namespace HardwareStore.Controllers
              
             return View(options);
         }
-
-        
-        
+ 
         /// <summary>
         /// Identifies the user that his information will be edited, then returns the user. 
         /// </summary>
@@ -67,8 +64,6 @@ namespace HardwareStore.Controllers
             return NotFound();
 
         }
-
-
 
         public async Task<IActionResult> EditConfirmed(User user)
         {
@@ -127,21 +122,10 @@ namespace HardwareStore.Controllers
         [Route("Admin/Import")] //URL in the fetch should be /Admin/Import
         public  async Task<IActionResult> Import() 
         {
-
-
-
-            using (MiniProfiler.Current.Step("ReadWrite"))
-            {
-                  await _readerWriter.ReadWrite();
-  
-                return Ok();
-            }
-
-
-            
-
-
+            await _readerWriter.ReadWrite();
+            return Ok();
         }
+
         public IActionResult ImportResult()
         {
 
@@ -152,8 +136,6 @@ namespace HardwareStore.Controllers
         {
             return View();
         }
-
-
 
     }
 }

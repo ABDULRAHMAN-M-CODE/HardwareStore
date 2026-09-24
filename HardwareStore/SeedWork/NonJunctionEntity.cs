@@ -3,7 +3,7 @@
     //Brand Needs to extend two informations:  TimeStamable and Entity<Brand>
     //But a class may only extend one base class in C#.
     //So, merge both informations in one class → Entity<T> : Timestampable
-    public abstract class NonJunctionEntity<T> : Timestampable, IEquatable<T>
+    public abstract class NonJunctionEntity<T> : AuditableEntity, IEquatable<T>
         where T : NonJunctionEntity<T>
     {
         public string? EnglishName { get; set; }

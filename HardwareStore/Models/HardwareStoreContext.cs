@@ -5,13 +5,13 @@ namespace HardwareStoreNameSpace
     using HardwareStore.SeedWork;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.ChangeTracking;
     using System.Data;
-
-
+    using System.Security.Claims;
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        
-        
+
+        private readonly IAudit<EntityEntry> _audit;
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Brand> Brands{ get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -36,9 +36,9 @@ namespace HardwareStoreNameSpace
 
 
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options):base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IAudit<EntityEntry> audit) :base(options)
         {
-
+            _audit = audit;  
         }
 
         // Overriding the methods does not force me to generate a migration
@@ -46,14 +46,27 @@ namespace HardwareStoreNameSpace
         // The main problem the following methods solve is the following : I want to automate the process of populating the UpdatedAt Field 
         public override int SaveChanges()
         {
-            AddTimestamps();// I Added this functionality, that's why I override the method
+            //Run time dependency should not be stored in DI container.
+            IEnumerable<EntityEntry> auditablEntries = ChangeTracker.Entries().Where(x => 
+                x.Entity is AuditableEntity && 
+                (x.State == EntityState.Added || x.State == EntityState.Modified ||x.State==EntityState.Deleted)
+            );
+            _audit.AuditAllChangesAspects(auditablEntries);
             return base.SaveChanges();// Functionality of the Base stays the same
         }
 
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            AddTimestamps();// I Added this functionality, that's why I override the method
+            //Run time dependency should not be stored in DI container.
+            IEnumerable<EntityEntry> auditablEntries = ChangeTracker.Entries().Where(x => 
+            
+                x.Entity is AuditableEntity && 
+                (x.State == EntityState.Added || x.State == EntityState.Modified||x.State==EntityState.Deleted)
+            
+            );
+
+            _audit.AuditAllChangesAspects(auditablEntries);
             return await base.SaveChangesAsync(); // Note ZZZ: This line caused the following error "Microsoft.Data.SqlClient.SqlException: 'The MERGE statement conflicted with the FOREIGN KEY constraint "FK_SubCategories_Categories_CategoryId". The conflict occurred in database "HardwareDB", table "dbo.Categories", column 'Id'.'"
         }
 
@@ -69,23 +82,6 @@ namespace HardwareStoreNameSpace
         /// 
         /// if Deleted : neither
         /// </summary>
-        private void AddTimestamps()
-        {
-            var entities = ChangeTracker.Entries()
-                .Where(x => x.Entity is Timestampable && (x.State == EntityState.Added || x.State == EntityState.Modified));
-
-
-            foreach (var entity in entities)
-            {
-                var now = DateTime.UtcNow; // current datetime
-
-                if (entity.State == EntityState.Added)
-                {
-                    ((Timestampable)entity.Entity).CreatedAt = now;
-                }
-                ((Timestampable)entity.Entity).UpdatedAt = now;
-            }
-        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             //some relevant documentation : https://learn.microsoft.com/en-us/ef/ef6/modeling/code-first/fluent/types-and-properties

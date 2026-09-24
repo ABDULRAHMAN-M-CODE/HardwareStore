@@ -8,6 +8,7 @@ using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 
 //Mental Model about the DI container: 
@@ -31,10 +32,23 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddMiniProfiler();
 
 // the options are callback; they are not executed now, when some code needs the service, the options will be executed.
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("HardwareDB") , 
-    providerOptions => providerOptions.EnableRetryOnFailure())
-    );
+builder.Services.AddDbContext<ApplicationDbContext>(options =>     
+
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("HardwareDB") , 
+        providerOptions => providerOptions.EnableRetryOnFailure()
+    )
+
+);
+//Factory was used to enable concurrent reading from different contexts.
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
+
+    options.UseSqlServer( // DbContextOptions are shared between two services; DbContextFactory and the DbContext
+        builder.Configuration.GetConnectionString("HardwareDB"),
+        providerOptions => providerOptions.EnableRetryOnFailure()
+    ),
+    ServiceLifetime.Scoped   
+);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -57,12 +71,15 @@ builder.Services.AddScoped<IAccount, UserAccount>(); // fresh  instance of the U
 //builder.Services.AddScoped<IOmniWriter, ReadExcelWriteDatabase>();
 
 builder.Services.AddScoped<ReadExcelWriteDatabase>();
-builder.Services.AddScoped<IOmniReaderWriter>(sp =>sp.GetRequiredService<ReadExcelWriteDatabase>());
+builder.Services.AddScoped<IOmniReaderWriter>( sp =>sp.GetRequiredService<ReadExcelWriteDatabase>()  );
 //builder.Services.AddScoped<IOmniReader>(sp =>sp.GetRequiredService<ReadExcelWriteDatabase>());
 //builder.Services.AddScoped<IOmniWriter>(sp =>sp.GetRequiredService<ReadExcelWriteDatabase>());
 
 builder.Services.AddScoped<IAdmin, AdminPanel>();
 
+// How to register the dependency?
+
+builder.Services.AddScoped<IAudit<EntityEntry>,AuditEntriesChanges>();
 builder.Services.AddScoped<SignupViewModel>();
 builder.Services.AddRazorPages();
 
@@ -109,13 +126,9 @@ using (var scope = app.Services.CreateScope())
 }
 app.UseDefaultFiles();
 app.UseStaticFiles();
-
 app.UseHttpsRedirection();
 app.UseRouting();
-
-
 app.MapStaticAssets();
-
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiniProfiler();
