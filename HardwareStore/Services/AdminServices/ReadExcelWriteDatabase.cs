@@ -29,11 +29,11 @@ namespace HardwareStore.Services.AdminServices
         #region public methods
         public async Task ReadWrite()
         {
-            IDataDto data = Read();
+            IDataDto data =  await Read();
             await Write(data);
         }
 
-        public IDataDto Read()
+        public async Task<IDataDto> Read()
         {
 
 
@@ -46,67 +46,128 @@ namespace HardwareStore.Services.AdminServices
 
 
 
-            List<Category> categories = ReadSpecificColumns<Category>(new List<string> { "EnglishName" }, new List<string> { "Category" });
-            categories = categories.DistinctBy(c => c.EnglishName).ToList();
-
-
-
-            List<Country> countries = ReadSpecificColumns<Country>(new List<string> { "EnglishName" }, new List<string> { "Country" });
-            countries = countries.DistinctBy(c => c.EnglishName).ToList();
-
-
-
-            List<Unit> units = ReadSpecificColumns<Unit>(new List<string> { "EnglishName" }, new List<string> { "Unit" });
-            units = units.DistinctBy(u => u.EnglishName).ToList();
-
-
-
-            List<Brand> brands = ReadSpecificColumns<Brand>(new List<string> { "EnglishName" }, new List<string> { "Brand" });
-            brands = brands.DistinctBy(b => b.EnglishName).ToList();
-
-
-
-            List<Supplier> suppliers = ReadSpecificColumns<Supplier>(new List<string> { "EnglishName" }, new List<string> { "Supplier" });
-            suppliers = suppliers.DistinctBy(s => s.EnglishName).ToList();
-
-
-
-            List<Product> products = ReadSpecificColumns<Product>(
-            new List<string> { "SKU", "Barcode", "EnglishName", "ArabicName", "Description", "Status", "VAT", "Price", "MinStock", "ReorderQTY" },
-            new List<string> { "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT", "Price", "Min Stock", "Reorder Qty" }
+            var categories = Task<List<Category>>.Run(() =>
+                GetDistinctModels<Category>(new List<string> { "EnglishName" }, new List<string> { "Category" })
             );
-            products = products.DistinctBy(p => p.EnglishName).ToList();
+            //List <Category> categories = ReadSpecificColumns<Category>(new List<string> { "EnglishName" }, new List<string> { "Category" });
+            //categories = categories.DistinctBy(c => c.EnglishName).ToList();
 
 
+            var countries=Task<List<Country>>.Run(
+                () =>
 
-            List<Bin> bins = ReadSpecificColumns<Bin>(new List<string> { "EnglishName" }, new List<string> { "Bin" });
-            bins = bins.DistinctBy(c => c.EnglishName).ToList();
+                    GetDistinctModels<Country>(
+
+                        new List<string> { "EnglishName" }, new List<string> { "Country" }
+                    )
+                );
+            //List<Country> countries = ReadSpecificColumns<Country>(new List<string> { "EnglishName" }, new List<string> { "Country" });
+            //countries = countries.DistinctBy(c => c.EnglishName).ToList();
+
+            var units = Task<List<Unit>>.Run(
+                () =>
+
+                    GetDistinctModels<Unit>(
+
+                        new List<string> { "EnglishName" }, new List<string> { "Unit" }
+                    )
+                );
+
+            //List<Unit> units = ReadSpecificColumns<Unit>(new List<string> { "EnglishName" }, new List<string> { "Unit" });
+            //units = units.DistinctBy(u => u.EnglishName).ToList();
+
+            var brands = Task<List<Brand>>.Run(
+                () =>
+
+                    GetDistinctModels<Brand>(
+
+                        [ "EnglishName" ], [ "Brand" ]
+                    )
+                );
+
+            //List<Brand> brands = ReadSpecificColumns<Brand>(new List<string> { "EnglishName" }, new List<string> { "Brand" });
+            //brands = brands.DistinctBy(b => b.EnglishName).ToList();
 
 
+            var suppliers = Task<List<Supplier>>.Run(
+                () =>
 
-            List<Manufacturer> manufacturers = ReadSpecificColumns<Manufacturer>(new List<string> { "EnglishName" }, new List<string> { "Manufacturer" });
-            manufacturers = manufacturers.DistinctBy(m => m.EnglishName).ToList();
+                    GetDistinctModels<Supplier>(
+
+                        ["EnglishName"], ["Supplier"]
+                    )
+                );
+            //List<Supplier> suppliers = ReadSpecificColumns<Supplier>(new List<string> { "EnglishName" }, new List<string> { "Supplier" });
+            //suppliers = suppliers.DistinctBy(s => s.EnglishName).ToList();
+
+            var products= Task<List<Product>>.Run(
+                () =>
+
+                    GetDistinctModels<Product>(
+
+                        [ "SKU", "Barcode", "EnglishName", "ArabicName", "Description", "Status", "VAT", "Price", "MinStock", "ReorderQTY" ],
+                        [ "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT", "Price", "Min Stock", "Reorder Qty" ]
+                    )
+                );
+
+            //List<Product> products = ReadSpecificColumns<Product>(
+            //new List<string> { "SKU", "Barcode", "EnglishName", "ArabicName", "Description", "Status", "VAT", "Price", "MinStock", "ReorderQTY" },
+            //new List<string> { "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT", "Price", "Min Stock", "Reorder Qty" }
+            //);
+            //products = products.DistinctBy(p => p.EnglishName).ToList();
 
 
-            var subCategories = ReadSpecificColumns<SubCategory>
+            var bins = Task<List<Bin>>.Run(
+                () =>
+
+                    GetDistinctModels<Bin>(
+
+                        ["EnglishName"], ["Bin"]
+                    )
+                );
+
+            //List<Bin> bins = ReadSpecificColumns<Bin>(new List<string> { "EnglishName" }, new List<string> { "Bin" });
+            //bins = bins.DistinctBy(c => c.EnglishName).ToList();
+
+            var manufacturers = Task<List<Manufacturer>>.Run(
+                () =>
+
+                    GetDistinctModels<Manufacturer>(
+
+                        ["EnglishName"], ["Manufacturer"]
+                    )
+                );
+
+            //List<Manufacturer> manufacturers = ReadSpecificColumns<Manufacturer>(new List<string> { "EnglishName" }, new List<string> { "Manufacturer" });
+            //manufacturers = manufacturers.DistinctBy(m => m.EnglishName).ToList();
+
+            var subCategories =
+            Task<List<SubCategory>>.Run(
+                () => ReadSpecificColumns<SubCategory>
                 (new List<string> { "EnglishName" }, new List<string> { "Subcategory" })
                 .DistinctBy(sc => new { sc.EnglishName, sc.CategoryId })
                 .OrderBy(c => c.EnglishName)
-                .ToList();
+                .ToList()
+                );
 
             return new ExcelProductsDto
             {
-                Categories = categories,
-                Countries = countries,
-                Units = units,
-                Brands = brands,
-                Suppliers = suppliers,
-                Products = products,
-                Bins = bins,
-                Manufacturers = manufacturers,
-                SubCategories=subCategories
+                Categories = await categories,
+                Countries = await countries,
+                Units = await units,
+                Brands = await brands,
+                Suppliers = await suppliers,
+                Products = await products,
+                Bins = await bins,
+                Manufacturers = await manufacturers,
+                SubCategories=await subCategories
             };
             
+            List<T> GetDistinctModels<T>(List<string> entityPropertiesNames, List<string> ExcelColumnsNames) where T : IHasEnglishAndArabicName, new()
+            {
+                List<T> result = ReadSpecificColumns<T>(entityPropertiesNames, ExcelColumnsNames);
+                return result.DistinctBy(c => c.EnglishName).ToList();
+            }
              #region Local functions
             /// <summary>
             /// 
@@ -127,37 +188,57 @@ namespace HardwareStore.Services.AdminServices
             /// <param name="sheet"></param>
             /// <returns></returns>
             /// <exception cref="ArgumentException"></exception>
-            List<T> ReadSpecificColumns<T>(List<string> relevantEntityPropertiesNames, List<string> relevantExcelColumnsNames) where T : IHasEnglishAndArabicName, new()
+            List<T> ReadSpecificColumns<T>(List<string> entityPropertiesNames, List<string> ExcelColumnsNames) where T : IHasEnglishAndArabicName, new()
             {
 
-                if (relevantEntityPropertiesNames.Count != relevantExcelColumnsNames.Count)
+                int numberOfProperties = entityPropertiesNames.Count;
+
+                #region Safety check
+                if (numberOfProperties != ExcelColumnsNames.Count)
                 {
                     throw new ArgumentException("The number of the excel columns must equal the number of properties names");
                 }
+                #endregion
 
-                List<T> result = new List<T>();
-
-                //scan all the rows 
-                for (int row = 2; row <= (_sheet.LastRow); row++)//assuming row 1 is header, want skip it.
+                #region Get the model's properties given there names.
+                PropertyInfo[] modelProperties = new PropertyInfo[numberOfProperties];
+                for (int i=0; i < numberOfProperties;i++)
                 {
-                    //scan specific columns
-                    // Populate all the relevant properties of a single Entity 
+                    modelProperties[i] = typeof(T).GetProperty(entityPropertiesNames[i]);
+                }
+                #endregion
+                
+                #region Obtain columns indicies given there names.
+                int[] columnsIndicies = new int[numberOfProperties];
+                for (int i=0; i < numberOfProperties; i++)
+                {
+                    columnsIndicies[i]= _sheet.FindString(ExcelColumnsNames[i], false, false).Column;
+
+                }
+                #endregion
+                
+                #region Create an in-memory representation of the Excel data.
+                List<T> result = new List<T>();                
+                for (int row = 2; row <= (_sheet.LastRow); row++)//Scan all the rows. Skip first row assuming it is a header.
+                {
+
                     T entity = new T();
-
-                    for (int i = 0; i < relevantEntityPropertiesNames.Count; i++)// most of the time, the inner for loop will have only one iteration, good.
+                    //Scan specific columns; populate all the relevant properties of a single Entity  
+                    for (int i = 0; i < numberOfProperties; i++)
                     {
-                        var entityProperty = typeof(T).GetProperty(relevantEntityPropertiesNames[i]);
-                        int relevantColumnNumber = _sheet.FindString(relevantExcelColumnsNames[i], false, false).Column;
-
-                        var excelCellValue = Convert.ChangeType(_sheet.Range[row, relevantColumnNumber].Value, entityProperty!.PropertyType);
-                        entityProperty.SetValue(entity, excelCellValue);
+                        var excelCellValue = Convert.ChangeType(_sheet.Range[row, columnsIndicies[i]].Value, modelProperties[i].PropertyType);
+                        modelProperties[i].SetValue(entity, excelCellValue);
                     }
 
                     result.Add(entity);
                 }
+                #endregion
+                
+                
                 return result;
 
             }
+
             #endregion
 
 
