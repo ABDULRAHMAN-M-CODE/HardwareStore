@@ -1,4 +1,5 @@
 <Solution>
   <Folder Name="/Solution Items/" />
   <Project Path="HardwareStore/HardwareStore.csproj" />
+  <Project Path="MyBenchMark/MyBenchMark.csproj" Id="65252435-e55e-4c3e-8d1f-4daa97832a8b" />
 </Solution>

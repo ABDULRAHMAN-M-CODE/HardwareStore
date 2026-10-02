@@ -11,7 +11,7 @@
     public interface IOmniReader
     {
 
-        public  Task<IDataDto> Read();
+        public  Task<IDataDto> Read(object dataSource);
 
     }
     public interface IOmniWriter

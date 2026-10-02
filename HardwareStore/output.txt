@@ -1,0 +1,128 @@
+.
+├── AtStartup
+│   └── CustomRoleManager.cs
+├── AutoMapperMapping
+│   └── MappingProfile.cs
+├── Controllers
+│   ├── Account.cs
+│   ├── AdminController.cs
+│   └── WelcomeController.cs
+├── DTOs
+│   ├── ExcelProductsDto.cs
+│   └── IResultDto.cs
+├── HardwareStore.csproj
+├── HardwareStore.csproj.user
+├── Migrations
+│   ├── 20260827165934_test.Designer.cs
+│   ├── 20260827165934_test.cs
+│   ├── 20260827171935_removedBrandIdFromProductTable.Designer.cs
+│   ├── 20260827171935_removedBrandIdFromProductTable.cs
+│   ├── 20260830150146_AddedAuditProperties.Designer.cs
+│   ├── 20260830150146_AddedAuditProperties.cs
+│   ├── 20260903091245_AddedPriceColumnToProductsTable.Designer.cs
+│   ├── 20260903091245_AddedPriceColumnToProductsTable.cs
+│   ├── 20260904074443_RemovedReorderQTYAndMinStock.Designer.cs
+│   ├── 20260904074443_RemovedReorderQTYAndMinStock.cs
+│   ├── 20260904111028_AddedProductsBinsManyToManyRelation.Designer.cs
+│   ├── 20260904111028_AddedProductsBinsManyToManyRelation.cs
+│   ├── 20260904111357_RemovedBinColumnFromProductsTable.Designer.cs
+│   ├── 20260904111357_RemovedBinColumnFromProductsTable.cs
+│   ├── 20260904144053_RemovedForeignKeysFromProductsTable.Designer.cs
+│   ├── 20260904144053_RemovedForeignKeysFromProductsTable.cs
+│   ├── 20260904151657_AddedTwoTables.Designer.cs
+│   ├── 20260904151657_AddedTwoTables.cs
+│   ├── 20260904164637_AddedTwoColumnsToProductsTableAndChangedReturnTypesForVatColumn.Designer.cs
+│   ├── 20260904164637_AddedTwoColumnsToProductsTableAndChangedReturnTypesForVatColumn.cs
+│   ├── 20260905100000_AddedProductsManufacturersTable.Designer.cs
+│   ├── 20260905100000_AddedProductsManufacturersTable.cs
+│   ├── 20260905120649_ProductsTableForeignKeys.Designer.cs
+│   ├── 20260905120649_ProductsTableForeignKeys.cs
+│   ├── 20260905125616_CreatedByAndUpdatedByForEachPrincipleTable.Designer.cs
+│   ├── 20260905125616_CreatedByAndUpdatedByForEachPrincipleTable.cs
+│   ├── 20260905150542_ChangedAduitForeignKeysNames.Designer.cs
+│   ├── 20260905150542_ChangedAduitForeignKeysNames.cs
+│   ├── 20260924053821_DeleteAllDataFromDatabase.Designer.cs
+│   ├── 20260924053821_DeleteAllDataFromDatabase.cs
+│   └── ApplicationDbContextModelSnapshot.cs
+├── Models
+│   ├── ApplicationUser.cs
+│   ├── Bin.cs
+│   ├── Brand.cs
+│   ├── BrandSupplier.cs
+│   ├── Category.cs
+│   ├── Country.cs
+│   ├── HardwareStoreContext.cs
+│   ├── Manufacturer.cs
+│   ├── Product.cs
+│   ├── ProductBin.cs
+│   ├── ProductBrand.cs
+│   ├── ProductCategory.cs
+│   ├── ProductCountry.cs
+│   ├── ProductManufacturer.cs
+│   ├── ProductSupplier.cs
+│   ├── ProductUnit.cs
+│   ├── SubCategory.cs
+│   ├── Supplier.cs
+│   └── Unit.cs
+├── MyBenchMark
+│   ├── MyBenchMark.csproj
+│   ├── MyBenchMark.slnx
+│   ├── Program.cs
+│   ├── bin
+│   └── obj
+├── Program.cs
+├── Properties
+│   └── launchSettings.json
+├── ScaffoldingReadMe.txt
+├── SeedWork
+│   ├── IAudit.cs
+│   ├── IExcel.cs
+│   ├── IHasEnglishAndArabicName.cs
+│   ├── IHasIdentification.cs
+│   ├── IJunctionEntity.cs
+│   ├── IOmniReaderWriter.cs
+│   ├── IParentEntity.cs
+│   ├── NonJunctionEntity.cs
+│   ├── RelationshipLookupRecord.cs
+│   └── Timestampable.cs
+├── Services
+│   ├── AdminServices
+│   ├── AuditTrail.cs
+│   ├── HttpRequestExcel.cs
+│   ├── UserRegistrationService.cs
+│   ├── f00wjp2e.ouk~
+│   ├── gonccfa4.v1t~
+│   └── jtdxtx4p.2nk~
+├── ViewModel
+│   ├── AccountViewModels
+│   └── ProductViewModel.cs
+├── ViewModels
+├── Views
+│   ├── Account
+│   ├── Admin
+│   ├── Shared
+│   ├── Welcome
+│   ├── _ViewImports.cshtml
+│   └── _ViewStart.cshtml
+├── appsettings.Development.json
+├── appsettings.json
+├── bin
+│   ├── Debug
+│   └── Release
+├── obj
+│   ├── Debug
+│   ├── HardwareStore.csproj.codegeneration.targets
+│   ├── HardwareStore.csproj.nuget.dgspec.json
+│   ├── HardwareStore.csproj.nuget.g.props
+│   ├── HardwareStore.csproj.nuget.g.targets
+│   ├── Release
+│   ├── project.assets.json
+│   └── project.nuget.cache
+├── output.txt
+└── wwwroot
+    ├── css
+    ├── favicon.ico
+    ├── js
+    └── lib
+
+32 directories, 94 files

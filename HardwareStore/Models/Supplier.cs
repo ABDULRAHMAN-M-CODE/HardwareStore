@@ -3,10 +3,12 @@ using HardwareStore.SeedWork;
 
 namespace HardwareStore.Models
 {
-    public class Supplier:NonJunctionEntity<Supplier>,IHasEnglishAndArabicName,IHasIdentification, IParentEntity
+    public class Supplier:NonJunctionEntity<Supplier>,IHasEnglishAndArabicName,IHasIdentification,ICreator<Supplier>
     {
-        public int Id { get; set; }// if I do not use  property , this column will not be created in the database unless I explicitly specifiy it using Fluent API configuration.
-        
+        public static Supplier Create()
+        {
+            return new Supplier();
+        }
         public string? ArabicName { get; set; }
         
 

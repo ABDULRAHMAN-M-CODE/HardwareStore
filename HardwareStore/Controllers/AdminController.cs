@@ -7,25 +7,30 @@ namespace HardwareStore.Controllers
     using HardwareStore.Services;
     using HardwareStore.Services.AdminServices;
     using HardwareStore.ViewModel.AccountViewModels;
+    using HardwareStoreNameSpace;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
-    
+    using Microsoft.EntityFrameworkCore;
+    using StackExchange.Profiling;
+
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
+        
 
-        public IOmniReaderWriter _readerWriter;
         private readonly IAccount _account;
         private readonly IAdmin _admin;
+        public IOmniReaderWriter _readerWriter;
         public AdminController(
             IAccount account, 
             IAdmin admin, 
             IOmniReaderWriter readerWriter
             )
         {
-            _readerWriter = readerWriter;
+            
             _account = account;
              _admin=admin;
+            _readerWriter = readerWriter;
         }
 
         public async Task<IActionResult> AdminPanel(AdminViewModel options)
@@ -119,11 +124,15 @@ namespace HardwareStore.Controllers
 
 
         [HttpPost]
-        [Route("Admin/Import")] //URL in the fetch should be /Admin/Import
+        [Route("Admin/Import")]
         public  async Task<IActionResult> Import() 
         {
-            await _readerWriter.ReadWrite();
-            return Ok();
+
+            
+                await _readerWriter.ReadWrite();
+                    
+                return Ok();
+        
         }
 
         public IActionResult ImportResult()

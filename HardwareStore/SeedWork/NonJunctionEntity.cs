@@ -1,12 +1,16 @@
 ﻿namespace HardwareStore.SeedWork
 {
+
+
+    
     //Brand Needs to extend two informations:  TimeStamable and Entity<Brand>
     //But a class may only extend one base class in C#.
     //So, merge both informations in one class → Entity<T> : Timestampable
-    public abstract class NonJunctionEntity<T> : AuditableEntity, IEquatable<T>
+    public abstract class NonJunctionEntity<T> : AuditableEntity, IEquatable<T>,INonJunctionEntity
         where T : NonJunctionEntity<T>
     {
-        public string? EnglishName { get; set; }
+        public string? EnglishName { get; set; } // if I do not use  property , this column will not be created in the database unless I explicitly specifiy it using Fluent API configuration.
+        public int Id { get; set; }
 
         public bool Equals(T other)
         {
