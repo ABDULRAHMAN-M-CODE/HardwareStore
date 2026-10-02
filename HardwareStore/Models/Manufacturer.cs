@@ -1,13 +1,13 @@
 ﻿
 namespace HardwareStore.Models
 {
-    using HardwareStore.Services;
-
     using HardwareStore.SeedWork;
-    public class Manufacturer:NonJunctionEntity<Manufacturer>, IHasEnglishAndArabicName, IHasIdentification, IParentEntity
+    public class Manufacturer:NonJunctionEntity<Manufacturer>, IHasEnglishAndArabicName, IHasIdentification,ICreator<Manufacturer>
     {
-        public int Id { get; set; }
-
+        public static Manufacturer Create()
+        {
+            return new Manufacturer();
+        }
         public string? ArabicName { get; set; }
 
         public IEnumerable<ProductManufacturer> ProductManufacturers { get; } = new List<ProductManufacturer>();

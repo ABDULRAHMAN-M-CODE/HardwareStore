@@ -1,5 +1,4 @@
-﻿
-namespace HardwareStore.Services
+﻿namespace HardwareStore.SeedWork
 {
 
 
@@ -12,7 +11,7 @@ namespace HardwareStore.Services
     public interface IOmniReader
     {
 
-        public  IDataDto Read();
+        public  Task<IDataDto> Read(object dataSource);
 
     }
     public interface IOmniWriter
@@ -22,7 +21,7 @@ namespace HardwareStore.Services
     public interface IOmniReaderWriter
     {
 
-        public  Task<bool> ReadWrite();
+        public  Task ReadWrite();
 
     }
 

@@ -1,12 +1,13 @@
 ﻿using HardwareStore.SeedWork;
-using HardwareStore.Services;
 
 namespace HardwareStore.Models
 {
-    public class Unit:NonJunctionEntity<Unit>,IHasEnglishAndArabicName,IHasIdentification, IParentEntity
+    public class Unit:NonJunctionEntity<Unit>,IHasEnglishAndArabicName,IHasIdentification,ICreator<Unit>
     {
-
-        public int Id { get; set; }// if I do not use  property , this column will not be created in the database unless I explicitly specifiy it using Fluent API configuration.      
+        public static Unit Create()
+        {
+            return new Unit();
+        }
         public string? ArabicName { get; set; }
 
         public ApplicationUser Creator { get; set; } = null!;

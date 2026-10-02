@@ -1,4 +1,4 @@
-﻿namespace HardwareStore.Services
+﻿namespace HardwareStore.SeedWork
 {
     public interface IHasIdentification
     {

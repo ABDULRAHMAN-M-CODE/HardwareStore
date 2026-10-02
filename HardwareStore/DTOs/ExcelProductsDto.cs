@@ -12,5 +12,6 @@
         public required List<Product> Products;
         public required List<Bin> Bins;
         public required List<Manufacturer> Manufacturers;
+        public required List<SubCategory> SubCategories;
     }
 }

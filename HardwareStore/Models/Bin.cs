@@ -1,11 +1,15 @@
 ﻿using HardwareStore.SeedWork;
-using HardwareStore.Services;
 namespace HardwareStore.Models
 {
-    public class Bin: NonJunctionEntity<Bin> ,IParentEntity  ,IHasEnglishAndArabicName, IHasIdentification
+
+    
+    public class Bin: NonJunctionEntity<Bin> ,IHasEnglishAndArabicName, IHasIdentification,ICreator<Bin>
     {
 
-        public int Id { get; set; }// surrogote key
+        public static Bin Create()
+        {
+            return new Bin();
+        }
 
         public string? ArabicName { get; set; }
 

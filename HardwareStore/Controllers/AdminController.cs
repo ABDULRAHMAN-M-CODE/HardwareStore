@@ -3,29 +3,34 @@ namespace HardwareStore.Controllers
     
 {
     using HardwareStore.Models;
+    using HardwareStore.SeedWork;
     using HardwareStore.Services;
     using HardwareStore.Services.AdminServices;
     using HardwareStore.ViewModel.AccountViewModels;
+    using HardwareStoreNameSpace;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
     using StackExchange.Profiling;
 
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
+        
 
-        public IOmniReaderWriter _readerWriter;
         private readonly IAccount _account;
         private readonly IAdmin _admin;
+        public IOmniReaderWriter _readerWriter;
         public AdminController(
             IAccount account, 
             IAdmin admin, 
             IOmniReaderWriter readerWriter
             )
         {
-            _readerWriter = readerWriter;
+            
             _account = account;
              _admin=admin;
+            _readerWriter = readerWriter;
         }
 
         public async Task<IActionResult> AdminPanel(AdminViewModel options)
@@ -45,11 +50,9 @@ namespace HardwareStore.Controllers
              
             return View(options);
         }
-
-        
-        
+ 
         /// <summary>
-        /// This function Initiates the user editing process. it does not edit anything yet.
+        /// Identifies the user that his information will be edited, then returns the user. 
         /// </summary>
         /// <param name="id">The unique identifier of the user, mapped automatically from the URL route or query string via Model Binding.</param>
         /// <returns>An asynchronous task that renders the user edit view.</returns>
@@ -66,8 +69,6 @@ namespace HardwareStore.Controllers
             return NotFound();
 
         }
-
-
 
         public async Task<IActionResult> EditConfirmed(User user)
         {
@@ -123,27 +124,17 @@ namespace HardwareStore.Controllers
 
 
         [HttpPost]
-        [Route("Admin/Import")] //URL in the fetch should be /Admin/Import
+        [Route("Admin/Import")]
         public  async Task<IActionResult> Import() 
         {
 
-
-
-            using (MiniProfiler.Current.Step("ReadWrite"))
-            {
-                Task<bool> success = _readerWriter.ReadWrite();
-                if (await success)
-                {
-                    return Ok();
-                }
-                return BadRequest();
-            }
-
-
             
-
-
+                await _readerWriter.ReadWrite();
+                    
+                return Ok();
+        
         }
+
         public IActionResult ImportResult()
         {
 
@@ -154,8 +145,6 @@ namespace HardwareStore.Controllers
         {
             return View();
         }
-
-
 
     }
 }

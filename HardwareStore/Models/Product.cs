@@ -1,11 +1,13 @@
 ﻿
 namespace HardwareStore.Models
 {
-    using HardwareStore.Services;
     using HardwareStore.SeedWork;
-    public class Product:NonJunctionEntity<Product>,IHasIdentification,IHasEnglishAndArabicName, IParentEntity
+    public class Product:NonJunctionEntity<Product>,IHasIdentification,IHasEnglishAndArabicName,ICreator<Product>
     {
-        public int Id { get; set; } // Primary key, also Idenitity.
+        public static  Product Create()
+        {
+            return new Product();
+        }
         public string? SKU { get; set; }
         public  string? Barcode{ get; set; }
         public string? ArabicName { get; set; }

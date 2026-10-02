@@ -1,9 +1,10 @@
-﻿using HardwareStore.Services;
-using System.ComponentModel;
+﻿
+
+using HardwareStore.SeedWork;
 
 namespace HardwareStore.Models
 {
-    public class BrandSupplier
+    public class BrandSupplier:IJunctionEntity
         
     {
        

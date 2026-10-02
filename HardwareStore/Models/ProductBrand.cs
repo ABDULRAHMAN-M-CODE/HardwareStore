@@ -1,9 +1,11 @@
-﻿namespace HardwareStore.Models
+﻿using HardwareStore.SeedWork;
+
+namespace HardwareStore.Models
 {
     /// <summary>
     /// Junction table between Products and Brands tables.
     /// </summary>
-    public class ProductBrand
+    public class ProductBrand:IJunctionEntity
     {
         public int ProductId { get; set; }
         public int BrandId { get; set; }
