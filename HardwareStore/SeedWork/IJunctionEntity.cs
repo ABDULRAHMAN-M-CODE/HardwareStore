@@ -1,6 +1,6 @@
 ﻿namespace HardwareStore.SeedWork
 {
-    public interface IJunctionEntity
+    public interface IJunctionEntity:IEntity
     {
     }
 }

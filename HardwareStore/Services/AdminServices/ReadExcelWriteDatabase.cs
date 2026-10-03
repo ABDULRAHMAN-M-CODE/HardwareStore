@@ -5,7 +5,6 @@ using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Spire.Xls;
 using StackExchange.Profiling;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace HardwareStore.Services.AdminServices
@@ -344,31 +343,62 @@ namespace HardwareStore.Services.AdminServices
             using (var _context7 = _contextFactory.CreateDbContext())
             using (var _context8 = _contextFactory.CreateDbContext())
             {
-                Task[] addingTasks = new Task[9];
-                addingTasks[0]=_context0.AddRangeAsync(uniqueSubCategories);
-                addingTasks[1]= _context1.AddRangeAsync(uniqueBrandSuppliers);
-                addingTasks[2]=_context2.AddRangeAsync(uniqueProductCountries);
-                addingTasks[3]=_context3.AddRangeAsync(uniqueProductManufacturers);
-                addingTasks[4]=_context4.AddRangeAsync(uniqueProductBins);
-                addingTasks[5]=_context5.AddRangeAsync(uniqueProductSuppliers);
-                addingTasks[6]=_context6.AddRangeAsync(uniqueProductBrands);
-                addingTasks[7]=_context7.AddRangeAsync(uniqueProductCategories);
-                addingTasks[8]=_context8.AddRangeAsync(uniqueProductUnits);
-                var continuation = Task.WhenAll(addingTasks);
-                continuation.Wait();
-               
-                Task[] savingTasks = new Task[9];
-                savingTasks[0]=_context0.SaveChangesAsync();
-                savingTasks[1]=_context1.SaveChangesAsync();
-                savingTasks[2]=_context2.SaveChangesAsync();
-                savingTasks[3]=_context3.SaveChangesAsync();
-                savingTasks[4]=_context4.SaveChangesAsync();
-                savingTasks[5]=_context5.SaveChangesAsync();
-                savingTasks[6]=_context6.SaveChangesAsync();
-                savingTasks[7]=_context7.SaveChangesAsync();
-                savingTasks[8]=_context8.SaveChangesAsync();
-                var savingContinuation = Task.WhenAll(savingTasks);
-                savingContinuation.Wait();
+                //var addingDelegates = new Func<Task>[]
+                //{
+                //    ()=> _context0.AddRangeAsync(uniqueSubCategories),
+                //    ()=> _context1.AddRangeAsync(uniqueBrandSuppliers),
+                //    ()=> _context2.AddRangeAsync(uniqueProductCountries),
+                //    ()=> _context3.AddRangeAsync(uniqueProductManufacturers),
+                //    ()=> _context4.AddRangeAsync(uniqueProductBins),
+                //    ()=> _context5.AddRangeAsync(uniqueProductSuppliers),
+                //    ()=>_context6.AddRangeAsync(uniqueProductBrands) ,
+                //    ()=>_context7.AddRangeAsync(uniqueProductCategories) ,
+                //    ()=> _context8.AddRangeAsync(uniqueProductUnits)
+                //};
+                var _contexts = new ApplicationDbContext[]
+                {
+                    _context0,
+                    _context1,
+                    _context2 ,
+                    _context3 ,
+                    _context4 ,
+                    _context5 ,
+                    _context6 ,
+                    _context7 ,
+                    _context8 
+                };
+                
+                var dataPieces = new IEnumerable<IEntity>[]
+                {
+                    uniqueSubCategories,
+                    uniqueBrandSuppliers,
+                    uniqueProductCountries,
+                    uniqueProductManufacturers,
+                    uniqueProductBins,
+                    uniqueProductSuppliers,
+                    uniqueProductBrands ,
+                    uniqueProductCategories ,
+                    uniqueProductUnits
+                };
+                Task[] addingTasks = new Task[_contexts.Length];
+                //Task[] addingTasks = new Task[addingDelegates.Length];
+                for (int i = 0; i < addingTasks.Length; i++)
+                {
+                    //addingTasks[i] = addingDelegates[i].Invoke();
+                    addingTasks[i] = _contexts[i].AddRangeAsync(dataPieces[i]);
+                }
+                Task.WhenAll(addingTasks).Wait();
+
+
+
+                Task[] savingTasks = new Task[_contexts.Length];
+                for (int i = 0; i < savingTasks.Length; i++)
+                {
+                    savingTasks[i]=_contexts[i].SaveChangesAsync();
+                }
+                
+                Task.WhenAll(savingTasks).Wait();
+                
             }
             #endregion
 
