@@ -13,9 +13,11 @@ namespace HardwareStore.Models
         public int CategoryId { get; set; } //FK
 
 
+        #region naviagion properties
         public Category Category { get; set; } = null!; // Navigation
         public ApplicationUser Creator { get; set; } = null!;
         public ApplicationUser Deleter { get; set; } = null!;
         public ApplicationUser Updater { get; set; } = null!;
+        #endregion
     }
 }

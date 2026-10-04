@@ -4,7 +4,8 @@ using HardwareStore.SeedWork;
 using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Spire.Xls;
-using StackExchange.Profiling;
+
+
 using System.Reflection;
 
 namespace HardwareStore.Services.AdminServices
@@ -15,18 +16,18 @@ namespace HardwareStore.Services.AdminServices
     {
 
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
-        private readonly IExcel _excel;// PROBLEM: Move this to higher-level code; The Controller for example.
 
-        public ReadExcelWriteDatabase(IDbContextFactory<ApplicationDbContext> contextFactory, IExcel excel)
+
+        public ReadExcelWriteDatabase(IDbContextFactory<ApplicationDbContext> contextFactory)
         {        
             _contextFactory = contextFactory;
-            _excel = excel;
+
         }
 
-        public ReadExcelWriteDatabase(IExcel excel) // For benchmarking different versions of the `Read(WorkSheet sheet)` method
-        {
-            _excel = excel;
-        }
+        //public ReadExcelWriteDatabase(IExcel excel) // For benchmarking different versions of the `Read(WorkSheet sheet)` method
+        //{
+        //    _excel = excel;
+        //}
 
 
         #region interface methods : signatrue should not never be modified unless it's the last resort.
@@ -35,7 +36,7 @@ namespace HardwareStore.Services.AdminServices
 
 
 
-        #region Read
+        #region Base Read
         public async Task<IDataDto> Read(object sheet)
         {
 
@@ -151,6 +152,11 @@ namespace HardwareStore.Services.AdminServices
             #endregion
 
         }
+        #endregion
+
+        #region Read the returns DbDataReader to be sent to SqlBulkCopy.
+
+
         #endregion
 
         #endregion
@@ -437,18 +443,22 @@ namespace HardwareStore.Services.AdminServices
         #endregion
 
         #region facade method
-        public async Task ReadWrite()
+        public async Task ReadWrite(object sheet)
         {
 
 
-            IDataDto data= await Read(_excel.GetSheet(1));// THIS BECAME BASE
+            
+            IDataDto data = await Read((Worksheet)sheet);
 
-            using (MiniProfiler.Current.Step("Write()"))
-            {
+            //using (MiniProfiler.Current.Step("Write()"))
+            //{
                 await Write(data);
 
-            }
+            //}
         }
+
+        //Old approach: Bad
+
         #endregion
 
     }

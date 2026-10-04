@@ -6,12 +6,12 @@ namespace HardwareStore.Controllers
     using HardwareStore.SeedWork;
     using HardwareStore.Services;
     using HardwareStore.Services.AdminServices;
+    using HardwareStore.Services.ExcelServices;
     using HardwareStore.ViewModel.AccountViewModels;
-    using HardwareStoreNameSpace;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
-    using StackExchange.Profiling;
+    using Spire.Xls;
+
 
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
@@ -125,13 +125,16 @@ namespace HardwareStore.Controllers
 
         [HttpPost]
         [Route("Admin/Import")]
-        public  async Task<IActionResult> Import() 
+        public  async Task<IActionResult> Import(IFormFile file) 
         {
 
-            
-                await _readerWriter.ReadWrite();
+
+            FormExcel excel = new FormExcel(file);
+            Worksheet workSheet = excel.GetSheet(1);
+
+            await _readerWriter.ReadWrite(workSheet);
                     
-                return Ok();
+           return Ok();
         
         }
 

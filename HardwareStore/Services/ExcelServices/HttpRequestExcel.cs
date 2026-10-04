@@ -5,11 +5,11 @@ using Spire.Xls.Core;
 namespace HardwareStore.Services.ExcelServices
 {
     
-    public class HttpRequestExcel:IExcel
+    public class HttpContextExcel:IExcel
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public HttpRequestExcel(IHttpContextAccessor httpContextAccessor)
+        public HttpContextExcel(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
         }

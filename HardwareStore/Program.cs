@@ -4,7 +4,6 @@ using HardwareStore.Models;
 using HardwareStore.SeedWork;
 using HardwareStore.Services;
 using HardwareStore.Services.AdminServices;
-using HardwareStore.Services.ExcelServices;
 using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Identity;
@@ -65,7 +64,6 @@ builder.Services.AddScoped<IAdmin, AdminPanel>();
 builder.Services.AddScoped<IAudit<EntityEntry>,AuditEntriesChanges>();
 builder.Services.AddScoped<SignupViewModel>();
 builder.Services.AddRazorPages();
-builder.Services.AddScoped<IExcel, HttpRequestExcel>();
 #endregion
 
 builder.Services.Configure<IdentityOptions>(options =>

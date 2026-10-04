@@ -21,7 +21,7 @@
     public interface IOmniReaderWriter
     {
 
-        public  Task ReadWrite();
+        public  Task ReadWrite(object obj);
 
     }
 
