@@ -5,31 +5,24 @@ using System.Security.Claims;
 
 namespace HardwareStore.Services
 {
-    public class AuditEntriesChanges:IAudit<EntityEntry>
+    /// <summary>
+    /// A run-time generated database entries that cannot be registerd into the DI container.
+    /// </summary>
+    public class AuditableEntries: IAuditableEntries<EntityEntry>
     {
- 
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public AuditEntriesChanges(IHttpContextAccessor httpContextAccessor)
+        private readonly IEnumerable<EntityEntry> _auditablEntries;
+        public AuditableEntries(IEnumerable<EntityEntry> auditablEntries)
         {
-            
-            _httpContextAccessor=httpContextAccessor;
-            
+             _auditablEntries=auditablEntries;
         }
         #region public methods
         #endregion
-        public void AuditAllChangesAspects(IEnumerable<EntityEntry> auditablEntries)
-        {
             
-
-            AuditChangesTime(auditablEntries);
-            AuditChangesActor(auditablEntries);
-        }
-        public void AuditChangesTime(IEnumerable<EntityEntry> auditablEntries)
+        public void AuditChangesTime()
         {
 
 
-            foreach (EntityEntry entry in auditablEntries)
+            foreach (EntityEntry entry in _auditablEntries)
             {
                 var now = DateTime.UtcNow;
 
@@ -58,24 +51,24 @@ namespace HardwareStore.Services
                 }
             }
         }
-        public void AuditChangesActor(IEnumerable<EntityEntry> auditablEntries)
+        public void AuditChangesActor(string manipulatorId)
         {
-            foreach (EntityEntry entry in auditablEntries)
+            foreach (EntityEntry entry in _auditablEntries)
             {
                 if (entry.State == EntityState.Added)
                 {
        
-                    ((AuditableEntity)entry.Entity).CreatorId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    ((AuditableEntity)entry.Entity).UpdaterId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    ((AuditableEntity)entry.Entity).CreatorId = manipulatorId;
+                    ((AuditableEntity)entry.Entity).UpdaterId = manipulatorId;
 
                 }
                 else if (entry.State == EntityState.Modified)
                 {
-                    ((AuditableEntity)entry.Entity).UpdaterId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    ((AuditableEntity)entry.Entity).UpdaterId =  manipulatorId;
                 }
                 else if(entry.State==EntityState.Deleted)
                 {
-                    ((AuditableEntity)entry.Entity).DeleterId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    ((AuditableEntity)entry.Entity).DeleterId =  manipulatorId;
 
                 }
                 else
@@ -87,4 +80,5 @@ namespace HardwareStore.Services
             
         }
     }
+
 }

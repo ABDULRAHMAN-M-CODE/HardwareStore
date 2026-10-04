@@ -3,6 +3,7 @@ namespace HardwareStoreNameSpace
 {
     using HardwareStore.Models;
     using HardwareStore.SeedWork;
+    using HardwareStore.Services;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -10,8 +11,8 @@ namespace HardwareStoreNameSpace
     using System.Security.Claims;
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-
-        private readonly IAudit<EntityEntry> _audit;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Brand> Brands{ get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -36,9 +37,13 @@ namespace HardwareStoreNameSpace
 
 
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IAudit<EntityEntry> audit) :base(options)
+        public ApplicationDbContext(
+            DbContextOptions<ApplicationDbContext> options,
+            IHttpContextAccessor httpContextAccessor) :base(options
+                )
         {
-            _audit = audit;  
+
+            _httpContextAccessor=httpContextAccessor;
         }
 
         // Overriding the methods does not force me to generate a migration
@@ -46,28 +51,33 @@ namespace HardwareStoreNameSpace
         // The main problem the following methods solve is the following : I want to automate the process of populating the UpdatedAt Field 
         public override int SaveChanges()
         {
-            //Run time dependency should not be stored in DI container.
-            IEnumerable<EntityEntry> auditablEntries = ChangeTracker.Entries().Where(x => 
-                x.Entity is AuditableEntity && 
-                (x.State == EntityState.Added || x.State == EntityState.Modified ||x.State==EntityState.Deleted)
-            );
-            _audit.AuditAllChangesAspects(auditablEntries);
+            auditEntriesChanges();
             return base.SaveChanges();// Functionality of the Base stays the same
         }
 
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            //Run time dependency should not be stored in DI container.
-            IEnumerable<EntityEntry> auditablEntries = ChangeTracker.Entries().Where(x => 
-            
-                x.Entity is AuditableEntity && 
-                (x.State == EntityState.Added || x.State == EntityState.Modified||x.State==EntityState.Deleted)
-            
-            );
-
-            _audit.AuditAllChangesAspects(auditablEntries);
+            auditEntriesChanges();
             return await base.SaveChangesAsync(); // Note ZZZ: This line caused the following error "Microsoft.Data.SqlClient.SqlException: 'The MERGE statement conflicted with the FOREIGN KEY constraint "FK_SubCategories_Categories_CategoryId". The conflict occurred in database "HardwareDB", table "dbo.Categories", column 'Id'.'"
+        }
+
+        public void auditEntriesChanges()
+        {
+            //Run time dependency should not be stored in DI container.
+            IEnumerable<EntityEntry> entriesForTrackedEntities = ChangeTracker.Entries().Where(x =>
+
+                x.Entity is AuditableEntity &&
+                (x.State == EntityState.Added || x.State == EntityState.Modified || x.State == EntityState.Deleted)
+
+            );
+            AuditableEntries auditableEntries = new AuditableEntries(entriesForTrackedEntities);
+            auditableEntries.AuditChangesTime();
+            // Source - https://stackoverflow.com/q/62404483
+            // Posted by CodeName, modified by community. See post 'Timeline' for change history
+            // Retrieved 2026-10-04, License - CC BY-SA 4.0
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            auditableEntries.AuditChangesActor(userId);
         }
 
         /// <summary>
@@ -84,6 +94,8 @@ namespace HardwareStoreNameSpace
         /// </summary>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            #region Fluent API configurations
             //some relevant documentation : https://learn.microsoft.com/en-us/ef/ef6/modeling/code-first/fluent/types-and-properties
             base.OnModelCreating(modelBuilder);// When overriding OnModelCreating, base.OnModelCreating should be called first;
 
@@ -377,8 +389,8 @@ namespace HardwareStoreNameSpace
                 .WithMany(c => c.ProductCategories)
                 .HasForeignKey(pc => pc.ProductId)
                 .OnDelete(DeleteBehavior.NoAction);
-           
-           
+
+            #endregion
 
 
         }

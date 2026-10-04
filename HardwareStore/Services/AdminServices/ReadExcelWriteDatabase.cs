@@ -2,11 +2,13 @@
 using HardwareStore.Models;
 using HardwareStore.SeedWork;
 using HardwareStoreNameSpace;
+using Microsoft.CodeAnalysis.Elfie.Model.Tree;
 using Microsoft.EntityFrameworkCore;
 using Spire.Xls;
-
-
+using Sylvan.Data.Excel;
+using System.Data.Common;
 using System.Reflection;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HardwareStore.Services.AdminServices
 
@@ -14,7 +16,7 @@ namespace HardwareStore.Services.AdminServices
 {
     public class ReadExcelWriteDatabase : IOmniReader, IOmniWriter,IOmniReaderWriter
     {
-
+        
         private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
 
@@ -23,11 +25,6 @@ namespace HardwareStore.Services.AdminServices
             _contextFactory = contextFactory;
 
         }
-
-        //public ReadExcelWriteDatabase(IExcel excel) // For benchmarking different versions of the `Read(WorkSheet sheet)` method
-        //{
-        //    _excel = excel;
-        //}
 
 
         #region interface methods : signatrue should not never be modified unless it's the last resort.
@@ -446,10 +443,7 @@ namespace HardwareStore.Services.AdminServices
         public async Task ReadWrite(object sheet)
         {
 
-
-            
             IDataDto data = await Read((Worksheet)sheet);
-
             //using (MiniProfiler.Current.Step("Write()"))
             //{
                 await Write(data);

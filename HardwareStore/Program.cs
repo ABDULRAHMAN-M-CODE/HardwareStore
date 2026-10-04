@@ -61,7 +61,8 @@ builder.Services.AddScoped<IAccount, UserAccount>();
 builder.Services.AddScoped<ReadExcelWriteDatabase>();
 builder.Services.AddScoped<IOmniReaderWriter>( sp =>sp.GetRequiredService<ReadExcelWriteDatabase>());
 builder.Services.AddScoped<IAdmin, AdminPanel>();
-builder.Services.AddScoped<IAudit<EntityEntry>,AuditEntriesChanges>();
+
+builder.Services.AddScoped<IAuditableEntries<EntityEntry>,AuditableEntries>();
 builder.Services.AddScoped<SignupViewModel>();
 builder.Services.AddRazorPages();
 #endregion
