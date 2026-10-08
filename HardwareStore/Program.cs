@@ -4,6 +4,9 @@ using HardwareStore.Models;
 using HardwareStore.SeedWork;
 using HardwareStore.Services;
 using HardwareStore.Services.AdminServices;
+using HardwareStore.Services.DatabaseServices;
+using HardwareStore.Services.ExcelServices;
+using HardwareStore.Services.FacadeServices;
 using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Identity;
@@ -57,9 +60,15 @@ builder.Services.AddDefaultIdentity<ApplicationUser>
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IAccount, UserAccount>(); 
-builder.Services.AddScoped<ReadExcelWriteDatabase>();
-builder.Services.AddScoped<IOmniReaderWriter>( sp =>sp.GetRequiredService<ReadExcelWriteDatabase>());
+builder.Services.AddScoped<IAccount, UserAccount>();
+
+#region readers and writers
+builder.Services.AddScoped<IOmniReader, ExcelReader>();
+builder.Services.AddScoped<ISqlServerWriter, DbOverwriter>();
+builder.Services.AddScoped<ISourceToDistinationDataSyncronizer,DbToExternalStorageSyncroznier>();
+
+#endregion
+
 builder.Services.AddScoped<IAdmin, AdminPanel>();
 
 builder.Services.AddScoped<IAuditableEntries<EntityEntry>,AuditableEntries>();

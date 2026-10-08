@@ -10,10 +10,10 @@ namespace HardwareStore.Services
     /// </summary>
     public class AuditableEntries: IAuditableEntries<EntityEntry>
     {
-        private readonly IEnumerable<EntityEntry> _auditablEntries;
+        private readonly IEnumerable<EntityEntry> _entitiesEntries;
         public AuditableEntries(IEnumerable<EntityEntry> auditablEntries)
         {
-             _auditablEntries=auditablEntries;
+             _entitiesEntries=auditablEntries;
         }
         #region public methods
         #endregion
@@ -22,7 +22,7 @@ namespace HardwareStore.Services
         {
 
 
-            foreach (EntityEntry entry in _auditablEntries)
+            foreach (EntityEntry entry in _entitiesEntries)
             {
                 var now = DateTime.UtcNow;
 
@@ -53,7 +53,7 @@ namespace HardwareStore.Services
         }
         public void AuditChangesActor(string manipulatorId)
         {
-            foreach (EntityEntry entry in _auditablEntries)
+            foreach (EntityEntry entry in _entitiesEntries)
             {
                 if (entry.State == EntityState.Added)
                 {

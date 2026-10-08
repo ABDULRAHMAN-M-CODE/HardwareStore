@@ -1,83 +1,45 @@
 ﻿
-
-using Microsoft.EntityFrameworkCore;
-namespace StackOverflowQuestion
+namespace RedditQuestion
 {
-
-    public interface IEntity
+public class TResult
+{
+        // Instance fields....
+        // No properties.
+        // No methods.
+}
+    public interface ISomeInterface<T>
     {
-
+        public Task<T> SomeMethod();
     }
-    public interface INonJunctionEntity : IEntity
+    public class SomeClass : ISomeInterface<TResult>
     {
+        // instance fields.....
 
-    }
-    public interface IJunctionEntity : IEntity
-    {
+        //constructor......
 
-    }
-    public class SubCategory : INonJunctionEntity
-    {
-        public string? EnglishName { get; set; }
-    }
-
-    public class BrandSupplier : IJunctionEntity
-    {
-        public int BrandId { get; set; }
-        public int SupplierId { get; set; }
-    }
-
-    public class ApplicationDbContext : DbContext
-    {
-        public DbSet<SubCategory> SubCategories { get; set; }
-        public DbSet<BrandSupplier> BrandsSuppliers { get; set; }
-        // alot of other DbSet<T>....
-
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-        {
-
-        }
-    }
-    // Other classes that inherit from IEntity... 
-    public class DatabaseService
-    {
-
-
-        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
-        public DatabaseService(IDbContextFactory<ApplicationDbContext> contextFactory)
-        {
-            _contextFactory = contextFactory;
-
-        }
-
-        public async Task PersistDataInParallel_FirstVersion(IEnumerable<IEntity>[] dataPieces)
+        public async Task<TResult> SomeMethod()
         {
 
 
-            using (var _context0 = _contextFactory.CreateDbContext())
-            using (var _context1 = _contextFactory.CreateDbContext())
+            //Some code that is not important to this question.......
 
+
+
+            TResult result = new TResult
             {
-                var _contexts = new ApplicationDbContext[]
-                {
-                    _context0,
-                    _context1
-                };
+                // assign instance fields....
+            };
 
-                Task[] addingTasks = new Task[_contexts.Length];
-                for (int i = 0; i < addingTasks.Length; i++)
-                {
-                    addingTasks[i] = _contexts[i].AddRangeAsync(dataPieces[i]);
-                }
-                Task.WhenAll(addingTasks).Wait();
+            Task<TResult> task = Task.FromResult<TResult>(result);
+
+            return task ;
+            
+            // Solution is:  return result;
 
 
-            }
 
         }
 
-
-
     }
 
-}// end of namespace
+}

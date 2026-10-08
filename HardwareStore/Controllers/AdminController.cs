@@ -20,17 +20,17 @@ namespace HardwareStore.Controllers
 
         private readonly IAccount _account;
         private readonly IAdmin _admin;
-        public IOmniReaderWriter _readerWriter;
+        public ISourceToDistinationDataSyncronizer _excelReaderDatabaseWriter;
         public AdminController(
             IAccount account, 
             IAdmin admin, 
-            IOmniReaderWriter readerWriter
+            ISourceToDistinationDataSyncronizer readerWriter
             )
         {
             
             _account = account;
              _admin=admin;
-            _readerWriter = readerWriter;
+            _excelReaderDatabaseWriter = readerWriter;
         }
 
         public async Task<IActionResult> AdminPanel(AdminViewModel options)
@@ -132,7 +132,7 @@ namespace HardwareStore.Controllers
             FormExcel excel = new FormExcel(file);
             Worksheet workSheet = excel.GetSheet(1);
 
-            await _readerWriter.ReadWrite(workSheet);
+            await _excelReaderDatabaseWriter.ReadWrite(workSheet);
                     
            return Ok();
         

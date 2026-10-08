@@ -54,6 +54,7 @@ namespace MyBenchmarks
     {
         public static void Main(string[] args)
         {
+            // Don't use the Switcher, refer to the documentation and use other varient..
             var summary = BenchmarkSwitcher
                 .FromAssembly(typeof(Program).Assembly)
                 .Run(args, new DebugInProcessConfig());    
