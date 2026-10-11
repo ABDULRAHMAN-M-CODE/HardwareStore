@@ -1,6 +1,6 @@
 ﻿namespace HardwareStore.DTOs
 {
-    public interface IDataDto
+    public interface IData
     {
     }
 }

@@ -1,45 +1,25 @@
-﻿
-namespace RedditQuestion
-{
-public class TResult
-{
-        // Instance fields....
-        // No properties.
-        // No methods.
-}
-    public interface ISomeInterface<T>
-    {
-        public Task<T> SomeMethod();
-    }
-    public class SomeClass : ISomeInterface<TResult>
-    {
-        // instance fields.....
+﻿//using HardwareStore.Models;
+//using HardwareStore.SeedWork;
+//using Microsoft.AspNetCore.Http.HttpResults;
+//using Microsoft.AspNetCore.Mvc;
+//using Microsoft.EntityFrameworkCore;
+//using Microsoft.EntityFrameworkCore.Storage;
 
-        //constructor......
+//namespace RedditQuestion
+//{
 
-        public async Task<TResult> SomeMethod()
-        {
+//    IExecutionStrategy strategy = _context.Database.CreateExecutionStrategy();
+//    await strategy.ExecuteAsync(async () =>
+//            {
+//        await using var transaction = await _context.Database.BeginTransactionAsync();
 
+//         // Delete all the content from the database
+//         // _context.AddRange(X);
+//         // _contextSaveChangesAsync()
+//         // _context.AddRange(Y)
+//         //_context.SaveChangesAsync()
 
-            //Some code that is not important to this question.......
+//        await transaction.CommitAsync();
+//    });
 
-
-
-            TResult result = new TResult
-            {
-                // assign instance fields....
-            };
-
-            Task<TResult> task = Task.FromResult<TResult>(result);
-
-            return task ;
-            
-            // Solution is:  return result;
-
-
-
-        }
-
-    }
-
-}
+//}

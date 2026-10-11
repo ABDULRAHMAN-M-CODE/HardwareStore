@@ -6,6 +6,7 @@ namespace HardwareStore.Controllers
     using HardwareStore.SeedWork;
     using HardwareStore.Services;
     using HardwareStore.Services.AdminServices;
+
     using HardwareStore.Services.ExcelServices;
     using HardwareStore.ViewModel.AccountViewModels;
     using Microsoft.AspNetCore.Authorization;
@@ -16,21 +17,32 @@ namespace HardwareStore.Controllers
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
-        
+
+
+
+
+        //Reddit question..
+        //private readonly IProductsImporter<IFormFile> _productsImporter;
+        private readonly ISourceToDistinationDataSyncronizer<Worksheet> _syncronizer;
 
         private readonly IAccount _account;
         private readonly IAdmin _admin;
-        public ISourceToDistinationDataSyncronizer _excelReaderDatabaseWriter;
         public AdminController(
+
+            //IProductsImporter<IFormFile> productsImporter,
+            ISourceToDistinationDataSyncronizer<Worksheet> syncronizer,
+            
             IAccount account, 
-            IAdmin admin, 
-            ISourceToDistinationDataSyncronizer readerWriter
+            IAdmin admin
             )
         {
-            
+
+            _syncronizer = syncronizer;
+            //_productsImporter=productsImporter;
             _account = account;
-             _admin=admin;
-            _excelReaderDatabaseWriter = readerWriter;
+            _admin=admin;
+            
+            
         }
 
         public async Task<IActionResult> AdminPanel(AdminViewModel options)
@@ -128,13 +140,14 @@ namespace HardwareStore.Controllers
         public  async Task<IActionResult> Import(IFormFile file) 
         {
 
+            //Note 1 : `workSheet` cannot be registerd in the DI container; it is not a compile-time dependency, but a run-time dependency.
 
+            //_productsImporter.ImportAsync(file, CancellationToken);
             FormExcel excel = new FormExcel(file);
             Worksheet workSheet = excel.GetSheet(1);
+            await _syncronizer.Syncronize(workSheet); 
 
-            await _excelReaderDatabaseWriter.ReadWrite(workSheet);
-                    
-           return Ok();
+            return Ok();
         
         }
 

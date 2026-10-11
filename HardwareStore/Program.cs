@@ -4,14 +4,13 @@ using HardwareStore.Models;
 using HardwareStore.SeedWork;
 using HardwareStore.Services;
 using HardwareStore.Services.AdminServices;
-using HardwareStore.Services.DatabaseServices;
-using HardwareStore.Services.ExcelServices;
 using HardwareStore.Services.FacadeServices;
 using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStoreNameSpace;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Spire.Xls;
 
 
 //Mental Model about the DI container: 
@@ -39,19 +38,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(optionsBuilder =>
 
     optionsBuilder.UseSqlServer(
         builder.Configuration.GetConnectionString("HardwareDB") , 
-        providerOptions => providerOptions.EnableRetryOnFailure()
+        providerOptions => providerOptions.EnableRetryOnFailure() // removing this solved the issue
     )
 
 );
-//Factory was used to enable concurrent reading from different contexts.
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 
-    options.UseSqlServer( // DbContextOptions are shared between two services; DbContextFactory and the DbContext
-        builder.Configuration.GetConnectionString("HardwareDB"),
-        providerOptions => providerOptions.EnableRetryOnFailure()
-    ),
-    ServiceLifetime.Scoped   
-);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<ApplicationUser>
@@ -62,12 +53,12 @@ builder.Services.AddDefaultIdentity<ApplicationUser>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAccount, UserAccount>();
 
-#region readers and writers
-builder.Services.AddScoped<IOmniReader, ExcelReader>();
-builder.Services.AddScoped<ISqlServerWriter, DbOverwriter>();
-builder.Services.AddScoped<ISourceToDistinationDataSyncronizer,DbToExternalStorageSyncroznier>();
 
-#endregion
+builder.Services.AddScoped<DbOverWriter>();
+builder.Services.AddScoped<AllBusinessProductsReader>(); 
+builder.Services.AddScoped<ISourceToDistinationDataSyncronizer<Worksheet>,WorkSheetToDbSyncronizer>();
+
+
 
 builder.Services.AddScoped<IAdmin, AdminPanel>();
 

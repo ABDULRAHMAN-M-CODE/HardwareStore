@@ -50,8 +50,4 @@
 
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\Writers\" />
-  </ItemGroup>
-
 </Project>
