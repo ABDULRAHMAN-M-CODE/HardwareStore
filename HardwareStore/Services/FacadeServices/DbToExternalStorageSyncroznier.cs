@@ -6,6 +6,7 @@ using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Spire.Xls;
+using System.Diagnostics;
 using System.Reflection;
 
 
@@ -138,7 +139,7 @@ namespace HardwareStore.Services.FacadeServices
         #endregion
 
         #region public methods
-        public async Task OverWrite(NonJunctionModelsSnapShot incomingData)
+        public async Task<bool> OverWrite(NonJunctionModelsSnapShot incomingData,CancellationToken cancellationToken)
         {
             
             #region All code
@@ -300,20 +301,41 @@ namespace HardwareStore.Services.FacadeServices
             #endregion
 
             #region Transaction
-            //https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-resilient-entity-framework-core-sql-connections
-            IExecutionStrategy strategy = _context.Database.CreateExecutionStrategy();
-            await strategy.ExecuteAsync(async () =>
+            try
             {
-                await using var transaction = await _context.Database.BeginTransactionAsync();
-                
-                #region Delete content from database then save new content.
+                //https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-resilient-entity-framework-core-sql-connections
 
-                await _context.Database.ExecuteSqlInterpolatedAsync($"EXECUTE  [dbo].[uspDeleteAllDataFromDatabase]");
-                await _context.SaveChangesAsync();
-                #endregion
+                IExecutionStrategy strategy = _context.Database.CreateExecutionStrategy();
+                await strategy.ExecuteAsync(async () =>
+                {
+                    await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
-                await transaction.CommitAsync();
-            });
+                    #region Delete content from database then save new content.
+
+                    await _context.Database.ExecuteSqlInterpolatedAsync($"EXECUTE  [dbo].[uspDeleteAllDataFromDatabase]", cancellationToken);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    #endregion
+
+                    await transaction.CommitAsync(cancellationToken);
+                });
+
+                return true;
+            }
+            catch (OperationCanceledException e)
+            {
+                // exception will not be catched if the cancellation was requested and
+                // the transaction reached a point of no return.
+                Console.WriteLine("###########################################################");
+                Console.WriteLine("########## OPERATION CANCELLED SUCCESSFULLY ###############");
+                Console.WriteLine("###########################################################");
+                Debug.WriteLine("###########################################################");
+                Debug.WriteLine("########## OPERATION CANCELLED SUCCESSFULLY ###############");
+                Debug.WriteLine("###########################################################");
+                Console.WriteLine("OperationCanceledException: "+e.Message);
+
+                return false;
+            }
+
 
 
          
@@ -384,10 +406,10 @@ namespace HardwareStore.Services.FacadeServices
             _allDataReader = reader;
             _overWriter = overWriter;
         }
-        public async Task Syncronize(Worksheet worksheet)
+        public async Task Syncronize(Worksheet worksheet,CancellationToken cancellationToken)
         {
             var allProducts=await _allDataReader.ReadAllData(worksheet);
-            await _overWriter.OverWrite(allProducts);
+            await _overWriter.OverWrite(allProducts,cancellationToken);
         }
     }
 }

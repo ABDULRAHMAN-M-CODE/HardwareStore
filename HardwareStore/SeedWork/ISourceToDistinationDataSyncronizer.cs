@@ -4,7 +4,7 @@
     public interface ISourceToDistinationDataSyncronizer<DataSource>
     {
 
-        public Task Syncronize(DataSource dataSource);
+        public Task Syncronize(DataSource dataSource,CancellationToken cancellationToken);
 
     }
 

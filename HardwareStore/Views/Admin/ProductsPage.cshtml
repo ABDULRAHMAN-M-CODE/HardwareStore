@@ -6,13 +6,33 @@
 <label for="avatar">Choose a file:</label>
 
 <input class="form-control form-control-lg" id="formFileLg" type="file" accept=".xlsx" />
+<div class="container" id="cancelContainer">
+
+</div>
+
 
 <script>
+    console.log("Script Executed")
     document.getElementById("formFileLg").addEventListener("change", importFile);
-    console.log("hello world");
 
+    
+    
     async function importFile() {
-        console.log("The JS handler was started...")
+        console.log("importFil executed")
+        const controller = new AbortController();
+
+        let cancelContainer = document.getElementById("cancelContainer");
+        let cancelButton = document.createElement('BUTTON');
+        cancelButton.appendChild(document.createTextNode("Cancel"));
+        cancelButton.onclick = function() {
+            console.log("abort executed")
+            controller.abort()
+            cancelButton.remove();
+        }
+        
+        cancelContainer.appendChild(cancelButton);
+
+
         const formData = new FormData();
         formData.append("file", this.files[0]);
 
@@ -21,6 +41,7 @@
             response = await fetch('/Admin/Import', { 
                 method: 'POST',
                 body: formData,
+                signal:controller.signal
                
             })
             if (!response.ok) {
@@ -40,11 +61,16 @@
            //window.location.href = "/Admin/ImportResult"; // return RedirectToAction in the action method won't fucking work. because it must return control to the caller, which is the fetch-api
 
         }
+
         catch (error) {
 
-
+            if (error.name == "AbortError") {
+                console.log("catch block executed: AbortError")
+            }
+            
             console.error(error.message);
         }
+        cancelButton.remove();
     }
 
 

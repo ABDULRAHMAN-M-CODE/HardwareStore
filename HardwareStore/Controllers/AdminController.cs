@@ -137,7 +137,7 @@ namespace HardwareStore.Controllers
 
         [HttpPost]
         [Route("Admin/Import")]
-        public  async Task<IActionResult> Import(IFormFile file) 
+        public  async Task<IActionResult> Import(IFormFile file,CancellationToken cancellationToken) 
         {
 
             //Note 1 : `workSheet` cannot be registerd in the DI container; it is not a compile-time dependency, but a run-time dependency.
@@ -145,8 +145,8 @@ namespace HardwareStore.Controllers
             //_productsImporter.ImportAsync(file, CancellationToken);
             FormExcel excel = new FormExcel(file);
             Worksheet workSheet = excel.GetSheet(1);
-            await _syncronizer.Syncronize(workSheet); 
-
+            await _syncronizer.Syncronize(workSheet,cancellationToken); 
+            Console.WriteLine("hello world");
             return Ok();
         
         }
