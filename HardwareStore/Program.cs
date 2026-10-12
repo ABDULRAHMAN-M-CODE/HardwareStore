@@ -3,6 +3,7 @@ using HardwareStore.AtStartup;
 using HardwareStore.Models;
 using HardwareStore.SeedWork;
 using HardwareStore.Services;
+using HardwareStore.Services.ActorIdGetterServices;
 using HardwareStore.Services.AdminServices;
 using HardwareStore.Services.FacadeServices;
 using HardwareStore.ViewModel.AccountViewModels;
@@ -61,7 +62,7 @@ builder.Services.AddScoped<ISourceToDistinationDataSyncronizer<Worksheet>,WorkSh
 
 
 builder.Services.AddScoped<IAdmin, AdminPanel>();
-
+builder.Services.AddScoped<IActorIdGetter,HttpContextActorIdGetter>();
 builder.Services.AddScoped<IAuditableEntries<EntityEntry>,AuditableEntries>();
 builder.Services.AddScoped<SignupViewModel>();
 builder.Services.AddRazorPages();

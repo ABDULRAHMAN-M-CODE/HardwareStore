@@ -2,17 +2,13 @@
 namespace HardwareStoreNameSpace
 {
     using HardwareStore.Models;
-    using HardwareStore.SeedWork;
-    using HardwareStore.Services;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore.ChangeTracking;
-    using System.Data;
-    using System.Security.Claims;
+
+
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        
+        #region Non-junction tables
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Brand> Brands{ get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -22,9 +18,9 @@ namespace HardwareStoreNameSpace
         public DbSet<Country> Countries { get; set; }
         public DbSet<Bin> Bins { get; set; }
         public DbSet<Manufacturer> Manufacturers { get; set; }
+#endregion
 
-
-        // Junction tables
+        #region Junction tables
         public DbSet<ProductCountry> ProductsCountries { get; set; }
         public DbSet<BrandSupplier> BrandsSuppliers { get; set; }
         public DbSet<ProductBrand> ProductsBrands { get; set; }
@@ -33,77 +29,28 @@ namespace HardwareStoreNameSpace
         public DbSet<ProductCategory> ProductsCategories { get; set; }
         public DbSet<ProductUnit> ProductsUnits { get; set; }
         public DbSet<ProductManufacturer> ProductsManufacturers { get; set; }
+        #endregion
 
-
-
-
-        public ApplicationDbContext(
-            DbContextOptions<ApplicationDbContext> options,
-            IHttpContextAccessor httpContextAccessor) :base(options
-                )
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :base(options)
         {
 
-            _httpContextAccessor=httpContextAccessor;
         }
-
-        // Overriding the methods does not force me to generate a migration
-        
-        // The main problem the following methods solve is the following : I want to automate the process of populating the UpdatedAt Field 
-        public override int SaveChanges()
-        {
-            auditEntriesChanges();
-            return base.SaveChanges();// Functionality of the Base stays the same
-        }
-
-
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            auditEntriesChanges();
-            return await base.SaveChangesAsync(); // Note ZZZ: This line caused the following error "Microsoft.Data.SqlClient.SqlException: 'The MERGE statement conflicted with the FOREIGN KEY constraint "FK_SubCategories_Categories_CategoryId". The conflict occurred in database "HardwareDB", table "dbo.Categories", column 'Id'.'"
-        }
-
-        public void auditEntriesChanges()
-        {
-            //Run time dependency should not be stored in DI container.
-            IEnumerable<EntityEntry> entriesForTrackedEntities = ChangeTracker.Entries().Where(x =>
-
-                x.Entity is AuditableEntity &&
-                (x.State == EntityState.Added || x.State == EntityState.Modified || x.State == EntityState.Deleted)
-
-            );
-            AuditableEntries auditableEntries = new AuditableEntries(entriesForTrackedEntities);
-            auditableEntries.AuditChangesTime();
-            // Source - https://stackoverflow.com/q/62404483
-            // Posted by CodeName, modified by community. See post 'Timeline' for change history
-            // Retrieved 2026-10-04, License - CC BY-SA 4.0
-            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            auditableEntries.AuditChangesActor(userId);
-        }
-
-        /// <summary>
-        /// 
-        /// This method either populates 'CreatedAt' or 'UpdatedAt' properties or both of them. 
-        /// 
-        /// if Entity is added, it  populates  CreatedAt and UpdatedAt.
-        /// 
-        /// if Entity is only Modified but not added, the method will  populate  UpdatedAt   only
-        /// 
-        /// if Unchanged : neither.
-        /// 
-        /// if Deleted : neither
-        /// </summary>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
             #region Fluent API configurations
+            
             //some relevant documentation : https://learn.microsoft.com/en-us/ef/ef6/modeling/code-first/fluent/types-and-properties
             base.OnModelCreating(modelBuilder);// When overriding OnModelCreating, base.OnModelCreating should be called first;
 
 
             //// documentation : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/many-to-many
             //Supppliers has PK, NO FK
+            
+            #region Non junction tables configuration
             modelBuilder.Entity<Supplier>().HasKey(s => s.Id);
-            modelBuilder.Entity<Supplier>().Property(s => s.Id).UseIdentityColumn();
+            modelBuilder.Entity<Supplier>().Property(x => x.Id).ValueGeneratedNever();
+
             modelBuilder.Entity<Supplier>().HasIndex(s => s.EnglishName).IsUnique();
             modelBuilder.Entity<Supplier>()
                   .HasOne(s => s.Creator)
@@ -123,9 +70,9 @@ namespace HardwareStoreNameSpace
 
             //Brands has PK, NO FK
             modelBuilder.Entity<Brand>().HasKey(b => b.Id); 
-            modelBuilder.Entity<Brand>().Property(b => b.Id).UseIdentityColumn();
             modelBuilder.Entity<Brand>().HasIndex(b => b.EnglishName).IsUnique();
             modelBuilder.Entity<Brand>().Property(b => b.EnglishName).IsRequired();
+            modelBuilder.Entity<Brand>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<Brand>()
               .HasOne(b => b.Creator)
             .WithMany(u => u.CreatedBrands)
@@ -148,8 +95,9 @@ namespace HardwareStoreNameSpace
 
 
             //Categories: 1 PK
-            modelBuilder.Entity<Category>().HasKey(c => c.Id); 
-            modelBuilder.Entity<Category>().Property(c => c.Id).UseIdentityColumn();
+            modelBuilder.Entity<Category>().HasKey(c => c.Id);
+            modelBuilder.Entity<Category>().Property(x => x.Id).ValueGeneratedNever();
+
             modelBuilder.Entity<Category>().HasIndex(c => c.EnglishName).IsUnique();
             modelBuilder.Entity<Category>()
                   .HasOne(c => c.Creator)
@@ -169,8 +117,9 @@ namespace HardwareStoreNameSpace
             
             
             //Units: 1 PK
-            modelBuilder.Entity<Unit>().HasKey(u => u.Id); 
-            modelBuilder.Entity<Unit>().Property(u => u.Id).UseIdentityColumn();
+            modelBuilder.Entity<Unit>().HasKey(u => u.Id);
+            modelBuilder.Entity<Unit>().Property(x => x.Id).ValueGeneratedNever();
+
             modelBuilder.Entity<Unit>().HasIndex(u => u.EnglishName).IsUnique();
             modelBuilder.Entity<Unit>()
                   .HasOne(u => u.Creator)
@@ -187,8 +136,9 @@ namespace HardwareStoreNameSpace
 
 
             ////Products: 1 Identity PK,  and 3 FKs. 
-            modelBuilder.Entity<Product>().HasKey(p => p.Id); 
-            modelBuilder.Entity<Product>().Property(p => p.Id).UseIdentityColumn();
+            modelBuilder.Entity<Product>().HasKey(p => p.Id);
+            modelBuilder.Entity<Product>().Property(x => x.Id).ValueGeneratedNever();
+
             modelBuilder.Entity<Product>()
                   .HasOne(p => p.Creator)
                 .WithMany(u => u.CreatedProducts)
@@ -205,7 +155,8 @@ namespace HardwareStoreNameSpace
 
             //SubCategories has one Idenitity-PK and  one FK
             modelBuilder.Entity<SubCategory>().HasKey(sc=> sc.Id);
-            modelBuilder.Entity<SubCategory>().Property(sc=> sc.Id).UseIdentityColumn();
+            modelBuilder.Entity<SubCategory>().Property(x => x.Id).ValueGeneratedNever();
+
             modelBuilder.Entity<SubCategory>()
             .HasOne(sc => sc.Category)
             .WithMany(c => c.SubCategories)
@@ -227,7 +178,8 @@ namespace HardwareStoreNameSpace
 
             // Countries has  Identity-PK, NO FK
             modelBuilder.Entity<Country>().HasKey(c => c.Id);
-            modelBuilder.Entity<Country>().Property(c => c.Id).UseIdentityColumn();
+            modelBuilder.Entity<Country>().Property(x => x.Id).ValueGeneratedNever();
+
             modelBuilder.Entity<Country>().HasIndex(c => c.EnglishName).IsUnique();
             modelBuilder.Entity<Country>()
                   .HasOne(c => c.Creator)
@@ -244,7 +196,8 @@ namespace HardwareStoreNameSpace
 
             //Manufacturers: 1 PK, 3 FKs
             modelBuilder.Entity<Manufacturer>().HasKey(m => m.Id);
-            modelBuilder.Entity<Manufacturer>().Property(m => m.Id).UseIdentityColumn();
+            modelBuilder.Entity<Manufacturer>().Property(x => x.Id).ValueGeneratedNever();
+
             modelBuilder.Entity<Manufacturer>().HasIndex(m => m.EnglishName).IsUnique();
             modelBuilder.Entity<Manufacturer>()
                   .HasOne(m => m.Creator)
@@ -264,7 +217,8 @@ namespace HardwareStoreNameSpace
 
             //Bins: 1 PK, 3 FKs
             modelBuilder.Entity<Bin>().HasKey(b => b.Id);
-            modelBuilder.Entity<Bin>().Property(b => b.Id).UseIdentityColumn();
+            modelBuilder.Entity<Bin>().Property(x => x.Id).ValueGeneratedNever();
+
             modelBuilder.Entity<Bin>().HasIndex(b => b.EnglishName).IsUnique();
             modelBuilder.Entity<Bin>()
                   .HasOne(b => b.Creator)
@@ -281,8 +235,10 @@ namespace HardwareStoreNameSpace
                 .WithMany(u => u.DeletedBins)
                 .HasForeignKey(b => b.DeleterId)
                 .OnDelete(DeleteBehavior.NoAction);
+            #endregion
 
 
+            #region configuration for junction tables
 
             //BrandsSuppliers has one composite PK and  two FKs
             modelBuilder.Entity<BrandSupplier>().HasKey(bs => new { bs.SupplierId, bs.BrandId });
@@ -389,7 +345,8 @@ namespace HardwareStoreNameSpace
                 .WithMany(c => c.ProductCategories)
                 .HasForeignKey(pc => pc.ProductId)
                 .OnDelete(DeleteBehavior.NoAction);
-
+            #endregion
+            
             #endregion
 
 

@@ -17,8 +17,7 @@ namespace HardwareStore.Services
         }
         #region public methods
         #endregion
-            
-        public void AuditChangesTime()
+        public void AuditTimeAndActor(string actorId)
         {
 
 
@@ -28,22 +27,23 @@ namespace HardwareStore.Services
 
                 if (entry.State == EntityState.Added)
                 {
-
+                    var x = (AuditableEntity)entry.Entity;
                     ((AuditableEntity)entry.Entity).CreatedAt = now;
                     ((AuditableEntity)entry.Entity).UpdatedAt = now;
-
+                    ((AuditableEntity)entry.Entity).CreatorId = actorId;
+                    ((AuditableEntity)entry.Entity).UpdaterId = actorId;
                 }
                 else if (entry.State == EntityState.Modified)
                 {
                     ((AuditableEntity)entry.Entity).UpdatedAt = now;
+                    ((AuditableEntity)entry.Entity).UpdaterId = actorId;
 
-                   
 
                 }
                 else if (entry.State == EntityState.Deleted)
                 {
                     ((AuditableEntity)entry.Entity).DeletedAt = now;
-
+                    ((AuditableEntity)entry.Entity).DeleterId = actorId;
                 }
                 else
                 {
@@ -51,34 +51,7 @@ namespace HardwareStore.Services
                 }
             }
         }
-        public void AuditChangesActor(string manipulatorId)
-        {
-            foreach (EntityEntry entry in _entitiesEntries)
-            {
-                if (entry.State == EntityState.Added)
-                {
-       
-                    ((AuditableEntity)entry.Entity).CreatorId = manipulatorId;
-                    ((AuditableEntity)entry.Entity).UpdaterId = manipulatorId;
 
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    ((AuditableEntity)entry.Entity).UpdaterId =  manipulatorId;
-                }
-                else if(entry.State==EntityState.Deleted)
-                {
-                    ((AuditableEntity)entry.Entity).DeleterId =  manipulatorId;
-
-                }
-                else
-                {
-                    continue;
-                }
-
-            }
-            
-        }
     }
 
 }

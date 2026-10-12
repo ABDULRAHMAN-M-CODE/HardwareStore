@@ -4,6 +4,7 @@ using HardwareStore.Models;
 using HardwareStore.SeedWork;
 using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 using Spire.Xls;
 using System.Reflection;
@@ -122,14 +123,17 @@ namespace HardwareStore.Services.FacadeServices
 
         }
     }
+
     public class DbOverWriter
     {
 
         #region fields and constructor
         private readonly ApplicationDbContext _context;
-        public DbOverWriter(ApplicationDbContext context)
+        private readonly IActorIdGetter _actorIdGetter;
+        public DbOverWriter(ApplicationDbContext context, IActorIdGetter actorIdGetter)
         {
             _context = context;
+            _actorIdGetter = actorIdGetter;
         }
 
         #endregion
@@ -138,158 +142,177 @@ namespace HardwareStore.Services.FacadeServices
         public async Task OverWrite(NonJunctionModelsSnapShot incomingData)
         {
             
-            #region code
-
-
-            
-
+            #region All code
 
             #region deduplicate parents
-            var uniqueSuppliers = incomingData.Suppliers.DistinctBy(supplier => new { supplier.EnglishName });
-            var uniqueBrands = incomingData.Brands.DistinctBy(brand => new { brand.EnglishName });
-            var uniqueUnits = incomingData.Units.DistinctBy(unit => new { unit.EnglishName });
-            var uniqueCategories = incomingData.Categories.DistinctBy(category => new { category.EnglishName });
-            var uniqueCountries = incomingData.Countries.DistinctBy(country => new { country.EnglishName });
-            var uniqueProducts = incomingData.Products.DistinctBy(product => new { product.EnglishName });
-            var uniqueBins = incomingData.Bins.DistinctBy(bin => new { bin.EnglishName });
-            var uniqueManufacturers = incomingData.Manufacturers.DistinctBy(manufacturer => new { manufacturer.EnglishName });
+            var uniqueSuppliers = incomingData.Suppliers.DistinctBy(supplier => new { supplier.EnglishName }).ToList();
+            var uniqueBrands = incomingData.Brands.DistinctBy(brand => new { brand.EnglishName }).ToList();
+            var uniqueUnits = incomingData.Units.DistinctBy(unit => new { unit.EnglishName }).ToList();
+            var uniqueCategories = incomingData.Categories.DistinctBy(category => new { category.EnglishName }).ToList();
+            var uniqueCountries = incomingData.Countries.DistinctBy(country => new { country.EnglishName }).ToList();
+            var uniqueProducts = incomingData.Products.DistinctBy(product => new { product.EnglishName }).ToList();
+            var uniqueBins = incomingData.Bins.DistinctBy(bin => new { bin.EnglishName }).ToList();
+            var uniqueManufacturers = incomingData.Manufacturers.DistinctBy(manufacturer => new { manufacturer.EnglishName }).ToList();
             #endregion
 
-            #region persisting non-child tables (child tables cannot exist without parent tables)
+            #region populateId Values
+            PopulateIdentityColumn(uniqueSuppliers);
+            PopulateIdentityColumn(uniqueBrands);
+            PopulateIdentityColumn(uniqueUnits);
+            PopulateIdentityColumn(uniqueCategories);
+            PopulateIdentityColumn(uniqueCountries);
+            PopulateIdentityColumn(uniqueProducts);
+            PopulateIdentityColumn(uniqueBins);
+            PopulateIdentityColumn(uniqueManufacturers);
+
+            #endregion
+            
+            #region code
+            #region  Lookup operations
+            LookupIdValues<Category>(incomingData.Categories, uniqueCategories.ToList());
+            LookupIdValues<Product>(incomingData.Products, uniqueProducts.ToList());
+            LookupIdValues<Bin>(incomingData.Bins, uniqueBins.ToList());
+            LookupIdValues<Brand>(incomingData.Brands, uniqueBrands.ToList());
+            LookupIdValues<Supplier>(incomingData.Suppliers, uniqueSuppliers.ToList());
+            LookupIdValues<Country>(incomingData.Countries, uniqueCountries.ToList());
+            LookupIdValues<Manufacturer>(incomingData.Manufacturers, uniqueManufacturers.ToList());
+            LookupIdValues<Unit>(incomingData.Units, uniqueUnits.ToList());
+            #endregion
+
+
+            #region Populating foregin key(s) for non-junction child(s)
 
 
 
-           //https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-resilient-entity-framework-core-sql-connections
+
+            var zip = incomingData.SubCategories.Zip(incomingData.Categories, (sc, c) => new { sc, c.EnglishName });
+            Dictionary<string, Category> categoriesLookup = uniqueCategories.ToDictionary(c => c.EnglishName, c => c);
+            foreach (var a in zip)
+            {
+                a.sc.CategoryId = categoriesLookup[a.EnglishName].Id;
+
+            }
+
+            List<SubCategory> uniqueSubCategories = zip.Select(x => x.sc).DistinctBy(subCategory => new { subCategory.EnglishName }).ToList();
+            PopulateIdentityColumn(uniqueSubCategories);
+            #endregion
+
+
+            #region Populating junction tables (a junction table contain two foreign keys)
+
+            var castedBrands = incomingData.Brands.Cast<INonJunctionEntity>().ToList();
+            var castedSuppliers = incomingData.Suppliers.Cast<INonJunctionEntity>().ToList();
+            var castedProducts = incomingData.Products.Cast<INonJunctionEntity>().ToList();
+
+
+
+            var uniqueBrandSuppliers =
+                ConstructJunctionTable<BrandSupplier>(
+                    castedBrands,
+                    castedSuppliers,
+                    "BrandId", "SupplierId"
+                    );
+
+            var uniqueProductCountries = ConstructJunctionTable<ProductCountry>(
+                castedProducts,
+                 incomingData.Countries.Cast<INonJunctionEntity>().ToList(),
+                 "ProductId", "CountryId"
+                );
+            ////////
+            var uniqueProductManufacturers =
+                ConstructJunctionTable<ProductManufacturer>(
+                 castedProducts,
+                 incomingData.Manufacturers.Cast<INonJunctionEntity>().ToList(),
+                 "ProductId", "ManufacturerId"
+                );
+
+            ////
+            var uniqueProductBins = ConstructJunctionTable<ProductBin>(
+                castedProducts,
+                incomingData.Bins.Cast<INonJunctionEntity>().ToList(),
+                "ProductId", "BinId"
+            );
+            //////
+            var uniqueProductSuppliers =
+                ConstructJunctionTable<ProductSupplier>(
+                castedProducts,
+                castedSuppliers,
+                "ProductId", "SupplierId"
+            );
+
+            /////////
+            var uniqueProductBrands =
+                ConstructJunctionTable<ProductBrand>(
+                    castedProducts,
+                    castedBrands,
+                    "ProductId", "BrandId"
+                    );
+            ////
+            var uniqueProductCategories = ConstructJunctionTable<ProductCategory>(
+                castedProducts,
+                incomingData.Categories.Cast<INonJunctionEntity>().ToList(),
+                "ProductId", "CategoryId"
+                );
+            //////
+            var uniqueProductUnits = ConstructJunctionTable<ProductUnit>(
+                castedProducts,
+                incomingData.Units.Cast<INonJunctionEntity>().ToList(),
+                "ProductId", "UnitId"
+                );
+
+
+
+            #endregion
+
+            #region Auditing parent tables records
+            var actorId = _actorIdGetter.GetActorId();
+            AuditParentRecords(uniqueSuppliers, actorId);
+            AuditParentRecords(uniqueBrands, actorId);
+            AuditParentRecords(uniqueUnits, actorId);
+            AuditParentRecords(uniqueCategories, actorId);
+            AuditParentRecords(uniqueCountries, actorId);
+            AuditParentRecords(uniqueProducts, actorId);
+            AuditParentRecords(uniqueBins, actorId);
+            AuditParentRecords(uniqueManufacturers, actorId);
+            AuditParentRecords(uniqueSubCategories, actorId);
+            #endregion
+
+
+            #region Adding parents and childs to  the context.
+            await _context.AddRangeAsync(uniqueSuppliers); 
+            await _context.AddRangeAsync(uniqueBrands);
+            await _context.AddRangeAsync(uniqueUnits);
+            await _context.AddRangeAsync(uniqueCategories);
+            await _context.AddRangeAsync(uniqueCountries);
+            await _context.AddRangeAsync(uniqueProducts);
+            await _context.AddRangeAsync(uniqueBins);
+            await _context.AddRangeAsync(uniqueManufacturers);
+            await _context.AddRangeAsync(uniqueSubCategories);
+            await _context.AddRangeAsync(uniqueBrandSuppliers);
+            await _context.AddRangeAsync(uniqueProductCountries);
+            await _context.AddRangeAsync(uniqueProductManufacturers);
+            await _context.AddRangeAsync(uniqueProductBins);
+            await _context.AddRangeAsync(uniqueProductSuppliers);
+            await _context.AddRangeAsync(uniqueProductBrands);
+            await _context.AddRangeAsync(uniqueProductCategories);
+            await _context.AddRangeAsync(uniqueProductUnits);
+            #endregion
+
+            #endregion
+
+            #region Transaction
+            //https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-resilient-entity-framework-core-sql-connections
             IExecutionStrategy strategy = _context.Database.CreateExecutionStrategy();
             await strategy.ExecuteAsync(async () =>
             {
                 await using var transaction = await _context.Database.BeginTransactionAsync();
                 
-                #region Unit of work
+                #region Delete content from database then save new content.
 
-                await _context.Database.ExecuteSqlInterpolatedAsync($"EXECUTE uspDeleteAllDataFromDatabase");
-
-                await _context.AddRangeAsync(uniqueSuppliers);
-                await _context.AddRangeAsync(uniqueBrands);
-                await _context.AddRangeAsync(uniqueUnits);
-                await _context.AddRangeAsync(uniqueCategories);
-                await _context.AddRangeAsync(uniqueCountries);
-                await _context.AddRangeAsync(uniqueProducts);
-                await _context.AddRangeAsync(uniqueBins);
-                await _context.AddRangeAsync(uniqueManufacturers);
-
-                await _context.SaveChangesAsync();
-
-
-                #region  To be moved to `TwoListsOperations` service class.
-                PopulateIdProperty<Category>(incomingData.Categories, uniqueCategories.ToList());
-                PopulateIdProperty<Product>(incomingData.Products, uniqueProducts.ToList());
-                PopulateIdProperty<Bin>(incomingData.Bins, uniqueBins.ToList());
-                PopulateIdProperty<Brand>(incomingData.Brands, uniqueBrands.ToList());
-                PopulateIdProperty<Supplier>(incomingData.Suppliers, uniqueSuppliers.ToList());
-                PopulateIdProperty<Country>(incomingData.Countries, uniqueCountries.ToList());
-                PopulateIdProperty<Manufacturer>(incomingData.Manufacturers, uniqueManufacturers.ToList());
-                PopulateIdProperty<Unit>(incomingData.Units, uniqueUnits.ToList());
-                #endregion
-
-
-                #region Populating foregin key(s) for non-junction child(s)
-
-
-
-
-                var zip = incomingData.SubCategories.Zip(incomingData.Categories, (sc, c) => new { sc, c.EnglishName });
-                Dictionary<string, Category> categoriesLookup = uniqueCategories.ToDictionary(c => c.EnglishName, c => c);
-                foreach (var a in zip)
-                {
-                    a.sc.CategoryId = categoriesLookup[a.EnglishName].Id;
-
-                }
-
-                List<SubCategory> uniqueSubCategories = zip.Select(x => x.sc).DistinctBy(subCategory => new { subCategory.EnglishName }).ToList();
-
-                #endregion
-
-
-                #region Populating junction tables (a junction table contain two foreign keys)
-
-                var castedBrands = incomingData.Brands.Cast<INonJunctionEntity>().ToList();
-                var castedSuppliers = incomingData.Suppliers.Cast<INonJunctionEntity>().ToList();
-                var castedProducts = incomingData.Products.Cast<INonJunctionEntity>().ToList();
-
-
-
-                var uniqueBrandSuppliers =
-                    ConstructJunctionTable<BrandSupplier>(
-                        castedBrands,
-                        castedSuppliers,
-                        "BrandId", "SupplierId"
-                        );
-
-                var uniqueProductCountries = ConstructJunctionTable<ProductCountry>(
-                    castedProducts,
-                     incomingData.Countries.Cast<INonJunctionEntity>().ToList(),
-                     "ProductId", "CountryId"
-                    );
-                ////////
-                var uniqueProductManufacturers =
-                    ConstructJunctionTable<ProductManufacturer>(
-                     castedProducts,
-                     incomingData.Manufacturers.Cast<INonJunctionEntity>().ToList(),
-                     "ProductId", "ManufacturerId"
-                    );
-
-                ////
-                var uniqueProductBins = ConstructJunctionTable<ProductBin>(
-                    castedProducts,
-                    incomingData.Bins.Cast<INonJunctionEntity>().ToList(),
-                    "ProductId", "BinId"
-                );
-                //////
-                var uniqueProductSuppliers =
-                    ConstructJunctionTable<ProductSupplier>(
-                    castedProducts,
-                    castedSuppliers,
-                    "ProductId", "SupplierId"
-                );
-
-                /////////
-                var uniqueProductBrands =
-                    ConstructJunctionTable<ProductBrand>(
-                        castedProducts,
-                        castedBrands,
-                        "ProductId", "BrandId"
-                        );
-                ////
-                var uniqueProductCategories = ConstructJunctionTable<ProductCategory>(
-                    castedProducts,
-                    incomingData.Categories.Cast<INonJunctionEntity>().ToList(),
-                    "ProductId", "CategoryId"
-                    );
-                //////
-                var uniqueProductUnits = ConstructJunctionTable<ProductUnit>(
-                    castedProducts,
-                    incomingData.Units.Cast<INonJunctionEntity>().ToList(),
-                    "ProductId", "UnitId"
-                    );
-                #endregion
-
-
-                #region adding and saving childs to the context
-                await _context.AddRangeAsync(uniqueSubCategories);
-                await _context.AddRangeAsync(uniqueBrandSuppliers);
-                await _context.AddRangeAsync(uniqueProductCountries);
-                await _context.AddRangeAsync(uniqueProductManufacturers);
-                await _context.AddRangeAsync(uniqueProductBins);
-                await _context.AddRangeAsync(uniqueProductSuppliers);
-                await _context.AddRangeAsync(uniqueProductBrands);
-                await _context.AddRangeAsync(uniqueProductCategories);
-                await _context.AddRangeAsync(uniqueProductUnits);
-
+                await _context.Database.ExecuteSqlInterpolatedAsync($"EXECUTE  [dbo].[uspDeleteAllDataFromDatabase]");
                 await _context.SaveChangesAsync();
                 #endregion
-                #endregion
-                
+
                 await transaction.CommitAsync();
             });
 
@@ -300,11 +323,21 @@ namespace HardwareStore.Services.FacadeServices
 
             #endregion
         }
- 
+
         #endregion
 
-        #region local function
-        static void PopulateIdProperty<T>(List<T> objects, List<T> sourceOfTruth) where T : IHasEnglishAndArabicName, IHasIdentification
+        #region local functions
+        static void PopulateIdentityColumn<T>(List<T> objects) where T : IHasIdentification
+        {
+            int number = 1;
+            foreach (T obj in objects )
+            {
+                obj.Id = number;
+                number++;
+            }
+        }
+
+        static void LookupIdValues<T>(List<T> objects, List<T> sourceOfTruth) where T : IHasEnglishAndArabicName, IHasIdentification
         {
             var lookups = sourceOfTruth.ToDictionary(t => t.EnglishName, t => t);
             foreach (T obj in objects)
@@ -329,6 +362,18 @@ namespace HardwareStore.Services.FacadeServices
             }
             return result;
         }
+        static void AuditParentRecords<T>(List<T> objects, string actorId) where T:AuditableEntity,INonJunctionEntity
+        {
+            foreach (T obj in objects)
+            {
+                obj.CreatorId = actorId;
+                obj.UpdaterId = actorId;
+                var now = DateTime.Now;
+                obj.CreatedAt = now;
+                obj.UpdatedAt = now;
+            }
+        }
+        
         #endregion
     }
     public class WorkSheetToDbSyncronizer:ISourceToDistinationDataSyncronizer<Worksheet>

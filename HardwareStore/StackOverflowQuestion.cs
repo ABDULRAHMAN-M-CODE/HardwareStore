@@ -1,25 +1,54 @@
-﻿//using HardwareStore.Models;
-//using HardwareStore.SeedWork;
-//using Microsoft.AspNetCore.Http.HttpResults;
-//using Microsoft.AspNetCore.Mvc;
+﻿
 //using Microsoft.EntityFrameworkCore;
 //using Microsoft.EntityFrameworkCore.Storage;
 
 //namespace RedditQuestion
 //{
+//    /// <summary>
+//    /// Used to talk to the database using Entity-Framework Core
+//    /// </summary>
+//    public class ApplicationDbContext:DbContext
+//    {
+//        // Domain models and the Fluent API configurations.
+//    }
 
-//    IExecutionStrategy strategy = _context.Database.CreateExecutionStrategy();
-//    await strategy.ExecuteAsync(async () =>
+
+//    /// <summary>
+//    /// Data snapshot that is used to overwrite the content of the database
+//    /// </summary>
+//    public interface ISomeData
+//    {
+
+//    }
+
+//    public class DatbaseOverWriter
+//    {
+
+
+//        private readonly ApplicationDbContext _context;
+//        public DatbaseOverWriter(ApplicationDbContext context)
+//        {
+//            _context = context;
+//        }
+
+//        public async Task OverWrite(ISomeData data)
+//        {
+//            //https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-resilient-entity-framework-core-sql-connections
+//            IExecutionStrategy strategy = _context.Database.CreateExecutionStrategy();
+//            await strategy.ExecuteAsync(async () =>
 //            {
-//        await using var transaction = await _context.Database.BeginTransactionAsync();
+//                await using var transaction = await _context.Database.BeginTransactionAsync();
 
-//         // Delete all the content from the database
-//         // _context.AddRange(X);
-//         // _contextSaveChangesAsync()
-//         // _context.AddRange(Y)
-//         //_context.SaveChangesAsync()
+//                    //code to delete the database, saving data to the parents tables, and finally save child tables
 
-//        await transaction.CommitAsync();
-//    });
+//                await transaction.CommitAsync();
+//            });
+
+//        }
+
+
+
+
+//    }
 
 //}

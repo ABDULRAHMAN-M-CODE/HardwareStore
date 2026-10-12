@@ -93,10 +93,7 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Bin", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
@@ -140,10 +137,7 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Brand", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
@@ -202,10 +196,7 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Category", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
@@ -249,10 +240,7 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Country", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
@@ -296,10 +284,7 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Manufacturer", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
@@ -343,10 +328,7 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Product", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
@@ -515,10 +497,7 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.SubCategory", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
@@ -565,10 +544,7 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Supplier", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
@@ -612,10 +588,7 @@ namespace HardwareStore.Migrations
             modelBuilder.Entity("HardwareStore.Models.Unit", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ArabicName")
                         .HasColumnType("nvarchar(max)");
