@@ -4,7 +4,6 @@ using HardwareStore.Models;
 using HardwareStore.SeedWork;
 using HardwareStoreNameSpace;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 using Spire.Xls;
 using System.Reflection;
