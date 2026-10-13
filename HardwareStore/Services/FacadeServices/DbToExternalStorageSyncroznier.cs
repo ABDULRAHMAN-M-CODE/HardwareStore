@@ -3,6 +3,7 @@ using HardwareStore.DTOs;
 using HardwareStore.Models;
 using HardwareStore.SeedWork;
 using HardwareStoreNameSpace;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Spire.Xls;
@@ -279,23 +280,23 @@ namespace HardwareStore.Services.FacadeServices
 
 
             #region Adding parents and childs to  the context.
-            await _context.AddRangeAsync(uniqueSuppliers); 
-            await _context.AddRangeAsync(uniqueBrands);
-            await _context.AddRangeAsync(uniqueUnits);
-            await _context.AddRangeAsync(uniqueCategories);
-            await _context.AddRangeAsync(uniqueCountries);
-            await _context.AddRangeAsync(uniqueProducts);
-            await _context.AddRangeAsync(uniqueBins);
-            await _context.AddRangeAsync(uniqueManufacturers);
-            await _context.AddRangeAsync(uniqueSubCategories);
-            await _context.AddRangeAsync(uniqueBrandSuppliers);
-            await _context.AddRangeAsync(uniqueProductCountries);
-            await _context.AddRangeAsync(uniqueProductManufacturers);
-            await _context.AddRangeAsync(uniqueProductBins);
-            await _context.AddRangeAsync(uniqueProductSuppliers);
-            await _context.AddRangeAsync(uniqueProductBrands);
-            await _context.AddRangeAsync(uniqueProductCategories);
-            await _context.AddRangeAsync(uniqueProductUnits);
+            await _context.AddRangeAsync(uniqueSuppliers,cancellationToken); 
+            await _context.AddRangeAsync(uniqueBrands,cancellationToken);
+            await _context.AddRangeAsync(uniqueUnits,cancellationToken);
+            await _context.AddRangeAsync(uniqueCategories,cancellationToken);
+            await _context.AddRangeAsync(uniqueCountries,cancellationToken);
+            await _context.AddRangeAsync(uniqueProducts,cancellationToken);
+            await _context.AddRangeAsync(uniqueBins, cancellationToken);
+            await _context.AddRangeAsync(uniqueManufacturers, cancellationToken);
+            await _context.AddRangeAsync(uniqueSubCategories, cancellationToken);
+            await _context.AddRangeAsync(uniqueBrandSuppliers, cancellationToken);
+            await _context.AddRangeAsync(uniqueProductCountries, cancellationToken);
+            await _context.AddRangeAsync(uniqueProductManufacturers, cancellationToken);
+            await _context.AddRangeAsync(uniqueProductBins, cancellationToken);
+            await _context.AddRangeAsync(uniqueProductSuppliers, cancellationToken);
+            await _context.AddRangeAsync(uniqueProductBrands, cancellationToken);
+            await _context.AddRangeAsync(uniqueProductCategories, cancellationToken);
+            await _context.AddRangeAsync(uniqueProductUnits, cancellationToken);
             #endregion
 
             #endregion
@@ -321,7 +322,7 @@ namespace HardwareStore.Services.FacadeServices
 
                 return true;
             }
-            catch (OperationCanceledException e)
+            catch (OperationCanceledException e) 
             {
                 // exception will not be catched if the cancellation was requested and
                 // the transaction reached a point of no return.
@@ -331,14 +332,57 @@ namespace HardwareStore.Services.FacadeServices
                 Debug.WriteLine("###########################################################");
                 Debug.WriteLine("########## OPERATION CANCELLED SUCCESSFULLY ###############");
                 Debug.WriteLine("###########################################################");
-                Console.WriteLine("OperationCanceledException: "+e.Message);
+                Console.WriteLine("OperationCanceledException: "+e.Message);    
 
                 return false;
             }
+            // Source - https://stackoverflow.com/a/80009656
+            // Posted by JonasH, modified by community. See post 'Timeline' for change history
+            // Retrieved 2026-10-13, License - CC BY-SA 4.0
+            //catch (DbUpdateException due) when (cancellationToken.IsCancellationRequested)
+            //{
 
 
 
-         
+            //    Console.WriteLine("###########################################################");
+            //    Console.WriteLine("DbUpdateException was caught");
+            //    Console.WriteLine(due.Message);
+            //    Console.WriteLine(due.HResult);
+            //    Console.WriteLine("###########################################################");
+
+            //    return false;// indicates that the operation was cancelled, show a massege to the user telling him that.
+            //}
+
+            catch (DbUpdateException ex) when (cancellationToken.IsCancellationRequested)
+            {
+                   Console.WriteLine("###########################################################\n");
+                   Console.WriteLine("DbUpdateException was caught");
+                   Console.WriteLine("###########################################################\n");
+                // Check if the inner exception is a SqlException
+                if (ex.InnerException is SqlException sqlEx)
+                {
+                    int errorCode = sqlEx.Number;
+                    Console.WriteLine("###########################################################\n");
+                    Console.WriteLine("Inner exception is SqlException");
+                    Console.WriteLine($"errorCode is : {errorCode}");
+                    Console.WriteLine("###########################################################\n");
+                    
+
+
+                    if (errorCode == 3617)
+                    {
+                        Console.WriteLine("User cancelled the transaction");
+                        return false;
+                    }
+
+                }
+                Console.WriteLine("###########################################################");
+                Console.WriteLine("Rethrow error");
+                Console.WriteLine("###########################################################");
+
+                throw;
+            }
+
             #endregion
 
 
