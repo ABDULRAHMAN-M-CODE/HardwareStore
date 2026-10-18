@@ -1,4 +1,4 @@
-﻿namespace HardwareStore.SeedWork
+﻿namespace HardwareStore.Services.ActorIdGetterServices
 {
     public interface IActorIdGetter
     {

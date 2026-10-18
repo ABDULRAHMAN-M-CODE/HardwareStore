@@ -1,5 +1,4 @@
-﻿using HardwareStore.SeedWork;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
 namespace HardwareStore.Services.ActorIdGetterServices
 {

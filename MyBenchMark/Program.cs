@@ -1,27 +1,15 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
-using HardwareStore.DTOs;
-using HardwareStore.Services.AdminServices;
 using HardwareStore.Services.ExcelServices;
-using HardwareStoreNameSpace;
+using HardwareStore.Models;
 using Microsoft.EntityFrameworkCore;
 using Spire.Xls;
 
 namespace MyBenchmarks
 {
 
-    public class MyDbContextFactory : IDbContextFactory<ApplicationDbContext>
-    {
-        public ApplicationDbContext CreateDbContext()
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=Test");
 
-            return new ApplicationDbContext(optionsBuilder);// continue from here
-        }
-    }
     [MinColumn, MaxColumn]
     public class ReadWriteVersions
     {

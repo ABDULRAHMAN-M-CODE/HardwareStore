@@ -1,44 +1,35 @@
-﻿
+﻿using HardwareStore.Models;
+using HardwareStore.Services.AdminServices;
+using HardwareStore.Services.AdminServices.ImportProductsFromExcelFile;
+using HardwareStore.Services.UserAccountServices;
+using HardwareStore.ViewModel.AccountViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
 namespace HardwareStore.Controllers
     
 {
-    using HardwareStore.Models;
-    using HardwareStore.SeedWork;
-    using HardwareStore.Services;
-    using HardwareStore.Services.AdminServices;
-
-    using HardwareStore.Services.ExcelServices;
-    using HardwareStore.ViewModel.AccountViewModels;
-    using Microsoft.AspNetCore.Authorization;
-    using Microsoft.AspNetCore.Mvc;
-    using Spire.Xls;
 
 
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
 
-
-
-
         //Reddit question..
-        //private readonly IProductsImporter<IFormFile> _productsImporter;
-        private readonly ISourceToDistinationDataSyncronizer<Worksheet> _syncronizer;
+        private readonly ISourceToDistinationDataSyncronizer<Stream> _syncronizer;
 
         private readonly IAccount _account;
         private readonly IAdmin _admin;
         public AdminController(
 
-            //IProductsImporter<IFormFile> productsImporter,
-            ISourceToDistinationDataSyncronizer<Worksheet> syncronizer,
+            ISourceToDistinationDataSyncronizer<Stream> syncronizer,
             
             IAccount account, 
             IAdmin admin
             )
         {
 
-            _syncronizer = syncronizer;
-            //_productsImporter=productsImporter;
+            _syncronizer= syncronizer;
             _account = account;
             _admin=admin;
             
@@ -140,13 +131,13 @@ namespace HardwareStore.Controllers
         public  async Task<IActionResult> Import(IFormFile file,CancellationToken cancellationToken) 
         {
 
-            //Note 1 : `workSheet` cannot be registerd in the DI container; it is not a compile-time dependency, but a run-time dependency.
+            if (file.ContentType != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"){
+                return BadRequest();
+            }
 
-            //_productsImporter.ImportAsync(file, CancellationToken);
-            FormExcel excel = new FormExcel(file);
-            Worksheet workSheet = excel.GetSheet(1);
-            await _syncronizer.Syncronize(workSheet,cancellationToken); 
-            Console.WriteLine("hello world");
+            await _syncronizer.SyncronizeAsync(file.OpenReadStream(), cancellationToken);
+
+
             return Ok();
         
         }

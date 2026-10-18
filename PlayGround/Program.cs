@@ -1,77 +1,88 @@
-﻿using HardwareStore.SeedWork;
-using Sylvan.Data.Excel;
-using System.Data;
-using System.Reflection;
+﻿using Microsoft.Data.SqlClient;
 
-
-namespace PlayGround
+class Program
 {
-
-public class MyProduct
-{
-        public string? EnglishName { get; set; }
-        public string? Category { get; set; }
-}
-
-
-public class Experiment
-
-{
-
-    
-        public List<T> BindExcelDataToObjects<T>(List<string> propertiesNames, List<string> ExcelColumnsNames) where T :ICreator<T>
-    
-        {
-
-
-
-            // move the following two lines outside this method
-            string path1 = @"d:\Training\NETLEARNING\EF_learning\HardwareStore\Available_Products\Excel2.xlsx";
-            
-            using ExcelDataReader edr = ExcelDataReader.Create(path1);
-            //public abstract class ExcelDataReader : DbDataReader, which means that I can pass it to the SqlBulkCopy Class
-            // but that means the following logic should be removed from the application and moved to the server using sql
-
-            // Can the following code be performed on the server side using SQL?
-            PropertyInfo[] propertiesInfos= new PropertyInfo[propertiesNames.Count];
-            for (int i= 0;i<propertiesNames.Count ;i++)
-            {
-                propertiesInfos[i] = typeof(T).GetProperty(propertiesNames[i]);
-            }            
-            List<T> result = new List<T>();
-            while (edr.Read())
-              
-            {
-                T obj = T.Create();
-
-               foreach(var propertyInfo in propertiesInfos)
-                {
-                    
-                    propertyInfo.SetValue(obj, edr.GetFieldValue<string>(propertyInfo.Name));
-                }
-                
-            }
-
-            return  result ;
-
-
-        }
-
-}
-    class Program
+    static void Main()
     {
-        static void Main()
+        string connectionString = GetConnectionString();
+        // Open a sourceConnection to the AdventureWorks database.
+        using (SqlConnection sourceConnection =
+                   new SqlConnection(connectionString))
         {
- 
-            List<MyProduct> myProducts= new Experiment().BindExcelDataToObjects();
-            foreach (var p in myProducts)
-            {
-                Console.WriteLine(p.EnglishName+" "+p.Category);
-            }
+            sourceConnection.Open();
 
+            // Perform an initial count on the destination table.
+            SqlCommand commandRowCount = new SqlCommand(
+                "SELECT COUNT(*) FROM " +
+                "dbo.BulkCopyDemoMatchingColumns;",
+                sourceConnection);
+            long countStart = System.Convert.ToInt32(
+                commandRowCount.ExecuteScalar());
+            Console.WriteLine("Starting row count = {0}", countStart);
+
+            // Get data from the source table as a SqlDataReader.
+            SqlCommand commandSourceData = new SqlCommand(
+                "SELECT ProductID, Name, " +
+                "ProductNumber " +
+                "FROM Production.Product;", sourceConnection);
+            SqlDataReader reader =
+                commandSourceData.ExecuteReader();
+
+            // Open the destination connection. In the real world you would
+            // not use SqlBulkCopy to move data from one table to the other
+            // in the same database. This is for demonstration purposes only.
+            using (SqlConnection destinationConnection =
+                       new SqlConnection(connectionString))
+            {
+                destinationConnection.Open();
+
+                // Set up the bulk copy object.
+                // Note that the column positions in the source
+                // data reader match the column positions in
+                // the destination table so there is no need to
+                // map columns.
+                using (SqlBulkCopy bulkCopy =
+                           new SqlBulkCopy(destinationConnection))
+                {
+                    bulkCopy.DestinationTableName =
+                        "dbo.BulkCopyDemoMatchingColumns";
+
+                    try
+                    {
+                        // Write from the source to the destination.
+                        bulkCopy.WriteToServer(reader);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                    finally
+                    {
+                        // Close the SqlDataReader. The SqlBulkCopy
+                        // object is automatically closed at the end
+                        // of the using block.
+                        reader.Close();
+                    }
+                }
+
+                // Perform a final count on the destination
+                // table to see how many rows were added.
+                long countEnd = System.Convert.ToInt32(
+                    commandRowCount.ExecuteScalar());
+                Console.WriteLine("Ending row count = {0}", countEnd);
+                Console.WriteLine("{0} rows were added.", countEnd - countStart);
+                Console.WriteLine("Press Enter to finish.");
+                Console.ReadLine();
+            }
         }
     }
 
+    private static string GetConnectionString()
+    // To avoid storing the sourceConnection string in your code,
+    // you can retrieve it from a configuration file.
+    {
+        return "Data Source=(local); " +
+            " Integrated Security=true;" +
+            "Initial Catalog=AdventureWorks;";
+    }
 }
-
-

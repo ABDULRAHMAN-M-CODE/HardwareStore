@@ -1,22 +1,20 @@
-﻿using HardwareStore.SeedWork;
-using Spire.Xls;
+﻿using Spire.Xls;
 
 namespace HardwareStore.Services.ExcelServices
 {
-    public class FormExcel:IExcel
+    public class ExcelStream : IExcel
     {
-        private readonly  IFormFile _formFile;
-        public FormExcel(IFormFile formFile)
+        private readonly Stream _stream;
+        public ExcelStream(Stream stream)
         {
-            _formFile=formFile;
+            _stream = stream;
         }
         public Worksheet GetSheet(int sheetNumber)
         {
 
-            using var stream = _formFile.OpenReadStream();
             var w = new Workbook();
-            w.LoadFromStream(stream);
-            return  w.Worksheets[sheetNumber];
+            w.LoadFromStream(_stream);
+            return w.Worksheets[sheetNumber];
         }
     }
 }

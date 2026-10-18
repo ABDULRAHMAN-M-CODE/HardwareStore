@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.FileProviders;
 using Spire.Xls;
 
-namespace HardwareStore.SeedWork
+namespace HardwareStore.Services.ExcelServices
 {
     public interface IExcel
     {

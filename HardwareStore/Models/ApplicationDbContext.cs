@@ -1,13 +1,34 @@
 
-namespace HardwareStoreNameSpace
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+namespace HardwareStore.Models
 {
-    using HardwareStore.Models;
-    using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore;
 
+
+    public class PersistingInterceptor: SaveChangesInterceptor
+    {
+
+
+
+        /// <inheritdoc />
+        /// Note for my self: this metod cannot be markeed as `virtual`
+        public override Task SaveChangesCanceledAsync(DbContextEventData eventData, CancellationToken cancellationToken = default)
+        {
+
+            //ft.EntityFrameworkCore.Database.Command.CommandCancelled 20105 = Microso
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException(cancellationToken);
+
+            return Task.CompletedTask;
+        }
+            
+    }
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
+        private readonly PersistingInterceptor _persistingInterceptor=new PersistingInterceptor();
+
         #region Non-junction tables
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Brand> Brands{ get; set; }
@@ -35,6 +56,14 @@ namespace HardwareStoreNameSpace
         {
 
         }
+        //Source - https://stackoverflow.com/a/80009716
+        // Posted by Charlieface
+        // Retrieved 2026 - 10 - 14, License - CC BY-SA 4.0
+
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+           => optionsBuilder.AddInterceptors(_persistingInterceptor);
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
@@ -49,9 +78,8 @@ namespace HardwareStoreNameSpace
             
             #region Non junction tables configuration
             modelBuilder.Entity<Supplier>().HasKey(s => s.Id);
-            modelBuilder.Entity<Supplier>().Property(x => x.Id).ValueGeneratedNever();
-
-            modelBuilder.Entity<Supplier>().HasIndex(s => s.EnglishName).IsUnique();
+            modelBuilder.Entity<Supplier>().Property(x => x.Id).ValueGeneratedNever();            
+            modelBuilder.Entity<Supplier>().HasIndex(s => s.EnglishName).IsUnique();            
             modelBuilder.Entity<Supplier>()
                   .HasOne(s => s.Creator)
                 .WithMany(u => u.CreatedSuppliers)
@@ -97,7 +125,6 @@ namespace HardwareStoreNameSpace
             //Categories: 1 PK
             modelBuilder.Entity<Category>().HasKey(c => c.Id);
             modelBuilder.Entity<Category>().Property(x => x.Id).ValueGeneratedNever();
-
             modelBuilder.Entity<Category>().HasIndex(c => c.EnglishName).IsUnique();
             modelBuilder.Entity<Category>()
                   .HasOne(c => c.Creator)
@@ -137,8 +164,8 @@ namespace HardwareStoreNameSpace
 
             ////Products: 1 Identity PK,  and 3 FKs. 
             modelBuilder.Entity<Product>().HasKey(p => p.Id);
-            modelBuilder.Entity<Product>().Property(x => x.Id).ValueGeneratedNever();
-
+            modelBuilder.Entity<Product>().Property(p => p.Id).ValueGeneratedNever();
+            modelBuilder.Entity<Product>().HasIndex(p => p.EnglishName).IsUnique();
             modelBuilder.Entity<Product>()
                   .HasOne(p => p.Creator)
                 .WithMany(u => u.CreatedProducts)
@@ -156,13 +183,13 @@ namespace HardwareStoreNameSpace
             //SubCategories has one Idenitity-PK and  one FK
             modelBuilder.Entity<SubCategory>().HasKey(sc=> sc.Id);
             modelBuilder.Entity<SubCategory>().Property(x => x.Id).ValueGeneratedNever();
-
+            modelBuilder.Entity<SubCategory>().HasIndex(sc => sc.EnglishName).IsUnique();
             modelBuilder.Entity<SubCategory>()
             .HasOne(sc => sc.Category)
             .WithMany(c => c.SubCategories)
             .HasForeignKey(sc =>sc.CategoryId)
             .OnDelete(DeleteBehavior.NoAction); 
-            modelBuilder.Entity<SubCategory>().HasIndex(sc =>  new { sc.CategoryId, sc.EnglishName }).IsUnique();
+            
             modelBuilder.Entity<SubCategory>()
                   .HasOne(sc => sc.Creator)
                 .WithMany(u => u.CreatedSubCategories)
@@ -179,7 +206,6 @@ namespace HardwareStoreNameSpace
             // Countries has  Identity-PK, NO FK
             modelBuilder.Entity<Country>().HasKey(c => c.Id);
             modelBuilder.Entity<Country>().Property(x => x.Id).ValueGeneratedNever();
-
             modelBuilder.Entity<Country>().HasIndex(c => c.EnglishName).IsUnique();
             modelBuilder.Entity<Country>()
                   .HasOne(c => c.Creator)
@@ -197,7 +223,6 @@ namespace HardwareStoreNameSpace
             //Manufacturers: 1 PK, 3 FKs
             modelBuilder.Entity<Manufacturer>().HasKey(m => m.Id);
             modelBuilder.Entity<Manufacturer>().Property(x => x.Id).ValueGeneratedNever();
-
             modelBuilder.Entity<Manufacturer>().HasIndex(m => m.EnglishName).IsUnique();
             modelBuilder.Entity<Manufacturer>()
                   .HasOne(m => m.Creator)
@@ -218,7 +243,6 @@ namespace HardwareStoreNameSpace
             //Bins: 1 PK, 3 FKs
             modelBuilder.Entity<Bin>().HasKey(b => b.Id);
             modelBuilder.Entity<Bin>().Property(x => x.Id).ValueGeneratedNever();
-
             modelBuilder.Entity<Bin>().HasIndex(b => b.EnglishName).IsUnique();
             modelBuilder.Entity<Bin>()
                   .HasOne(b => b.Creator)

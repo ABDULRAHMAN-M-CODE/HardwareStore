@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using HardwareStore.Models;
 using HardwareStore.ViewModel.AccountViewModels;
-using Microsoft.Extensions.Options;
 
 
 namespace HardwareStore.Services.AdminServices

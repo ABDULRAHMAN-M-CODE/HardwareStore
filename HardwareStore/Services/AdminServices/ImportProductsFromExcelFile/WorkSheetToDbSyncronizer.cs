@@ -2,8 +2,8 @@
 using HardwareStore.DTOs;
 using HardwareStore.Models;
 using HardwareStore.SeedWork;
-using HardwareStoreNameSpace;
-using Microsoft.Data.SqlClient;
+using HardwareStore.Services.ActorIdGetterServices;
+using HardwareStore.Services.AdminServices.ImportProductsFromExcelFile;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Spire.Xls;
@@ -11,7 +11,7 @@ using System.Diagnostics;
 using System.Reflection;
 
 
-namespace HardwareStore.Services.FacadeServices
+namespace HardwareStore.Services
 {
     public class AllBusinessProductsReader
     {
@@ -32,7 +32,9 @@ namespace HardwareStore.Services.FacadeServices
                 ()=>ReadSpecificColumns<Supplier>( ["EnglishName"], ["Supplier"]),//Result[4]
 
                 //Result[5]
-                ()=>ReadSpecificColumns<Product>([ "SKU", "Barcode", "EnglishName", "ArabicName", "Description", "Status", "VAT", "Price", "MinStock", "ReorderQTY" ],[ "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT", "Price", "Min Stock", "Reorder Qty" ]),
+                ()=>ReadSpecificColumns<Product>(
+                 [ "SKU", "Barcode", "EnglishName", "ArabicName", "Description", "Status", "VAT", "Price", "MinStock", "ReorderQTY" ],
+                [ "SKU", "Barcode", "English Name", "Arabic Name", "Description", "Status", "VAT", "Price", "Min Stock", "Reorder Qty" ]),
 
                 ()=>ReadSpecificColumns<Bin>( ["EnglishName"], ["Bin"]),//Result[6]
 
@@ -52,7 +54,7 @@ namespace HardwareStore.Services.FacadeServices
             }
 
 
-            var result= await Task.WhenAll(tasks);
+            var result = await Task.WhenAll(tasks);
 
             return new NonJunctionModelsSnapShot
             {
@@ -140,9 +142,9 @@ namespace HardwareStore.Services.FacadeServices
         #endregion
 
         #region public methods
-        public async Task<bool> OverWrite(NonJunctionModelsSnapShot incomingData,CancellationToken cancellationToken)
+        public async Task OverWrite(NonJunctionModelsSnapShot incomingData, CancellationToken cancellationToken)
         {
-            
+
             #region All code
 
             #region deduplicate parents
@@ -167,7 +169,7 @@ namespace HardwareStore.Services.FacadeServices
             PopulateIdentityColumn(uniqueManufacturers);
 
             #endregion
-            
+
             #region code
             #region  Lookup operations
             LookupIdValues<Category>(incomingData.Categories, uniqueCategories.ToList());
@@ -280,12 +282,12 @@ namespace HardwareStore.Services.FacadeServices
 
 
             #region Adding parents and childs to  the context.
-            await _context.AddRangeAsync(uniqueSuppliers,cancellationToken); 
-            await _context.AddRangeAsync(uniqueBrands,cancellationToken);
-            await _context.AddRangeAsync(uniqueUnits,cancellationToken);
-            await _context.AddRangeAsync(uniqueCategories,cancellationToken);
-            await _context.AddRangeAsync(uniqueCountries,cancellationToken);
-            await _context.AddRangeAsync(uniqueProducts,cancellationToken);
+            await _context.AddRangeAsync(uniqueSuppliers, cancellationToken);
+            await _context.AddRangeAsync(uniqueBrands, cancellationToken);
+            await _context.AddRangeAsync(uniqueUnits, cancellationToken);
+            await _context.AddRangeAsync(uniqueCategories, cancellationToken);
+            await _context.AddRangeAsync(uniqueCountries, cancellationToken);
+            await _context.AddRangeAsync(uniqueProducts, cancellationToken);
             await _context.AddRangeAsync(uniqueBins, cancellationToken);
             await _context.AddRangeAsync(uniqueManufacturers, cancellationToken);
             await _context.AddRangeAsync(uniqueSubCategories, cancellationToken);
@@ -320,9 +322,8 @@ namespace HardwareStore.Services.FacadeServices
                     await transaction.CommitAsync(cancellationToken);
                 });
 
-                return true;
             }
-            catch (OperationCanceledException e) 
+            catch (OperationCanceledException e)
             {
                 // exception will not be catched if the cancellation was requested and
                 // the transaction reached a point of no return.
@@ -332,56 +333,14 @@ namespace HardwareStore.Services.FacadeServices
                 Debug.WriteLine("###########################################################");
                 Debug.WriteLine("########## OPERATION CANCELLED SUCCESSFULLY ###############");
                 Debug.WriteLine("###########################################################");
-                Console.WriteLine("OperationCanceledException: "+e.Message);    
+                Console.WriteLine("OperationCanceledException: " + e.Message);
 
-                return false;
+
             }
-            // Source - https://stackoverflow.com/a/80009656
-            // Posted by JonasH, modified by community. See post 'Timeline' for change history
-            // Retrieved 2026-10-13, License - CC BY-SA 4.0
-            //catch (DbUpdateException due) when (cancellationToken.IsCancellationRequested)
-            //{
 
 
 
-            //    Console.WriteLine("###########################################################");
-            //    Console.WriteLine("DbUpdateException was caught");
-            //    Console.WriteLine(due.Message);
-            //    Console.WriteLine(due.HResult);
-            //    Console.WriteLine("###########################################################");
 
-            //    return false;// indicates that the operation was cancelled, show a massege to the user telling him that.
-            //}
-
-            catch (DbUpdateException ex) when (cancellationToken.IsCancellationRequested)
-            {
-                   Console.WriteLine("###########################################################\n");
-                   Console.WriteLine("DbUpdateException was caught");
-                   Console.WriteLine("###########################################################\n");
-                // Check if the inner exception is a SqlException
-                if (ex.InnerException is SqlException sqlEx)
-                {
-                    int errorCode = sqlEx.Number;
-                    Console.WriteLine("###########################################################\n");
-                    Console.WriteLine("Inner exception is SqlException");
-                    Console.WriteLine($"errorCode is : {errorCode}");
-                    Console.WriteLine("###########################################################\n");
-                    
-
-
-                    if (errorCode == 3617)
-                    {
-                        Console.WriteLine("User cancelled the transaction");
-                        return false;
-                    }
-
-                }
-                Console.WriteLine("###########################################################");
-                Console.WriteLine("Rethrow error");
-                Console.WriteLine("###########################################################");
-
-                throw;
-            }
 
             #endregion
 
@@ -395,7 +354,7 @@ namespace HardwareStore.Services.FacadeServices
         static void PopulateIdentityColumn<T>(List<T> objects) where T : IHasIdentification
         {
             int number = 1;
-            foreach (T obj in objects )
+            foreach (T obj in objects)
             {
                 obj.Id = number;
                 number++;
@@ -427,7 +386,7 @@ namespace HardwareStore.Services.FacadeServices
             }
             return result;
         }
-        static void AuditParentRecords<T>(List<T> objects, string actorId) where T:AuditableEntity,INonJunctionEntity
+        static void AuditParentRecords<T>(List<T> objects, string actorId) where T : AuditableEntity, INonJunctionEntity
         {
             foreach (T obj in objects)
             {
@@ -438,22 +397,42 @@ namespace HardwareStore.Services.FacadeServices
                 obj.UpdatedAt = now;
             }
         }
-        
+
         #endregion
     }
-    public class WorkSheetToDbSyncronizer:ISourceToDistinationDataSyncronizer<Worksheet>
+
+    public class WorkSheetToDbSyncronizer : ISourceToDistinationDataSyncronizer<Stream>
     {
-        private readonly AllBusinessProductsReader _allDataReader; // depending on concrete class violates dependency inversion principle
-        private readonly DbOverWriter _overWriter;              // depending on concrete class violates dependency inversion principle
+
+        private readonly AllBusinessProductsReader _allDataReader;
+        private readonly DbOverWriter _overWriter;
+
         public WorkSheetToDbSyncronizer(AllBusinessProductsReader reader, DbOverWriter overWriter)
         {
             _allDataReader = reader;
             _overWriter = overWriter;
         }
-        public async Task Syncronize(Worksheet worksheet,CancellationToken cancellationToken)
+
+        public async Task SyncronizeAsync(Stream stream, CancellationToken cancellationToken)
         {
-            var allProducts=await _allDataReader.ReadAllData(worksheet);
-            await _overWriter.OverWrite(allProducts,cancellationToken);
+            var worksheet = GetWorkSheet(stream, 0);
+            await ReadProductsAndOverRideDatabase(worksheet, cancellationToken);
+
         }
+        static Worksheet GetWorkSheet(Stream stream, int sheetNumber)
+        {
+
+            var w = new Workbook();
+            w.LoadFromStream(stream);
+            return w.Worksheets[sheetNumber];
+
+        }
+        public async Task ReadProductsAndOverRideDatabase(Worksheet worksheet, CancellationToken cancellationToken)
+        {
+            NonJunctionModelsSnapShot allProducts = await _allDataReader.ReadAllData(worksheet);
+            await _overWriter.OverWrite(allProducts, cancellationToken);
+        }
+
     }
+
 }

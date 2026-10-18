@@ -2,6 +2,10 @@
 
 namespace HardwareStore.Migrations
 {
+    /// <summary>
+    /// This migration will not work because it was not generated using the following command 
+    /// `dotnet ef migrations add  DeleteDataFromAllTables`
+    /// </summary>
     public partial class DeleteDataFromAllTables:Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -28,6 +32,7 @@ namespace HardwareStore.Migrations
 
                 "--Deleting content of parent tables\r\n" +
                 "-- Deleting parent tables (tables that does not depend on any other table)\r\n" +
+                
                 "DELETE FROM Bins\r\n" +
 
                 "DELETE FROM Brands\r\n" +
