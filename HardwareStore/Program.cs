@@ -7,7 +7,6 @@ using HardwareStore.ViewModel.AccountViewModels;
 using HardwareStore.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using HardwareStore.Services.AdminServices.ImportProductsFromExcelFile;
 using HardwareStore.Services.UserAccountServices;
 
@@ -54,8 +53,13 @@ builder.Services.AddScoped<IAccount, UserAccount>();
 
 
 builder.Services.AddScoped<DbOverWriter>();
-builder.Services.AddScoped<AllBusinessProductsReader>(); 
-builder.Services.AddScoped<ISourceToDistinationDataSyncronizer<Stream>,WorkSheetToDbSyncronizer>();
+builder.Services.AddScoped<AllBusinessProductsReader>();
+builder.Services.AddScoped<ISourceToDistinationDataSyncronizer<Stream>, WorkSheetToDbSyncronizer>();
+
+
+builder.Services.AddScoped<DbDataReaderGetter>();
+builder.Services.AddScoped<BulkInserter>();
+builder.Services.AddScoped<ISourceToDistinationDataSyncronizer<Stream>,WorkSheetToDbSyncronizerV2>();
 
 
 

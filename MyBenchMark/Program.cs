@@ -1,39 +1,77 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Running;
-using HardwareStore.Services.ExcelServices;
 using HardwareStore.Models;
+using HardwareStore.Services.ActorIdGetterServices;
+using HardwareStore.Services.AdminServices.ImportProductsFromExcelFile;
 using Microsoft.EntityFrameworkCore;
-using Spire.Xls;
+using Microsoft.Extensions.Configuration;
+using BenchmarkDotNet.Loggers;
 
-namespace MyBenchmarks
+namespace MyBenchMark
 {
-
-
-    [MinColumn, MaxColumn]
-    public class ReadWriteVersions
+    [Config(typeof(Config))]
+    public class Config : ManualConfig
     {
-
-        private readonly DiskExcel _excel = new(@"D:\Training\Excel2.xlsx");
-        private readonly ReadExcelWriteDatabase _readerWriter;
-
-        public ReadWriteVersions()
+        public Config()
         {
 
-            _readerWriter = new ReadExcelWriteDatabase();
+            AddExporter(RPlotExporter.Default);
 
+            AddLogger(ConsoleLogger.Default);
         }
-
-        public IEnumerable<object> GetSheet()
+    }
+    public class ActorIdGetter:IActorIdGetter
+    {
+        public string GetActorId()
         {
-            yield return _excel.GetSheet(1);
+            return "a1f28e89-2ba1-493e-b005-744decdd78b3";
         }
+    }
+    [MinColumn, MaxColumn]
+    public class SyncronizationService
+    {       
+        private readonly DbDataReaderGetter _dbDataReaderGetter=new DbDataReaderGetter();
+        private readonly BulkInserter _bulkInserter=new BulkInserter();
+        private readonly IActorIdGetter _actorIdGetter=new ActorIdGetter();
+        private readonly ApplicationDbContext _context;
+        private readonly WorkSheetToDbSyncronizerV2 _syncronizerV2;
+
+
+       
+        public SyncronizationService()
+        {
+
+            IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(Path.GetFullPath(
+                    @"D:\Training\NETLEARNING\EF_learning\HardwareStore"))
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            string connectionString =
+                configuration.GetConnectionString("HardwareDB")
+                ?? throw new InvalidOperationException(
+                    "Connection string 'HardwareDB' was not found.");
+
+            var contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
+    .UseSqlServer(connectionString)
+    .Options;
+
+            _context = new ApplicationDbContext(contextOptions);
+
+
+            _syncronizerV2=new WorkSheetToDbSyncronizerV2(_dbDataReaderGetter, _bulkInserter,_actorIdGetter,_context);
+        }
+
+
 
         [Benchmark(Baseline =true)]
-        [ArgumentsSource(nameof(GetSheet))]
-        public async Task ReadWriteWith_CSharp(Worksheet sheet)
+        public async Task SyncronizeV2()
         {
-              await _readerWriter.ReadWrite(sheet);
+            await using var stream = File.OpenRead(
+               @"D:\Training\NETLEARNING\EF_learning\HardwareStore\Available_Products\Excel2.xlsx");
+            await _syncronizerV2.SyncronizeAsync(stream);
         }
 
     }
@@ -42,11 +80,10 @@ namespace MyBenchmarks
     {
         public static void Main(string[] args)
         {
-            // Don't use the Switcher, refer to the documentation and use other varient..
-            var summary = BenchmarkSwitcher
-                .FromAssembly(typeof(Program).Assembly)
-                .Run(args, new DebugInProcessConfig());    
             
+
+            var summary = BenchmarkRunner.Run<SyncronizationService>(new Config());
+
 
 
         }

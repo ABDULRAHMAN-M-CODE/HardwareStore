@@ -1,5 +1,7 @@
-﻿using HardwareStore.Services.ActorIdGetterServices;
+﻿using HardwareStore.Models;
+using HardwareStore.Services.ActorIdGetterServices;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Sylvan.Data.Excel;
 using System.Data.Common;
 namespace HardwareStore.Services.AdminServices.ImportProductsFromExcelFile
@@ -12,13 +14,13 @@ namespace HardwareStore.Services.AdminServices.ImportProductsFromExcelFile
         }
     }
 
+   
+    /// <summary>
+    /// Transfers data from excel file to a staging table
+    /// </summary>
     public class BulkInserter
     {
-        private readonly IActorIdGetter _actorIdGetter;
-        public BulkInserter(IActorIdGetter actorIdGetter)
-        {
-            _actorIdGetter = actorIdGetter;
-        }
+        
         public async Task BulkInsertProductsToStagingTable(DbDataReader dbDataReader, CancellationToken cancellationToken)
         {
             using (SqlConnection destinationConnection =
@@ -35,16 +37,25 @@ namespace HardwareStore.Services.AdminServices.ImportProductsFromExcelFile
                            new SqlBulkCopy(destinationConnection))
                 {
                     bulkCopy.DestinationTableName =
-                        "dbo.StagingProducts";
+                        "dbo.BulkInsertedProducts";
 
                     try
                     {
-                        // Write from the source to the destination.
+                        
                         await bulkCopy.WriteToServerAsync(dbDataReader,cancellationToken);
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message);
+                        Console.WriteLine("########################################################");
+                        Console.WriteLine("###############"+ex.Message+"###########################");
+                        Console.WriteLine("############### RETHROWING THE EXCEPTION ###############");
+                        Console.WriteLine("############### EXCEPTION Happened inside BulkInsert" +
+                            "ProductsToStagingTable" +
+                            " method ##############################################################");
+
+                       
+                        
+                        throw ;
                     }
                     finally
                     {
@@ -54,45 +65,72 @@ namespace HardwareStore.Services.AdminServices.ImportProductsFromExcelFile
                         await dbDataReader.CloseAsync();
                     }
                 }
-
-                //####The following does not work yet.#####
-                //// Perform a final count on the destination
-                //// table to see how many rows were added.
-                //long countEnd = System.Convert.ToInt32(
-                //    commandRowCount.ExecuteScalar());
-                //Console.WriteLine("Ending row count = {0}", countEnd);
-                //Console.WriteLine("{0} rows were added.", countEnd - countStart);
-                //Console.WriteLine("Press Enter to finish.");
-                //Console.ReadLine();
             }
         }
 
     }
 
-
+    /// <summary>
+    /// Ensures that the data in the database matches the data inside an Excel worksheet.
+    /// </summary>
     public class WorkSheetToDbSyncronizerV2 : ISourceToDistinationDataSyncronizer<Stream>
     {
 
         private readonly DbDataReaderGetter _dbDataReaderGetter;
         private readonly BulkInserter _bulkInserter;
+        private readonly ApplicationDbContext _context;
+        private readonly IActorIdGetter _actorIdGetter;
 
-        public WorkSheetToDbSyncronizerV2(DbDataReaderGetter dbDataReaderGetter, BulkInserter bulkInserter)
+
+        public WorkSheetToDbSyncronizerV2(DbDataReaderGetter dbDataReaderGetter, BulkInserter bulkInserter, IActorIdGetter actorIdGetter, ApplicationDbContext context)
         {
             _dbDataReaderGetter = dbDataReaderGetter;
             _bulkInserter = bulkInserter;
+            _actorIdGetter = actorIdGetter;
+            _context = context;
+
         }
 
-        public async Task SyncronizeAsync(Stream stream, CancellationToken cancellationToken)
+        public async Task SyncronizeAsync(Stream stream, CancellationToken cancellationToken=default)
         {
-            DbDataReader reader =await _dbDataReaderGetter.GetDbDataReader(stream, cancellationToken);
-            await _bulkInserter.BulkInsertProductsToStagingTable(reader,cancellationToken);
-            // Now call a stored procedure  that internelly selects data from the staging table
-            //to populate all the parents then child tables
+
+
+  
+
+            using var connection = new SqlConnection(_context.Database.GetConnectionString());
+            await connection.OpenAsync(cancellationToken);
+
+            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                DbDataReader reader = await _dbDataReaderGetter.GetDbDataReader(stream, cancellationToken);
+                await _context.Database.ExecuteSqlInterpolatedAsync($" DELETE FROM  BulkInsertedProducts", cancellationToken);
+                await _bulkInserter.BulkInsertProductsToStagingTable(reader, cancellationToken);
+                await _context.Database.ExecuteSqlInterpolatedAsync($" EXECUTE OverWriteDatabaseData {_actorIdGetter.GetActorId()}", cancellationToken);
+
+                // Commit transaction if all commands succeed, transaction will auto-rollback
+                // when disposed if either commands fails
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException ex)
+            {
+                Console.WriteLine("########################################################");
+                Console.WriteLine("############### Operation cancelled ###########################");
+                Console.WriteLine("###############" + ex.Message + "###########################");
+                Console.WriteLine("############### EXCEPTION Happened inside SyncronizeAsync method, specifically in the second catch block ");
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                Console.WriteLine("########################################################");
+                Console.WriteLine("############### `SqlException` was thrown instead of `OperationCancelledException` ###########################");
+                Console.WriteLine("###############" + ex.Message + "###########################");
+                Console.WriteLine("############### EXCEPTION Happened inside SyncronizeAsync method, specifically in the second catch block. ");
+
+
+            }
+
 
         }
-
-
-
 
     }
 
