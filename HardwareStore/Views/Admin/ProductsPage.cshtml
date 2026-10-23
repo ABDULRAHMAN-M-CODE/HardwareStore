@@ -1,24 +1,18 @@
-﻿@* // Source - https://stackoverflow.com/a/23369494
-// Posted by Max
-// Retrieved 2026-10-22, License - CC BY-SA 3.0 *@
-
-
-
-
-@{
+﻿@{
     ViewData["Title"] = "Products page";
 }
-<h1>Products Page</h1>
-<label for="avatar">Choose a file:</label>
 
-<input class="form-control form-control-lg" id="formFileLg" type="file" accept=".xlsx" />
-<div class="container" id="cancelContainer">
+    <h1>Products Page</h1>
+    <label for="avatar">Choose a file:</label>
 
-</div>
+    <input class="form-control form-control-lg" id="formFileLg" type="file" accept=".xlsx" />
+    <div class="container" id="cancelContainer">
+    </div>
 
-<div   class="d-grid gap-3" id="productsContainer">
+    <div class="d-grid gap-3" id="productsContainer"></div>
+    <dialog id="dialog">
+        <p>Products were imported into the database.</p>
+        <button type="button" id="close">Close</button>
+    </dialog>
 
- 
-</div>
-
-<script src="~/js/site.js"></script>
+<script src="~/js/app.js"></script>
