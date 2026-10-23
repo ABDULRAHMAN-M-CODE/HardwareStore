@@ -1,5 +1,5 @@
 ﻿using HardwareStore.Models;
-using HardwareStore.Services;
+using HardwareStore.Services.UserAccountServices;
 using HardwareStore.ViewModel.AccountViewModels;
 using Microsoft.AspNetCore.Identity;
 

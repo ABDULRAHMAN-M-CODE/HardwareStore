@@ -2,4 +2,5 @@
   <Folder Name="/Solution Items/" />
   <Project Path="HardwareStore/HardwareStore.csproj" />
   <Project Path="MyBenchMark/MyBenchMark.csproj" Id="65252435-e55e-4c3e-8d1f-4daa97832a8b" />
+  <Project Path="PlayGround/PlayGround.csproj" Id="61c9e649-e2e6-4a37-9799-5389c0081dcf" />
 </Solution>

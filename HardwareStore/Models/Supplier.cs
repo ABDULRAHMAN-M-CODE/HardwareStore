@@ -10,10 +10,10 @@ namespace HardwareStore.Models
             return new Supplier();
         }
         public string? ArabicName { get; set; }
-        
 
+        public IEnumerable<BrandSupplier> BrandSuppliers { get; } = new List<BrandSupplier>();
         public IEnumerable<ProductSupplier> ProductSuppliers { get; } = new List<ProductSupplier>();
-        public IEnumerable<BrandSupplier>BrandSuppliers { get; } = new List<BrandSupplier>(); // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
+         // documentation link : https://learn.microsoft.com/en-us/ef/core/modeling/relationships/navigations
 
         public ApplicationUser Creator { get; set; } = null!;
         public ApplicationUser Deleter { get; set; } = null!;
