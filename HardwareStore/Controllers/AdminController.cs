@@ -1,16 +1,24 @@
 ﻿using HardwareStore.Models;
 using HardwareStore.Services.AdminServices;
 using HardwareStore.Services.AdminServices.ImportProductsFromExcelFile;
+using HardwareStore.Services.ProductsRepositoryServices;
 using HardwareStore.Services.UserAccountServices;
+using HardwareStore.ViewModel;
 using HardwareStore.ViewModel.AccountViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 
 namespace HardwareStore.Controllers
     
 {
 
+    public class GetProductsPayload
+    {
 
+        public int PageNumber { get; set; }
+
+    }
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
@@ -20,20 +28,22 @@ namespace HardwareStore.Controllers
 
         private readonly IAccount _account;
         private readonly IAdmin _admin;
+        private readonly IProductsRepository _productsRepository;
         public AdminController(
 
             ISourceToDistinationDataSyncronizer<Stream> syncronizer,
             
             IAccount account, 
-            IAdmin admin
+            IAdmin admin,
+            IProductsRepository productsRepository
             )
         {
 
             _syncronizer= syncronizer;
             _account = account;
             _admin=admin;
-            
-            
+
+            _productsRepository = productsRepository;
         }
 
         public async Task<IActionResult> AdminPanel(AdminViewModel options)
@@ -54,14 +64,10 @@ namespace HardwareStore.Controllers
             return View(options);
         }
  
-        /// <summary>
-        /// Identifies the user that his information will be edited, then returns the user. 
-        /// </summary>
-        /// <param name="id">The unique identifier of the user, mapped automatically from the URL route or query string via Model Binding.</param>
-        /// <returns>An asynchronous task that renders the user edit view.</returns>
+
         public async Task<IActionResult> EditUser(string Id)
         {
-            //Task<User?> GetUserForEdit(string id);
+
             User? user = await _account.GetUserForEdit(Id);
 
 
@@ -142,6 +148,19 @@ namespace HardwareStore.Controllers
         
         }
 
+
+
+        [HttpPost]
+        [Route("Admin/GetProducts")]
+        public async Task<IActionResult> GetProducts( [FromBody] GetProductsPayload payload)
+        {
+
+
+            IQueryable<Product> allProducts=_productsRepository.GetAll();
+            IEnumerable<ProductViewModel> result=_admin.GetSpecificPageProducts(allProducts,PageNumber:payload.PageNumber);//PageNumber should be 5, but it's zero.
+            return Ok(result);
+
+        }
         public IActionResult ImportResult()
         {
 

@@ -4,7 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - EF_learning</title>
-    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@6.0.0-alpha.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-B/GM4XqrwHnWXNOWMbloTmrYXZg10cakYGmpfsR/bbzQ6JAJI4ihuyADKLnBgrCe" crossorigin="anonymous">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/bootstrap@6.0.0-alpha.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-1a/pXj49ZQ1aHEmrJ+gMw1otqoVsYwlEnlD8mIfY2TV03r20Y0CN7uqx1tQogjPL" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
    
@@ -35,7 +36,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.js"></script>@*CDN*@
     
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> @*needed for bootstrap to work*@
-    @*<script src="~/js/site.js" asp-append-version="true"></script>*@ @* My JavaScript code, currently empty because I do not need JavaScript for Login and Signup*@
+   
     @await RenderSectionAsync("Scripts", required: false)  @*This is needed because I defined sections inside the cshtml files*@
     @*
         For example, I have the following inside the Login.cshtml file:
