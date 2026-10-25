@@ -84,9 +84,9 @@ namespace HardwareStore.AtStartup
                     Password = password,
                     ConfirmPassword = password
                 };
-                bool success =  await _account.RegisterUser(model);
+                RegistrationResult result =  await _account.RegisterUser(model);
 
-                if  (success)
+                if  (result.IsSucceeded)
                 {
                     //here we tie the  user to the role
                     var createdUser= await _userManager.FindByEmailAsync(email);

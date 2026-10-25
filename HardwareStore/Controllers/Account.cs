@@ -1,82 +1,49 @@
 using HardwareStore.Services.UserAccountServices;
 using HardwareStore.ViewModel.AccountViewModels;
-
 using Microsoft.AspNetCore.Mvc;
 
 namespace HardwareStore.Controllers
 {
 
 
-    public class AccountController : Controller
+
+    public class AccountController(IAccount _account) : Controller
     {
-        private readonly IAccount _account;
-             
-
-        public AccountController( IAccount account)
-            {
-                
-                _account=account;
-           }
-            
-        
-        public IActionResult Home()
-            {
-                return View();
-            }
-
-
-
-        // the following 4 Action methods are related to Signup.
-            
+        #region Signup actions        
         public IActionResult Register()
-            {
-
-                // the view should get empty model, the model's fields will be populated by the user using a form.
-                return View(new SignupViewModel());
-
-            }
-
         
+        {
+            RegistrationViewModel viewModel= new RegistrationViewModel();
+            viewModel.signupViewModel=new SignupViewModel();
+
+            viewModel.registrationResult = System.Text.Json.JsonSerializer.Deserialize<RegistrationResult>(
+    TempData["RegistrationResult"]?.ToString() ?? "{}");
+
             
-        public async Task<IActionResult> RegisterAlgorithm(SignupViewModel signupInput)
-            {
+            return View(viewModel);
 
-            // JUSTIFICATION : why I used Asyncrouns programming instead of Syncrouns Programming:
-            /*
-                I treated creating the user as a task, I can create many users at the same time without the need to make this a sequential process.
-
-                When the compiler reaches the line 81, because there is await, the enclosing action method will be suspended - yields control to the caller-.
-
-                The Thread is free to do other work; handling new request, this enhances performance.
-
-             */
-
-                
-                bool success =  await _account.RegisterUser(signupInput); // line 81. next lines of code will not be executed unless this line complete it's work, but the thread will be able to handle new request
-                  
-                // the following 'if-statement' is not considered 'business logic'; it's just a 'presentational (UI) logic', I'm deciding which UI should be rendered based on the result of the 'bussines logic'.
-                // so the following if statement should not be inside the Services Folder, it should be inside the Action Method in the controller.
-                 if (success)
-                    {
-                        return RedirectToAction("SignupSuccessful");
-                    }
-                    return RedirectToAction("SignupError"); 
         }
+                 
+        public async Task<IActionResult> RegisterAlgorithm([Bind(Prefix = "signupViewModel")] SignupViewModel signupInput)
             
-            
-        public IActionResult SignupError()
-            {
-                return View();
+        {   
+            RegistrationResult result =  await _account.RegisterUser(signupInput); 
+            if (result.IsSucceeded)
+            {                        
+                return RedirectToAction("SignupSuccessful");                    
             }
-            
-        public IActionResult SignupSuccessful()
-            {
-                return View();
-            }
+            TempData["RegistrationResult"] = System.Text.Json.JsonSerializer.Serialize(result);
+            return RedirectToAction("Register");         
+        }
+                  
+        public IActionResult SignupSuccessful()            
+        {              
+            return View();            
+        }
 
+        #endregion
 
-
-        // The following 5 action methods are related to Login
+        #region Login methods
         [HttpGet]    
         public IActionResult Login()
             {
@@ -126,21 +93,26 @@ namespace HardwareStore.Controllers
             }
             else
             {
-                // use the tempData to show a modal that says "Logout was not successful"
+
                 return RedirectToAction("AdminPanel","Admin");
             }
                 
         }
 
+        #endregion
 
+        public IActionResult Home()
+        {
 
+            return View();
 
+        }
 
 
 
     }
 
-   
+
 }
 
 

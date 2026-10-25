@@ -14,7 +14,7 @@
     <mini-profiler />
     <div class="container">
         <main role="main" class="pb-3">
-            @RenderBody() @*What is Rendered here is a specific view content, not the shared content*@
+            @RenderBody() 
             
         </main>
     </div>
@@ -23,7 +23,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.js"></script> @*CDN*@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.js"></script>@*CDN*@
-    @await RenderSectionAsync("Scripts", required: false)  @*This is needed because I defined sections inside the cshtml files*@
+    @await RenderSectionAsync("Scripts", required: false) 
     @*
        
     *@

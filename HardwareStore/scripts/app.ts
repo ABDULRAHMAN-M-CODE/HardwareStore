@@ -1,7 +1,5 @@
 ﻿let dialog: HTMLDialogElement;
 window.onload = () => {
-    console.log("URL:", window.location.href);
-    console.log("Element:", document.getElementById("formFileLg"));
     const formFileLg = document.getElementById("formFileLg");
     formFileLg!.addEventListener("change", importFile);
     dialog = <HTMLDialogElement>document.getElementById("dialog");

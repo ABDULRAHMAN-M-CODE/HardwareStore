@@ -1,5 +1,4 @@
-﻿
-@model SignupViewModel
+﻿@model RegistrationViewModel
 @{
     ViewData["Title"]="Create New Account";
 }
@@ -12,29 +11,46 @@
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Name" class="form-control"  aria-required="true" placeholder="Qutiba" type="text" />
-                <label asp-for="Name"></label>
-                <span asp-validation-for="Name" class="text-danger"></span>
+                <input asp-for="@Model.signupViewModel.Name" class="form-control"  aria-required="true" placeholder="Qutiba" type="text" />
+                <label asp-for="@Model.signupViewModel.Name"></label>
+                <span asp-validation-for="@Model.signupViewModel.Name" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="EmailOrPhoneNumber" class="form-control"  aria-required="true" placeholder="name@example.com" type="text" />
-                <label asp-for="EmailOrPhoneNumber">Email or phone number</label>
-                <span asp-validation-for="EmailOrPhoneNumber" class="text-danger"></span>
+                <input asp-for="@Model.signupViewModel.EmailOrPhoneNumber" class="form-control"  aria-required="true" placeholder="name@example.com" type="text" />
+                <label asp-for="@Model.signupViewModel.EmailOrPhoneNumber">Email or phone number</label>
+                <span asp-validation-for="@Model.signupViewModel.EmailOrPhoneNumber" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Password">Password</label>
-                <span asp-validation-for="Password" class="text-danger"></span>
+                <input asp-for="@Model.signupViewModel.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="@Model.signupViewModel.Password">Password</label>
+                <span asp-validation-for="@Model.signupViewModel.Password" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="ConfirmPassword">Confirm Password</label>
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                <input asp-for="@Model.signupViewModel.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="@Model.signupViewModel.ConfirmPassword">Confirm Password</label>
+                <span asp-validation-for="@Model.signupViewModel.ConfirmPassword" class="text-danger"></span>
             </div>
             <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </form>
+        @if ((Model.registrationResult != null) && (!Model.registrationResult.IsSucceeded))
+        {
+            <div class="container" id="registrationErrors">
+                @if ((Model.registrationResult.Errors != null) && (Model.registrationResult.Errors.Count > 0))
+                    @foreach (string errorMsg in Model.registrationResult.Errors)
+
+                    {
+
+                        //PROBLEM 1000000: Whenever the user starts typing, the error messages should disappear, how to do it? 
+                        <p>@errorMsg</p>
+
+                    }
+
+            </div>
+        }
     </div>
+<script src="~/js/Register.js" ></script>
 </body>
+
 
 @*The following is necessary for Client-side validation, it's for better user experience, it's not security, I should always implement server-side validation because user can simply disable javascript in his browser*@
 @* Client-side validation prevents submission until the form is valid. The Submit button runs JavaScript that either submits the form or displays error messages.,*@

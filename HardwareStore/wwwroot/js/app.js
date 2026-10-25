@@ -10,8 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 let dialog;
 window.onload = () => {
-    console.log("URL:", window.location.href);
-    console.log("Element:", document.getElementById("formFileLg"));
     const formFileLg = document.getElementById("formFileLg");
     formFileLg.addEventListener("change", importFile);
     dialog = document.getElementById("dialog");

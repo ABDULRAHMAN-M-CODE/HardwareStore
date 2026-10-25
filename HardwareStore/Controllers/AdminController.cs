@@ -61,6 +61,7 @@ namespace HardwareStore.Controllers
             //Note : the following line of code cannot be moved to a service. because I used TempData
             options.DeletionSucceed = TempData["UserDeletionSucceed"] as bool? ?? false; 
              
+ 
             return View(options);
         }
  
