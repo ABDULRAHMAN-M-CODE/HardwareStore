@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="scripts\app.ts" />
+    <None Remove="scripts\hideShowProductsButton.ts" />
     <None Remove="scripts\Register.ts" />
   </ItemGroup>
 
@@ -56,7 +56,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TypeScriptCompile Include="scripts\app.ts" />
+    <TypeScriptCompile Include="scripts\hideShowProductsButton.ts" />
+    <TypeScriptCompile Include="scripts\isThereProductsInDb.ts" />
+    <TypeScriptCompile Include="scripts\importProductsFromExcelFile.ts" />
     <TypeScriptCompile Include="scripts\Register.ts" />
   </ItemGroup>
 

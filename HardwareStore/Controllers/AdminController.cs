@@ -7,23 +7,19 @@ using HardwareStore.ViewModel;
 using HardwareStore.ViewModel.AccountViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 
 namespace HardwareStore.Controllers
     
 {
 
-    public class GetProductsPayload
-    {
 
-        public int PageNumber { get; set; }
-
-    }
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
 
-        //Reddit question..
+        
         private readonly ISourceToDistinationDataSyncronizer<Stream> _syncronizer;
 
         private readonly IAccount _account;
@@ -129,7 +125,16 @@ namespace HardwareStore.Controllers
         public IActionResult ProductsPage()
         {
 
-            return View();
+            
+
+            List<ProductsToView> products = System.Text.Json.JsonSerializer.Deserialize<List<ProductsToView>>(TempData["Products "]?.ToString() ?? "[]");
+            int pageNumber= System.Text.Json.JsonSerializer.Deserialize<int>(TempData["pageNumber"]?.ToString() ?? "1");
+            int totalNumberOfProducts = System.Text.Json.JsonSerializer.Deserialize<int>(TempData["TotalNumberOfProducts"]?.ToString() ?? "0");
+            var model = new ProductsPageViewModel();
+            model.SpecificPageProducts = products;
+            model.PageNumber = pageNumber;
+            model.TotalNumberOfProducts = totalNumberOfProducts;
+            return View(model);
         }
 
 
@@ -151,15 +156,20 @@ namespace HardwareStore.Controllers
 
 
 
-        [HttpPost]
-        [Route("Admin/GetProducts")]
-        public async Task<IActionResult> GetProducts( [FromBody] GetProductsPayload payload)
+
+        public async Task<IActionResult> GetProductsPageViewModel(int PageNumber)
         {
 
-
+            
             IQueryable<Product> allProducts=_productsRepository.GetAll();
-            IEnumerable<ProductViewModel> result=_admin.GetSpecificPageProducts(allProducts,PageNumber:payload.PageNumber);//PageNumber should be 5, but it's zero.
-            return Ok(result);
+            int totalNumberOfProducts=allProducts.Count();
+            List <ProductsToView> products=_admin.GetSpecificPageProducts(allProducts,PageNumber:PageNumber);
+
+            TempData["Products "] = System.Text.Json.JsonSerializer.Serialize(products);
+            TempData["PageNumber"] = System.Text.Json.JsonSerializer.Serialize(PageNumber);
+            TempData["TotalNumberOfProducts"] = System.Text.Json.JsonSerializer.Serialize(totalNumberOfProducts);
+
+            return RedirectToAction("ProductsPage","Admin"); // The debugger reached this line, Very good !
 
         }
         public IActionResult ImportResult()
@@ -171,6 +181,15 @@ namespace HardwareStore.Controllers
         public IActionResult ImportError()
         {
             return View();
+        }
+
+
+        public async Task<bool> IsThereProductsInDb()
+        {
+
+            var result= await _productsRepository.IsThereProductsInDb();
+            return result;
+
         }
 
     }

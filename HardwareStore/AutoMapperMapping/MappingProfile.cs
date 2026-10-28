@@ -20,7 +20,7 @@
             .ForMember(dest => dest.EmailOrPhoneNumber, opt => opt.MapFrom(src => src.Email ?? src.PhoneNumber))
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.UserName));
 
-            CreateMap<Product, ProductViewModel>()
+            CreateMap<Product, ProductsToView>()
 
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.EnglishName))
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))

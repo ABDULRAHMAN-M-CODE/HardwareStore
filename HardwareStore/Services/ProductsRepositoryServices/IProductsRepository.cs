@@ -5,5 +5,6 @@ namespace HardwareStore.Services.ProductsRepositoryServices
     public interface IProductsRepository
     {
         public IQueryable<Product> GetAll();
+        public Task<bool> IsThereProductsInDb();
     }
 }

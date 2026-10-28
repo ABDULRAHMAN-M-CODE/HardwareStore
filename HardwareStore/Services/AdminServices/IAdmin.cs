@@ -16,7 +16,7 @@ namespace HardwareStore.Services.AdminServices
 
 
         public AdminViewModel ModifyAdminPanelOptions(IQueryable<ApplicationUser> applicationUsers, AdminViewModel options);
-        public IEnumerable<ProductViewModel> GetSpecificPageProducts(IQueryable<Product> allProducts, int PageSize = 8, int PageNumber = 1);
+        public List<ProductsToView> GetSpecificPageProducts(IQueryable<Product> allProducts, int PageSize = 8, int PageNumber = 1);
 
 
 
@@ -60,7 +60,7 @@ namespace HardwareStore.Services.AdminServices
        
         
 
-        public IEnumerable<ProductViewModel> GetSpecificPageProducts(IQueryable<Product> applicationProducts, int PageSize =8, int PageNumber = 1)
+        public List<ProductsToView> GetSpecificPageProducts(IQueryable<Product> applicationProducts, int PageSize =8, int PageNumber = 1)
         {
             List<Product> SpecificPageApplicationProducts = applicationProducts
                 .OrderBy(ap => ap.EnglishName)
@@ -69,10 +69,10 @@ namespace HardwareStore.Services.AdminServices
                 ToList();
 
 
-            var result = new List<ProductViewModel>();
+            var result = new List<ProductsToView>();
             foreach (Product spp in SpecificPageApplicationProducts)
             {
-                result.Add(_mapper.Map<ProductViewModel>(spp));
+                result.Add(_mapper.Map<ProductsToView>(spp));
             }
 
             return result;

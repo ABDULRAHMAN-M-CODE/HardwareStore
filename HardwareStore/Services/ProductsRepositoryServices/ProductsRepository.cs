@@ -1,4 +1,5 @@
 ﻿using HardwareStore.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace HardwareStore.Services.ProductsRepositoryServices
 {
@@ -13,6 +14,10 @@ namespace HardwareStore.Services.ProductsRepositoryServices
         {
             IQueryable<Product> x = _context.Products;
             return x;
+        }
+        public async Task<bool> IsThereProductsInDb()
+        {
+            return await _context.Products.AnyAsync();
         }
 
     }
