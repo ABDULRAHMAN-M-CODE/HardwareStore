@@ -1,18 +1,154 @@
-﻿@{
+﻿@using HardwareStore.ViewModel;
+@model ProductsPageViewModel
+@{
     ViewData["Title"] = "Products page";
 }
+<head>
+    <script src="~/js/importProductsFromExcelFile.js" defer></script>
+    <link rel="stylesheet" href="~/css/productsPage.css" asp-append-version="true" />
+    
+</head>
 
-    <h1>Products Page</h1>
-    <label for="avatar">Choose a file:</label>
+<h1>Products Page</h1>
+<label for="avatar">Choose a file:</label>
 
-    <input class="form-control form-control-lg" id="formFileLg" type="file" accept=".xlsx" />
-    <div class="container" id="cancelContainer">
-    </div>
+<input class="form-control form-control-lg" id="formFileLg" type="file" accept=".xlsx" />
+<div class="container" id="cancelContainer">
+</div>
 
-    <div class="d-grid gap-3" id="productsContainer"></div>
-    <dialog id="dialog">
-        <p>Products were imported into the database.</p>
-        <button type="button" id="close">Close</button>
-    </dialog>
+@*The output of clicking the anchor tag is List<ProductViewModel>*@
 
-<script src="~/js/app.js"></script>
+
+<a id="showProductsAnchor"  class="btn btn-primary productsPageNavigator" asp-controller="Admin" asp-action="GetProductsPageViewModel" asp-route-PageNumber="@(1)">Show products</a>
+
+@*SHOWING PRODUCTS*@
+<div class="d-grid gap-3" id="products-container">
+    @{
+        if (Model != null)
+
+        {
+            if (Model.SpecificPageProducts.Count > 0)
+
+            {
+
+                int productsPerRow = 4;
+
+                
+                int requiredRows = (int)Math.Round(((float)Model.SpecificPageProducts.Count/ productsPerRow));
+
+        
+                
+                for (int i = 0; i < requiredRows; i++)
+
+        
+                
+                {
+
+                    
+                    <div class="row">
+
+                        
+                        @{
+
+                            
+                            for (int j = productsPerRow * i; j < Model.SpecificPageProducts.Count; j++)
+
+                            {
+
+                                if (j % productsPerRow == 0 && j != productsPerRow*i) break;
+
+                        
+                                
+                                
+                                <div class="col">
+
+                                    
+                                    <p class="text-center">@Model.SpecificPageProducts[j].Name</p>
+                                    <p class="text-center">@Model.SpecificPageProducts[j].Description</p>
+                                    <p class="text-center">@Model.SpecificPageProducts[j].Price $</p>
+
+                                
+                                </div>
+
+                            
+                            }
+
+                        
+                        }
+
+                    
+                    </div>
+
+        
+                
+                }
+
+                
+            }
+
+
+        }
+
+
+    
+    }
+</div>
+
+
+@*PAGINATION*@
+@if ( Model !=null &&  Model.TotalNumberOfProducts != 0)
+{
+    <nav aria-label="products paginator" id="productsNavigator">
+        <ul class="pagination">
+
+        
+            @{
+
+                    @if (Model.PageNumber > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link productsPageNavigator" as asp-controller="Admin" asp-action="GetProductsPageViewModel" asp-route-PageNumber="@(Model.PageNumber - 1)">Previous</a>
+
+                        </li>
+                    }
+                    int productsPerPage = 8;
+                    int totalPages = (int)Math.Round(((float)Model.TotalNumberOfProducts / productsPerPage));
+                    @for (int i = Model.PageNumber; i <= Model.PageNumber + 5; i++)
+                    {
+                        <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                            <a id="@($"productPage{i}")" onclick="hidePreviouseProductsPages(@i)" class="page-link productsPageNavigator" asp-controller="Admin" asp-action="GetProductsPageViewModel" asp-route-PageNumber="@i">@i</a>
+                        </li>
+                    }
+
+
+                    @if (Model.PageNumber < totalPages)
+                    {
+
+                        <li class="page-item">
+                            <a class="page-link productsPageNavigator" asp-controller="Admin" asp-action="GetProductsPageViewModel" asp-route-PageNumber="@(Model.PageNumber + 1)">Next</a>
+                        </li>
+                    }
+                
+
+            }
+
+        
+
+        </ul>
+    </nav>
+}
+
+
+
+<script src="~/js/isThereProductsInDb.js"></script>
+<script src="~/js/hideShowProductsButton.js" ></script>
+
+
+        
+
+
+
+
+
+
+

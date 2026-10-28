@@ -3,7 +3,7 @@
 namespace HardwareStore.Models
 {
     /// <summary>
-    /// Junction table between Products and Brands tables.
+    /// Junction table between SpecificPageProducts and Brands tables.
     /// </summary>
     public class ProductBrand:IJunctionEntity
     {

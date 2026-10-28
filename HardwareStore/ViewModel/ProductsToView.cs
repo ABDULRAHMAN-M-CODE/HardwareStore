@@ -1,6 +1,6 @@
 ﻿namespace HardwareStore.ViewModel
 {
-    public class ProductViewModel
+    public class ProductsToView
     {
         public string? Image { get; set; } // path  for the image inside the wwwroot folder. there is other approach, I can use byte[] if I want to store the image in the database.
         public int Id { get; set; }

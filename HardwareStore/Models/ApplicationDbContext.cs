@@ -162,7 +162,7 @@ namespace HardwareStore.Models
                 .HasForeignKey(u => u.DeleterId);
 
 
-            ////Products: 1 Identity PK,  and 3 FKs. 
+            ////SpecificPageProducts: 1 Identity PK,  and 3 FKs. 
             modelBuilder.Entity<Product>().HasKey(p => p.Id);
             modelBuilder.Entity<Product>().Property(p => p.Id).ValueGeneratedNever();
             modelBuilder.Entity<Product>().HasIndex(p => p.EnglishName).IsUnique();

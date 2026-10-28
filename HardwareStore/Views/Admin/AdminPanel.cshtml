@@ -16,17 +16,17 @@
             <button type="submit" class="btn btn-success ">Products page</button>
         </form>
     </div>
+
   
-    
 </div>
 <h1>
 
     @*Searching for user*@
     <form method="get" class="mb-4" asp-controller="Admin" asp-action="AdminPanel">
-        
+
         <div class="input-group">
-            <input asp-for="KeyWord" class="form-control"  aria-required="true" placeholder="search user" />
-            
+            <input asp-for="KeyWord" class="form-control" aria-required="true" placeholder="search user" />
+
             <button type="submit" class="btn btn-primary">Search</button>
         </div>
 
@@ -37,7 +37,7 @@
 <table class="table">
     <thead>
         <tr>
-            
+
             <th>Name</th>
             <th>Email</th>
             <th></th>
@@ -54,16 +54,16 @@
                 <td>
                     @*Editing USer*@
                     @*Model binding will map the query parameter to the  Action method parameter *@
-                    <form method="get" asp-controller="Admin" asp-action="EditUser" asp-route-Id="@user.Id" >
+                    <form method="get" asp-controller="Admin" asp-action="EditUser" asp-route-Id="@user.Id">
                         <button class="btn btn-primary">Edit</button>
                     </form>
                 </td>
                 <td>
-                        @*This button is not responsible for sending the delete request, the modal is.*@
-                      <button  class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal">
-                            Delete
-                        </button>
-                    
+                    @*This button is not responsible for sending the delete request, the modal is.*@
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                        Delete
+                    </button>
+
                 </td>
             </tr>
             @*The following Modal will not appear unless the user clicks the Delete button button*@
@@ -101,15 +101,17 @@
         }
     </tbody>
 </table>
+
+@*PAGINATION*@
 <nav aria-label="Page navigation">
     <ul class="pagination">
+
         
- 
         @{
             @if (Model.PageNumber > 1)
             {
                 <li class="page-item">
-                    <a class="page-link" as asp-controller="Admin" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber-1)">Previous</a>
+                    <a class="page-link" as asp-controller="Admin" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber - 1)">Previous</a>
                 </li>
             }
 
@@ -121,22 +123,24 @@
                     <a class="page-link" asp-controller="Admin" asp-action="AdminPanel" asp-route-PageNumber="@i">@i</a>
                 </li>
             }
-            @if (Model.PageNumber <Model.TotalPages)
+            @if (Model.PageNumber < Model.TotalPages)
             {
-                @*PageNumber is appended as query parameter, for example like this : ?PageNumber2 
-                    even though the AdminPanel Action method resolves a AdminViewModel
-                    the MODEL BINDING will intercept the request and match the value inside it to the PageNumber property  inside the AdminViewModel,
+                @*
+                    DON'T DELETE THIS COMMENT.
+                    `PageNumber` is appended as query parameter, for example like this : ?PageNumber2
+                    even though the `AdminPanel` resolves a `AdminViewModel`
+                    the `MODEL BINDING` will intercept the request and match the value inside it to the `PageNumber` property  inside the `AdminViewModel`,
                     effectively doing something like this for example: suppose the  string query parameter is ?PageNumber=2, then  Model binding does the following AdminViewModel.PageNumber = 2, then the rest of the action method will be executed;
-                       
-                *@
+
+*@
                 <li class="page-item">
-                    <a class="page-link" asp-controller="Admin" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber+1)">Next</a>
+                    <a class="page-link" asp-controller="Admin" asp-action="AdminPanel" asp-route-PageNumber="@(Model.PageNumber + 1)">Next</a>
                 </li>
             }
         }
-        
 
         
+
     </ul>
 </nav>
 
@@ -145,16 +149,14 @@
 @*THe following  Modal is always shown, how to show it only whe the deletion operation complets successfully?*@
 @*Should I use conditional rendering? or is there better trick in aso.net?*@
 
-
-
-
 @{
     @*The is just for debugging purposes,I faced alot of errors, it has nothing to do with the UI*@
     Debug.WriteLine("Modal.DeletionSucceed is" + Model.DeletionSucceed);
 }
 
 @*The logic is simple: if the deletion operation completed successfully, the backend will set the flag, and the frontend will check the flag here using if-statement*@
-@if (Model.DeletionSucceed){
+@if (Model.DeletionSucceed)
+{
 
 
     <script>
